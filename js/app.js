@@ -12,6 +12,7 @@ let rankingScope = 'global';   // 'global' | 'pais' | 'corp'
 let newsTab = 'all';
 let newsSource = 'heroindex';  // composer source
 let rankingFilter = '';        // selected country or corp name
+let profileSearch = '';
 
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
@@ -776,11 +777,19 @@ function resetMissionForm(){
 
 // ── PROFILES ─────────────────────────────────────────────────
 function renderProfiles(){
+  const session = currentSession || { type:'public' };
   const sorted=[...heroes].sort((a,b)=>b.score-a.score);
+const qEl=document.getElementById('profile-search');
+  profileSearch=(qEl?.value||'').trim().toLowerCase();
+  const filtered=sorted.filter(h=>{
+    if(!profileSearch) return true;
+    return [h.alias,h.corp,h.role].filter(Boolean).join(' ').toLowerCase().includes(profileSearch);
+  });
   const pg=document.getElementById('profiles-grid'); if(!pg) return;
-  pg.innerHTML=sorted.map(h=>{
+   pg.innerHTML=filtered.map(h=>{
     const av=avColor(h.alias);
-    const attrs=h.attrs||{};
+    const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
+    const attrs=canSeePrivate?(h.attrs||{}):{};
     const health=calcHealth(attrs);
     const resolve=calcResolve(attrs);
     const hasAttrs=Object.values(attrs).some(v=>v>0);
@@ -789,11 +798,11 @@ function renderProfiles(){
       <span>❤️ <strong style="color:var(--red)">${health}</strong></span>
       <span>🧠 <strong style="color:var(--accent)">${resolve}</strong></span>
     </div>`:'';
-    const powersSnippet=h.powers&&h.powers.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${h.powers.slice(0,3).map(p=>`<span class="power-level ${p.level||'basic'}" style="font-size:9px">${p.name}</span>`).join('')}${h.powers.length>3?`<span style="font-size:11px;color:var(--muted)">+${h.powers.length-3} más</span>`:''}</div>`:'';
-    const flags=gmActive&&h.flags&&h.flags.length?`<div class="gm-flag" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="flags-title">ORÁCULO — FLAGS</div>${h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('')}</div>`:'';
-    const real=gmActive&&h.realName?`<div class="profile-real gm-flag">Identidad: ${h.realName}</div>`:'';
-    const risk=gmActive?`<div class="gm-flag" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--muted)">Risk Index</span><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></div>`:'';
-    const klog=h.karmaLog&&h.karmaLog.length?h.karmaLog.slice(-3).reverse().map(l=>`<div class="klog-row"><span>Sesión ${l.session} · ${l.date}</span><span style="color:${l.delta>=0?'var(--green)':'var(--red)'};font-family:'DM Mono',monospace">${l.delta>=0?'+':''}${l.delta}</span></div>`).join(''):'<span style="font-size:11px;color:var(--muted)">Sin historial</span>';
+     const powersSnippet=canSeePrivate&&h.powers&&h.powers.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${h.powers.slice(0,3).map(p=>`<span class="power-level ${p.level||'basic'}" style="font-size:9px">${p.name}</span>`).join('')}${h.powers.length>3?`<span style="font-size:11px;color:var(--muted)">+${h.powers.length-3} más</span>`:''}</div>`:'';
+    const flags=session.type==='gm'&&h.flags&&h.flags.length?`<div class="gm-flag" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="flags-title">ORÁCULO — FLAGS</div>${h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('')}</div>`:'';
+    const real=session.type==='gm'&&h.realName?`<div class="profile-real gm-flag">Identidad: ${h.realName}</div>`:'';
+    const risk=session.type==='gm'?`<div class="gm-flag" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--muted)">Risk Index</span><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></div>`:'';
+    const klog=canSeePrivate&&h.karmaLog&&h.karmaLog.length?h.karmaLog.slice(-3).reverse().map(l=>`<div class="klog-row"><span>Sesión ${l.session} · ${l.date}</span><span style="color:${l.delta>=0?'var(--green)':'var(--red)'};font-family:'DM Mono',monospace">${l.delta>=0?'+':''}${l.delta}</span></div>`).join(''):'<span style="font-size:11px;color:var(--muted)">Perfil público protegido</span>';
     const pctS=Math.round((h.score/10000)*100),pctK=Math.min(100,h.karma*5);
     return `<div class="profile-card ${gmActive?'gm-card':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <div class="profile-header">
@@ -804,13 +813,13 @@ function renderProfiles(){
           ${h.role?`<span class="role-badge" style="font-size:9px;padding:3px 8px">${h.role}</span>`:''}
         </div></div>
       </div>
-      ${h.powers&&h.powers.length?powersSnippet:''}
+      ${powersSnippet}
       ${hasAttrs?miniAttrs:''}
       <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
-      <div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>
+      ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
       ${risk}
       <div class="divider"></div>
-      <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">KARMA — ÚLTIMAS SESIONES</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${canSeePrivate?'KARMA — ÚLTIMAS SESIONES':'VISTA PÚBLICA'}</div>
       ${klog}${flags}
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
     </div>`;
