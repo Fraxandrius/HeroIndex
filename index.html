@@ -415,7 +415,56 @@
 <div id="hero-modal" class="hero-modal-overlay" style="display:none" onclick="closeHeroModal(event)">
   <div class="hero-modal" id="hero-modal-content"></div>
 </div>
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><ellipse cx="22" cy="22" rx="8" ry="20" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><circle cx="22" cy="22" r="4" fill="#00c8ff"/><circle cx="22" cy="4" r="2" fill="#00c8ff" opacity="0.8"/><circle cx="40" cy="22" r="2" fill="#00c8ff" opacity="0.5"/></svg>
+    </div>
+    <div class="login-title">HERO<span style="color:var(--accent)">INDEX</span></div>
+    <div class="login-sub">Sistema de identificación metahumana</div>
+    <div class="login-tagline">"Transparencia. Seguridad. Progreso."</div>
 
+    <div id="login-step-choose" class="login-step">
+      <button class="login-btn-main" onclick="loginStep('hero')">Acceder como Héroe</button>
+      <button class="login-btn-main" onclick="loginStep('gm')" style="background:rgba(255,68,68,0.08);border-color:rgba(255,68,68,0.3);color:var(--gm-red)">Acceso GM</button>
+      <button class="login-btn-ghost" onclick="loginStep('public')">Continuar como invitado →</button>
+    </div>
+
+    <div id="login-step-hero" class="login-step" style="display:none">
+      <div class="login-back" onclick="loginStep('choose')">← Volver</div>
+      <div class="login-field-label">Tu alias de héroe</div>
+      <input type="text" id="login-alias" class="login-input" placeholder="Eclipse, Trueno..." autocomplete="off">
+      <div id="login-alias-msg" class="login-msg"></div>
+      <button class="login-btn-main" onclick="checkHeroAlias()" style="margin-top:8px">Continuar →</button>
+    </div>
+
+    <div id="login-step-create-code" class="login-step" style="display:none">
+      <div class="login-back" onclick="loginStep('hero')">← Volver</div>
+      <div class="login-field-label">Primera vez, <span id="login-hero-name-display"></span>. Elige tu código de acceso</div>
+      <input type="text" id="login-new-code" class="login-input" placeholder="eclipse-2049..." autocomplete="off" style="margin-top:8px">
+      <div class="login-hint">Mínimo 6 caracteres. Solo letras, números y guiones.</div>
+      <div id="login-code-msg" class="login-msg"></div>
+      <button class="login-btn-main" onclick="createHeroCode()" style="margin-top:8px">Registrar código →</button>
+    </div>
+
+    <div id="login-step-enter-code" class="login-step" style="display:none">
+      <div class="login-back" onclick="loginStep('hero')">← Volver</div>
+      <div class="login-field-label">Código de acceso, <span id="login-hero-name-display2"></span></div>
+      <input type="text" id="login-code" class="login-input" placeholder="tu-código..." autocomplete="off" style="margin-top:8px">
+      <div id="login-enter-msg" class="login-msg"></div>
+      <button class="login-btn-main" onclick="enterHeroCode()" style="margin-top:8px">Entrar →</button>
+    </div>
+
+    <div id="login-step-gm" class="login-step" style="display:none">
+      <div class="login-back" onclick="loginStep('choose')">← Volver</div>
+      <div class="login-field-label">Contraseña GM</div>
+      <input type="password" id="login-gm-pass" class="login-input" placeholder="••••••••" autocomplete="off" style="margin-top:8px">
+      <div id="login-gm-msg" class="login-msg"></div>
+      <button class="login-btn-main" onclick="enterGM()" style="margin-top:8px" style="background:rgba(255,68,68,0.15);border-color:var(--gm-red);color:var(--gm-red)">Acceder →</button>
+    </div>
+  </div>
+</div>
 <div id="toast" class="toast"></div>
 <!-- Firebase compat (no ES modules needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
