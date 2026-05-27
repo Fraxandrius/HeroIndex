@@ -108,6 +108,13 @@ function calcResolve(attrs){
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
+  // Permission check
+  const session = currentSession || {type:'public'};
+  const gmOnly = ['gm'];
+  const heroAndGm = ['karma','misiones','perfil'];
+  if(gmOnly.includes(name) && session.type !== 'gm') return;
+  if(heroAndGm.includes(name) && session.type === 'public') return;
+
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.snav,.bnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
