@@ -235,12 +235,13 @@ function renderHome(){
   // Home news feed
   const hnf=document.getElementById('home-news-feed');
   if(hnf){
-    const news=loadNews().filter(n=>n.source!=='oracle').slice(0,3);
-    hnf.innerHTML=news.length?news.map(n=>renderNewsItem(n,false)).join('')
-      :'<div class="news-empty">Sin noticias publicadas aún.</div>';
+    loadNews().then(all=>{
+      const news=all.filter(n=>n.source!=='oracle').slice(0,3);
+      hnf.innerHTML=news.length?news.map(n=>renderNewsItem(n,false)).join('')
+        :'<div class="news-empty">Sin noticias publicadas aún.</div>';
+    });
   }
 }
-
 
 function renderMiniChart(hero){
   const canvas=document.getElementById('mini-chart'); if(!canvas) return;
@@ -816,27 +817,7 @@ function renderProfiles(){
   }).join('')||'<p style="color:var(--muted)">Sin héroes registrados.</p>';
 }
 
-
-// ── NEWS SYSTEM ──────────────────────────────────────────────
-const NEWS_KEY = 'heroindex-news-v1';
-
-function loadNews(){
-  try{ const r=localStorage.getItem(NEWS_KEY); if(r) return JSON.parse(r); }catch(e){}
-  return getDefaultNews();
-}
-function saveNews(news){ try{ localStorage.setItem(NEWS_KEY,JSON.stringify(news)); }catch(e){} }
-
-function getDefaultNews(){
-  const news=[
-    {id:1,source:'heroindex',category:'comunicado',headline:'HeroIndex reporta 99.7% de cobertura heroica en Santiago',body:'El último informe trimestral de HeroIndex International confirma que la capital chilena mantiene el índice más alto de respuesta heroica certificada del continente. Cóndor lidera el ranking nacional por decimotercer mes consecutivo.',corp:'',date:'15/05/2024'},
-    {id:2,source:'corp',category:'operacion',headline:'Aurora Corporation despliega Equipo Alfa en zona norte',body:'Nuestros héroes completaron con éxito la Operación Amanecer en las regiones de Tarapacá y Antofagasta. Aurora Corporation agradece la confianza ciudadana y reafirma su compromiso con la seguridad nacional.',corp:'Aurora Corporation',date:'12/05/2024'},
-    {id:3,source:'heroindex',category:'cobertura',headline:'Incidente en Valparaíso: HeroIndex activa protocolo de revisión',body:'Tras los eventos del martes, HeroIndex ha iniciado una revisión de protocolo estándar. No se anticipan cambios en el ranking de los héroes involucrados. La transparencia es nuestro compromiso.',corp:'',date:'10/05/2024'},
-    {id:4,source:'oracle',category:'clasificado',headline:'[CLASIFICADO] Tres eliminaciones preventivas confirmadas — Sector Norte',body:'ORÁCULO registra resolución de tres individuos con Risk Index crítico en operación no documentada. Participación de héroes Aurora confirmada. Borrado mediático aplicado. Registro solo accesible nivel 5+.',corp:'',date:'10/05/2024'},
-    {id:5,source:'corp',category:'comunicado',headline:'Valkyr Industries expande operaciones a Sudamérica',body:'Valkyr Industries anuncia alianza estratégica con HeroIndex para certificar sus operativos en el Cono Sur. La expansión responde a la creciente demanda de seguridad metahumana en la región.',corp:'Valkyr Industries',date:'08/05/2024'},
-  ];
-  saveNews(news);
-  return news;
-}
+// ── NEWS UI ───────────────────────────────────────────────────
 
 function setNewsSource(src, btn){
   newsSource=src;
@@ -861,15 +842,17 @@ function publishNews(){
   const category=document.getElementById('news-category')?.value||'comunicado';
   const corp=newsSource==='corp'?(document.getElementById('news-corp-select')?.value||''):'';
   if(!headline){toast('El titular es obligatorio');return;}
-  const news=loadNews();
-  news.unshift({
-    id:Date.now(), source:newsSource, category, headline, body:body||'',
-    corp, date:today()
-  });
-  saveNews(news).then(()=>{ clearNewsForm();
-  renderNewsFeed();
-  renderHome();
-  toast('Noticia publicada');
+  loadNews().then(currentNews=>{
+    currentNews.unshift({
+      id:Date.now(), source:newsSource, category, headline,
+      body:body||'', corp, date:today()
+    });
+    saveNews(currentNews).then(()=>{
+      clearNewsForm();
+      renderNewsFeed();
+      renderHome();
+      toast('Noticia publicada');
+    });
   });
 }
 
@@ -903,18 +886,21 @@ function renderNewsItem(n, showDelete=false){
 }
 
 function renderNewsFeed(){
-  const all=loadNews();
-  let filtered=all;
-  if(newsTab==='heroindex') filtered=all.filter(n=>n.source==='heroindex');
-  else if(newsTab==='corp')  filtered=all.filter(n=>n.source==='corp');
-  else if(newsTab==='oracle') filtered=all.filter(n=>n.source==='oracle');
-  else filtered=gmActive?all:all.filter(n=>n.source!=='oracle');
-
   const feed=document.getElementById('news-feed');
-  if(feed) feed.innerHTML=filtered.length
-    ?filtered.map(n=>renderNewsItem(n,true)).join('')
-    :'<div class="news-empty">Sin noticias en esta categoría.</div>';
+  if(!feed) return;
+  feed.innerHTML='<div class="news-empty" style="color:var(--muted)">Cargando...</div>';
+  loadNews().then(all=>{
+    let filtered=all;
+    if(newsTab==='heroindex') filtered=all.filter(n=>n.source==='heroindex');
+    else if(newsTab==='corp')  filtered=all.filter(n=>n.source==='corp');
+    else if(newsTab==='oracle') filtered=all.filter(n=>n.source==='oracle');
+    else filtered=gmActive?all:all.filter(n=>n.source!=='oracle');
+    feed.innerHTML=filtered.length
+      ?filtered.map(n=>renderNewsItem(n,true)).join('')
+      :'<div class="news-empty">Sin noticias en esta categoría.</div>';
+  });
 }
+
 
 // ── GM — POWERS FORM ─────────────────────────────────────────
 function addPowerField(){
