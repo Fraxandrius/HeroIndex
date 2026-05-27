@@ -1,5 +1,5 @@
 // ── STATE ────────────────────────────────────────────────────
-let heroes = loadHeroes();
+let heroes = [];
 let gmActive = true;
 let selectedKarmaHero = null;
 let karmaChecks = {};
