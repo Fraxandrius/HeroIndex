@@ -553,7 +553,7 @@ function updateKarmaMetrics(){
   const tot=document.getElementById('km-total'); if(tot) tot.textContent=newTotal;
 }
 
-async function confirmSession(){
+function confirmSession(){
   if(!selectedKarmaHero) return;
   let pos=0,neg=0;
   GOOD_KARMA.forEach(q=>{if(karmaChecks[q.id])pos+=q.pts;});
@@ -572,13 +572,14 @@ async function confirmSession(){
     if(!hero.scoreLog)hero.scoreLog=[];
     hero.scoreLog.push({delta:sd,note:(snEl&&snEl.value.trim())||'Sesión',date:today()});
   }
-  await saveHeroes(heroes);
+  saveHeroes(heroes).then(()=>{
 
   // ── visual confirmation ──
   const alias=hero.alias;
   const karmaMsg=delta===0?'sin cambio karma':`karma ${oldKarma} → ${hero.karma}`;
   const scoreMsg=sd!==0?` · score ${sd>=0?'+':''}${sd}`:'';
   showSessionResult(alias, delta, hero.karma, sd, hero.score);
+  }); // end saveHeroes.then
 
   // ── full reset ──
   selectedKarmaHero=null;
@@ -692,7 +693,7 @@ function getMissionNarrative(total,sel){
   return{tag:'RESULTADO NEGATIVO',text:'La misión resta al historial. Si el patrón continúa, la corporación revisará el contrato.'};
 }
 
-async function applyMission(){
+function applyMission(){
   if(!missionHeroes.size) return;
   if(!Object.keys(FACTORS).every(k=>missionSelections[k])) return;
   let total=0; Object.keys(FACTORS).forEach(k=>total+=missionSelections[k].val);
@@ -706,8 +707,7 @@ async function applyMission(){
     h.scoreLog.push({delta:total,note:name,date:today()});
     affected.push(h.alias);
   });
-  await saveHeroes(heroes);
-  renderAll();
+  saveHeroes(heroes).then(()=>renderAll());
 
   // ── show mission result card ──
   showMissionResult(name, total, affected);
@@ -848,7 +848,7 @@ function setNewsTab(tab, btn){
   renderNewsFeed();
 }
 
-async function publishNews(){
+function publishNews(){
   const headline=document.getElementById('news-headline')?.value.trim();
   const body=document.getElementById('news-body')?.value.trim();
   const category=document.getElementById('news-category')?.value||'comunicado';
@@ -859,11 +859,11 @@ async function publishNews(){
     id:Date.now(), source:newsSource, category, headline, body:body||'',
     corp, date:today()
   });
-  await saveNews(news);
-  clearNewsForm();
+  saveNews(news).then(()=>{ clearNewsForm();
   renderNewsFeed();
   renderHome();
   toast('Noticia publicada');
+  });
 }
 
 function clearNewsForm(){
@@ -871,12 +871,9 @@ function clearNewsForm(){
   const b=document.getElementById('news-body');     if(b) b.value='';
 }
 
-async function deleteNews(id){
+function deleteNews(id){
   const news=loadNews().filter(n=>n.id!==id);
-  await saveNews(news);
-  renderNewsFeed();
-  renderHome();
-  toast('Noticia eliminada');
+  saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
 }
 
 const CAT_CLASSES={comunicado:'cat-comunicado',operacion:'cat-operacion',cobertura:'cat-cobertura',rumor:'cat-rumor',clasificado:'cat-clasificado'};
@@ -939,7 +936,7 @@ function collectPowers(){
 }
 
 // ── GM — ADD HERO ────────────────────────────────────────────
-async function addHero(){
+function addHero(){
   const aliasEl=document.getElementById('n-alias');
   const alias=aliasEl&&aliasEl.value.trim();
   if(!alias){toast('El alias es obligatorio');return;}
@@ -957,7 +954,7 @@ async function addHero(){
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
   heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
-  await saveHeroes(heroes);renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();
+  saveHeroes(heroes).then(()=>{renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();});
 }
 
 function clearGMForm(){
@@ -1059,14 +1056,15 @@ function showCSVPreview(rows){
   document.getElementById('csv-preview').style.display='block';
 }
 
-async function confirmCSV(){
+function confirmCSV(){
   if(!csvPending.length) return;
   heroes.push(...csvPending);
-  await saveHeroes(heroes);
+  saveHeroes(heroes).then(()=>{
   toast(`${csvPending.length} héroe(s) importados`);
   csvPending=[];
   document.getElementById('csv-preview').style.display='none';
   renderAll();renderGMList();
+  });
 }
 
 function cancelCSV(){
@@ -1075,13 +1073,13 @@ function cancelCSV(){
 }
 
 // ── GM LIST ───────────────────────────────────────────────────
-async function removeHero(id){
+function removeHero(id){
   const h=heroes.find(h=>h.id===id);if(!h)return;
   if(!confirm(`¿Eliminar a ${h.alias}?`))return;
-  heroes=heroes.filter(h=>h.id!==id);await saveHeroes(heroes);renderAll();renderGMList();toast(`${h.alias} eliminado`);
+  heroes=heroes.filter(h=>h.id!==id);saveHeroes(heroes).then(()=>{renderAll();renderGMList();toast(`${h.alias} eliminado`);});
 }
 
-async function updateScore(id){
+function updateScore(id){
   const h=heroes.find(h=>h.id===id);if(!h)return;
   const dEl=document.getElementById(`sd-${id}`);
   const nEl=document.getElementById(`sn-${id}`);
@@ -1095,13 +1093,11 @@ async function updateScore(id){
     h.scoreLog.push({delta:d,note,date:today()});
   }
   if(newRisk) h.risk=newRisk;
-  await saveHeroes(heroes);
-  renderAll();
-  renderGMList();
+  saveHeroes(heroes).then(()=>{ renderAll(); renderGMList();
   // clear fields after re-render
   const dEl2=document.getElementById(`sd-${id}`); if(dEl2) dEl2.value='';
   const nEl2=document.getElementById(`sn-${id}`); if(nEl2) nEl2.value='';
-  toast(`${h.alias} · Score: ${h.score.toLocaleString('es-CL')} · Risk: ${riskLabel(h.risk)}`);
+  toast(`${h.alias} · Score: ${h.score.toLocaleString('es-CL')} · Risk: ${riskLabel(h.risk)}`); });
 }
 
 function renderGMList(){
@@ -1141,30 +1137,30 @@ function renderGMList(){
 }
 
 function doExport(){exportData(heroes);}
-function handleImport(input){importData(input.files[0], async data=>{heroes=data;await saveHeroes(heroes);renderAll();renderGMList();toast('Datos importados correctamente');});}
+function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHeroes(heroes).then(()=>{renderAll();renderGMList();toast('Datos importados correctamente');});});}
 
 // ── INIT ─────────────────────────────────────────────────────
 document.body.classList.add('gm-active');
 const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
 
-// Show loading state
-document.getElementById('app').style.opacity='0.4';
+// Show loading overlay
+const appEl=document.getElementById('app');
+if(appEl) appEl.style.opacity='0.3';
 
-// Load data from Firebase then render
-(async () => {
-  heroes = await loadHeroes();
+// Load from Firebase then render
+loadHeroes().then(h=>{
+  heroes=h;
   renderAll();
-  document.getElementById('app').style.opacity='1';
+  if(appEl) appEl.style.opacity='1';
 
-  // Listen for real-time changes from other users
-  onHeroesChange((updatedHeroes) => {
-    heroes = updatedHeroes;
+  // Real-time listeners
+  onHeroesChange(updated=>{
+    heroes=updated;
     renderAll();
   });
-  onNewsChange(() => {
-    if(document.getElementById('page-noticias').classList.contains('active')){
-      renderNewsFeed();
-    }
+  onNewsChange(()=>{
     renderHome();
+    const np=document.getElementById('page-noticias');
+    if(np&&np.classList.contains('active')) renderNewsFeed();
   });
-})();
+});
