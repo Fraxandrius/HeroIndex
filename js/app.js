@@ -382,8 +382,10 @@ function renderRanking(){
 // ── HERO DETAIL MODAL ────────────────────────────────────────
 function openHeroModal(id){
   const h=heroes.find(h=>h.id===id); if(!h) return;
+  const session = currentSession || { type:'public' };
+  const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
   const av=avColor(h.alias);
-  const attrs=h.attrs||{};
+  const attrs=canSeePrivate?(h.attrs||{}):{};
   const health=calcHealth(attrs);
   const resolve=calcResolve(attrs);
   const hasAttrs=Object.values(attrs).some(v=>v>0);
@@ -419,17 +421,17 @@ function openHeroModal(id){
         <span class="power-level ${p.level||'basic'}">${(p.level||'basic').toUpperCase()}</span>
         <div><div class="power-name">${p.name}</div>${p.desc?`<div class="power-desc">${p.desc}</div>`:''}</div>
       </div>`).join('')}
-    </div>` : '<p style="font-size:12px;color:var(--muted)">Sin poderes registrados.</p>';
+    </div>` : '<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
 
   // Talents & Drawbacks
-  const talentsHtml=h.talents&&h.talents.length?`<div class="talents-grid">${h.talents.map(t=>`<span class="talent-tag">${t}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">—</p>';
-  const drawbacksHtml=h.drawbacks&&h.drawbacks.length?`<div class="talents-grid">${h.drawbacks.map(d=>`<span class="drawback-tag">${d}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">—</p>';
+  const talentsHtml=canSeePrivate&&h.talents&&h.talents.length?`<div class="talents-grid">${h.talents.map(t=>`<span class="talent-tag">${t}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
+  const drawbacksHtml=canSeePrivate&&h.drawbacks&&h.drawbacks.length?`<div class="talents-grid">${h.drawbacks.map(d=>`<span class="drawback-tag">${d}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
 
   // Relationships
-  const relsHtml=h.relationships&&h.relationships.length?`<div class="relationships-list">${h.relationships.map(r=>`<div class="rel-item"><div class="rel-name">${r.name}</div><div class="rel-type">${r.type}</div></div>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Sin relaciones registradas.</p>';
-
+  const relsHtml=canSeePrivate&&h.relationships&&h.relationships.length?`<div class="relationships-list">${h.relationships.map(r=>`<div class="rel-item"><div class="rel-name">${r.name}</div><div class="rel-type">${r.type}</div></div>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
+  
   // GM-only section
-  const gmSection=gmActive?`
+    const gmSection=session.type==='gm'?`
     <div class="divider"></div>
     <div class="card-label" style="color:var(--gm-red)">ORÁCULO — DATOS CLASIFICADOS</div>
     ${h.realName?`<div style="font-size:13px;margin-bottom:8px"><span style="color:var(--muted);font-size:11px">Identidad real: </span><span style="color:var(--gm-red);font-weight:600">${h.realName}</span></div>`:''}
@@ -446,7 +448,7 @@ function openHeroModal(id){
       <div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>
       <div style="flex:1">
         <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--text)">${h.alias}</div>
-        ${h.realName&&gmActive?`<div style="font-size:12px;color:var(--gm-red)">${h.realName}</div>`:''}
+        ${h.realName&&session.type==='gm'?`<div style="font-size:12px;color:var(--gm-red)">${h.realName}</div>`:''}
         <div style="font-size:12px;color:var(--muted);margin-top:2px">${h.corp||'—'} · ${h.country?getFlag(h.country)+' '+h.country:''} ${h.occupation?'· '+h.occupation:''}</div>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
@@ -456,12 +458,12 @@ function openHeroModal(id){
       <div style="text-align:right">
         <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
         <div style="font-size:10px;color:var(--muted);letter-spacing:1px">HEROINDEX</div>
-        <div style="font-size:14px;color:var(--green);font-weight:600;margin-top:4px">Karma: ${h.karma}</div>
-      </div>
+        ${canSeePrivate?`<div style="font-size:14px;color:var(--green);font-weight:600;margin-top:4px">Karma: ${h.karma}</div>`:''}      
+        </div>
     </div>
 
-    ${h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
-
+    ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
+    
     <div class="card-label" style="color:var(--accent)">ATRIBUTOS</div>
     ${attrsHtml}
 
