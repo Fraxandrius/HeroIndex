@@ -1139,7 +1139,8 @@ function renderGMList(){
 function doExport(){exportData(heroes);}
 function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHeroes(heroes).then(()=>{renderAll();renderGMList();toast('Datos importados correctamente');});});}
 
-// ── INIT ─────────────────────────────────────────────────────
+// ── INIT — llamado por auth.js después del login ──────────────
+function initHeroIndex(){
 document.body.classList.add('gm-active');
 const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
 
@@ -1164,3 +1165,5 @@ loadHeroes().then(h=>{
     if(np&&np.classList.contains('active')) renderNewsFeed();
   });
 });
+}
+initLogin();
