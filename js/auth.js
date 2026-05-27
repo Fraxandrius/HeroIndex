@@ -40,16 +40,13 @@ function startApp() {
 // ── APPLY SESSION — what the user sees ───────────────────────
 function applySession() {
   if (!currentSession) return;
-
   if (currentSession.type === 'gm') {
     document.body.classList.add('gm-active');
     const dot = document.getElementById('gm-dot');
     if (dot) dot.classList.add('show');
     updateSessionBadge('⬡ GM', '#ff4444');
   } else {
-    // Heroes and public NEVER get GM mode
     document.body.classList.remove('gm-active');
-    // Hide the GM toggle completely
     const toggleDesk = document.getElementById('gm-toggle-desk');
     if (toggleDesk) toggleDesk.closest('.gm-toggle-row').style.display = 'none';
     const notifBtn = document.querySelector('.notif-btn');
@@ -67,8 +64,8 @@ function applySession() {
   if (currentSession.type === 'public') {
     document.querySelectorAll('[data-page="karma"],[data-page="misiones"],[data-page="perfil"]')
       .forEach(el => el.style.display = 'none');
+  }
 }
-
 function updateSessionBadge(label, color) {
   const topbarRight = document.querySelector('.topbar-right');
   if (!topbarRight) return;
