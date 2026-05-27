@@ -110,8 +110,8 @@ function calcResolve(attrs){
 function showPage(name, btn){
   // Permission check
   const session = currentSession || {type:'public'};
-  const gmOnly = ['gm'];
-  const heroAndGm = ['karma','misiones','perfil'];
+  const gmOnly = ['gm','karma','misiones'];
+  const heroAndGm = [];
   if(gmOnly.includes(name) && session.type !== 'gm') return;
   if(heroAndGm.includes(name) && session.type === 'public') return;
 
