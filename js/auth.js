@@ -42,21 +42,23 @@ function applySession() {
   if (!currentSession) return;
 
   if (currentSession.type === 'gm') {
-    // GM sees everything
     document.body.classList.add('gm-active');
     const dot = document.getElementById('gm-dot');
     if (dot) dot.classList.add('show');
     updateSessionBadge('⬡ GM', '#ff4444');
-
-  } else if (currentSession.type === 'hero') {
-    // Hero sees their own data, public ranking, news from their corp
-    document.body.classList.remove('gm-active');
-    updateSessionBadge(currentSession.alias, null);
-
   } else {
-    // Public — ranking and public news only
+    // Heroes and public NEVER get GM mode
     document.body.classList.remove('gm-active');
-    updateSessionBadge('Invitado', null);
+    // Hide the GM toggle completely
+    const toggleDesk = document.getElementById('gm-toggle-desk');
+    if (toggleDesk) toggleDesk.closest('.gm-toggle-row').style.display = 'none';
+    const notifBtn = document.querySelector('.notif-btn');
+    if (notifBtn) notifBtn.style.display = 'none';
+    if (currentSession.type === 'hero') {
+      updateSessionBadge(currentSession.alias, null);
+    } else {
+      updateSessionBadge('Invitado', null);
+    }
   }
 }
 
