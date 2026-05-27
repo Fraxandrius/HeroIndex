@@ -60,6 +60,13 @@ function applySession() {
       updateSessionBadge('Invitado', null);
     }
   }
+  // Hide nav items based on role
+  if (currentSession.type !== 'gm') {
+    document.querySelectorAll('[data-page="gm"]').forEach(el => el.style.display = 'none');
+  }
+  if (currentSession.type === 'public') {
+    document.querySelectorAll('[data-page="karma"],[data-page="misiones"],[data-page="perfil"]')
+      .forEach(el => el.style.display = 'none');
 }
 
 function updateSessionBadge(label, color) {
