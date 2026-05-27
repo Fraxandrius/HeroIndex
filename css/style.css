@@ -1208,4 +1208,3 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .ctab.active.hi  { background: var(--accent-glow); color: var(--accent); border-color: var(--accent2); }
 .ctab.active.corp { background: rgba(255,171,64,0.08); color: var(--amber); border-color: rgba(255,171,64,0.3); }
 .ctab.active.oracle { background: rgba(255,68,68,0.08); color: var(--gm-red); border-color: rgba(255,68,68,0.3); }
-
