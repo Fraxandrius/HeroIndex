@@ -553,7 +553,7 @@ function updateKarmaMetrics(){
   const tot=document.getElementById('km-total'); if(tot) tot.textContent=newTotal;
 }
 
-function confirmSession(){
+async function confirmSession(){
   if(!selectedKarmaHero) return;
   let pos=0,neg=0;
   GOOD_KARMA.forEach(q=>{if(karmaChecks[q.id])pos+=q.pts;});
@@ -572,7 +572,7 @@ function confirmSession(){
     if(!hero.scoreLog)hero.scoreLog=[];
     hero.scoreLog.push({delta:sd,note:(snEl&&snEl.value.trim())||'Sesión',date:today()});
   }
-  saveHeroes(heroes);
+  await saveHeroes(heroes);
 
   // ── visual confirmation ──
   const alias=hero.alias;
@@ -692,7 +692,7 @@ function getMissionNarrative(total,sel){
   return{tag:'RESULTADO NEGATIVO',text:'La misión resta al historial. Si el patrón continúa, la corporación revisará el contrato.'};
 }
 
-function applyMission(){
+async function applyMission(){
   if(!missionHeroes.size) return;
   if(!Object.keys(FACTORS).every(k=>missionSelections[k])) return;
   let total=0; Object.keys(FACTORS).forEach(k=>total+=missionSelections[k].val);
@@ -706,7 +706,7 @@ function applyMission(){
     h.scoreLog.push({delta:total,note:name,date:today()});
     affected.push(h.alias);
   });
-  saveHeroes(heroes);
+  await saveHeroes(heroes);
   renderAll();
 
   // ── show mission result card ──
@@ -848,7 +848,7 @@ function setNewsTab(tab, btn){
   renderNewsFeed();
 }
 
-function publishNews(){
+async function publishNews(){
   const headline=document.getElementById('news-headline')?.value.trim();
   const body=document.getElementById('news-body')?.value.trim();
   const category=document.getElementById('news-category')?.value||'comunicado';
@@ -859,7 +859,7 @@ function publishNews(){
     id:Date.now(), source:newsSource, category, headline, body:body||'',
     corp, date:today()
   });
-  saveNews(news);
+  await saveNews(news);
   clearNewsForm();
   renderNewsFeed();
   renderHome();
@@ -871,9 +871,9 @@ function clearNewsForm(){
   const b=document.getElementById('news-body');     if(b) b.value='';
 }
 
-function deleteNews(id){
+async function deleteNews(id){
   const news=loadNews().filter(n=>n.id!==id);
-  saveNews(news);
+  await saveNews(news);
   renderNewsFeed();
   renderHome();
   toast('Noticia eliminada');
@@ -939,7 +939,7 @@ function collectPowers(){
 }
 
 // ── GM — ADD HERO ────────────────────────────────────────────
-function addHero(){
+async function addHero(){
   const aliasEl=document.getElementById('n-alias');
   const alias=aliasEl&&aliasEl.value.trim();
   if(!alias){toast('El alias es obligatorio');return;}
@@ -957,7 +957,7 @@ function addHero(){
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
   heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
-  saveHeroes(heroes);renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();
+  await saveHeroes(heroes);renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();
 }
 
 function clearGMForm(){
@@ -1059,10 +1059,10 @@ function showCSVPreview(rows){
   document.getElementById('csv-preview').style.display='block';
 }
 
-function confirmCSV(){
+async function confirmCSV(){
   if(!csvPending.length) return;
   heroes.push(...csvPending);
-  saveHeroes(heroes);
+  await saveHeroes(heroes);
   toast(`${csvPending.length} héroe(s) importados`);
   csvPending=[];
   document.getElementById('csv-preview').style.display='none';
@@ -1075,13 +1075,13 @@ function cancelCSV(){
 }
 
 // ── GM LIST ───────────────────────────────────────────────────
-function removeHero(id){
+async function removeHero(id){
   const h=heroes.find(h=>h.id===id);if(!h)return;
   if(!confirm(`¿Eliminar a ${h.alias}?`))return;
-  heroes=heroes.filter(h=>h.id!==id);saveHeroes(heroes);renderAll();renderGMList();toast(`${h.alias} eliminado`);
+  heroes=heroes.filter(h=>h.id!==id);await saveHeroes(heroes);renderAll();renderGMList();toast(`${h.alias} eliminado`);
 }
 
-function updateScore(id){
+async function updateScore(id){
   const h=heroes.find(h=>h.id===id);if(!h)return;
   const dEl=document.getElementById(`sd-${id}`);
   const nEl=document.getElementById(`sn-${id}`);
@@ -1095,7 +1095,7 @@ function updateScore(id){
     h.scoreLog.push({delta:d,note,date:today()});
   }
   if(newRisk) h.risk=newRisk;
-  saveHeroes(heroes);
+  await saveHeroes(heroes);
   renderAll();
   renderGMList();
   // clear fields after re-render
@@ -1141,9 +1141,30 @@ function renderGMList(){
 }
 
 function doExport(){exportData(heroes);}
-function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHeroes(heroes);renderAll();renderGMList();toast('Datos importados correctamente');});}
+function handleImport(input){importData(input.files[0], async data=>{heroes=data;await saveHeroes(heroes);renderAll();renderGMList();toast('Datos importados correctamente');});}
 
 // ── INIT ─────────────────────────────────────────────────────
 document.body.classList.add('gm-active');
 const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
-renderAll();
+
+// Show loading state
+document.getElementById('app').style.opacity='0.4';
+
+// Load data from Firebase then render
+(async () => {
+  heroes = await loadHeroes();
+  renderAll();
+  document.getElementById('app').style.opacity='1';
+
+  // Listen for real-time changes from other users
+  onHeroesChange((updatedHeroes) => {
+    heroes = updatedHeroes;
+    renderAll();
+  });
+  onNewsChange(() => {
+    if(document.getElementById('page-noticias').classList.contains('active')){
+      renderNewsFeed();
+    }
+    renderHome();
+  });
+})();
