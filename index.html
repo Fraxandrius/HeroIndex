@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>HeroIndex — Panel GM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="gm-active">
+<div id="app">
+
+  <!-- DESKTOP SIDEBAR -->
+  <aside class="sidebar desktop-only">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><ellipse cx="22" cy="22" rx="8" ry="20" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><circle cx="22" cy="22" r="4" fill="#00c8ff"/><circle cx="22" cy="4" r="2" fill="#00c8ff" opacity="0.8"/><circle cx="40" cy="22" r="2" fill="#00c8ff" opacity="0.5"/></svg></div>
+      <div><div class="logo-text">HERO<span class="logo-accent">INDEX</span></div><div class="logo-sub">Panel GM</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="snav active" data-page="inicio"   onclick="showPage('inicio',this)"><span class="snav-icon">⌂</span> Inicio</button>
+      <button class="snav" data-page="misiones" onclick="showPage('misiones',this)"><span class="snav-icon">◆</span> Calculadora Misión</button>
+      <button class="snav" data-page="karma"    onclick="showPage('karma',this)"><span class="snav-icon">◎</span> Sesión — Karma</button>
+      <button class="snav" data-page="ranking"  onclick="showPage('ranking',this)"><span class="snav-icon">◈</span> Ranking Global</button>
+      <button class="snav" data-page="perfil"   onclick="showPage('perfil',this)"><span class="snav-icon">◉</span> Perfiles</button>
+      <button class="snav gm-only" data-page="gm" onclick="showPage('gm',this)"><span class="snav-icon">⬡</span> Panel GM</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="gm-toggle-row">
+        <span class="toggle-label">Público</span>
+        <label class="toggle"><input type="checkbox" id="gm-toggle-desk" checked onchange="toggleGM('desk')"><span class="toggle-track"></span></label>
+        <span class="toggle-label">Modo GM</span>
+      </div>
+      <div class="sidebar-version">v2.0 · Ciudad Sin Crimen</div>
+    </div>
+  </aside>
+
+  <!-- MOBILE TOPBAR -->
+  <header class="topbar mobile-only">
+    <div class="topbar-left">
+      <div class="logo-icon-sm"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1.2"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><circle cx="22" cy="22" r="4" fill="#00c8ff"/></svg></div>
+      <span class="logo-text-sm">HERO<span class="logo-accent">INDEX</span></span>
+    </div>
+    <button class="notif-btn" onclick="toggleGMModal()">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 1 6 6v2l1.5 3h-15L4 10V8a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M8 15a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="notif-dot show" id="gm-dot"></span>
+    </button>
+  </header>
+
+  <main class="main-content">
+
+    <!-- INICIO -->
+    <section class="page active" id="page-inicio">
+      <div class="page-header desktop-only"><h1 class="page-title">INICIO</h1><p class="page-sub">Resumen de campaña · alertas activas</p></div>
+      <div class="home-grid">
+        <div class="score-banner card">
+          <div class="score-banner-left">
+            <div class="label-tag">POSICIÓN GLOBAL</div>
+            <div id="banner-rank" class="banner-rank">Top 1%</div>
+            <div class="banner-sub">Entre los héroes activos a nivel mundial</div>
+          </div>
+          <div class="score-banner-right">
+            <canvas id="mini-chart" width="180" height="70"></canvas>
+            <div id="banner-change" class="banner-change">↑ 0 pts</div>
+            <div class="banner-change-sub">Desde la última sesión</div>
+          </div>
+        </div>
+        <div class="home-section">
+          <div class="section-header"><span class="section-title">ALERTAS GLOBALES</span><span class="section-link" onclick="showPage('misiones')">Ver todas ›</span></div>
+          <div id="alerts-list" class="alerts-list"></div>
+        </div>
+        <div class="home-section">
+          <div class="section-header"><span class="section-title">RANKING GLOBAL</span><span class="section-link" onclick="showPage('ranking')">Ver ranking ›</span></div>
+          <div id="home-ranking" class="card home-ranking-card"></div>
+        </div>
+        <div class="quick-grid">
+          <div class="quick-card" onclick="showPage('misiones')"><div class="quick-icon">◆</div><div class="quick-label">MISIONES</div><div class="quick-val" id="q-misiones">—</div></div>
+          <div class="quick-card" onclick="showPage('karma')"><div class="quick-icon">◎</div><div class="quick-label">KARMA</div><div class="quick-val" id="q-karma">—</div></div>
+          <div class="quick-card" onclick="showPage('ranking')"><div class="quick-icon">◈</div><div class="quick-label">TOP SCORE</div><div class="quick-val" id="q-topscore">—</div></div>
+          <div class="quick-card gm-only" onclick="showPage('gm')"><div class="quick-icon">⬡</div><div class="quick-label">GM PANEL</div><div class="quick-val" id="q-heroes">—</div></div>
+        </div>
+        <div class="promo-banner card">
+          <div class="promo-text"><div class="promo-title">SÉ PARTE DEL CAMBIO</div><div class="promo-sub">Completa misiones, protege a la ciudadanía y sube en el ranking.</div><span class="promo-link" onclick="showPage('misiones')">Ver misiones ›</span></div>
+          <div class="promo-globe"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="40" stroke="#00c8ff" stroke-width="0.8" opacity="0.3"/><ellipse cx="50" cy="50" rx="40" ry="16" stroke="#00c8ff" stroke-width="0.6" opacity="0.4"/><ellipse cx="50" cy="50" rx="16" ry="40" stroke="#00c8ff" stroke-width="0.6" opacity="0.4"/><circle cx="50" cy="50" r="6" fill="#00c8ff" opacity="0.8"/></svg></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISIONES -->
+    <section class="page" id="page-misiones">
+      <div class="page-header"><h1 class="page-title">CALCULADORA DE MISIÓN</h1><p class="page-sub">El score refleja percepción pública, no realidad.</p></div>
+      <div class="mission-layout">
+        <div class="mission-left">
+          <div class="card">
+            <div class="card-label">NOMBRE DE LA MISIÓN</div>
+            <input type="text" id="m-name" placeholder="Operación Amanecer...">
+            <div class="card-label" style="margin-top:1rem">HÉROES PARTICIPANTES</div>
+            <div id="m-chips" class="chips-row" style="margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <div class="card-label">FACTORES</div>
+            <div id="factors-grid" class="factors-grid"></div>
+            <div id="tension-alert" class="tension-alert" style="display:none">⚠ Tensión sistémica — resultado real y percepción corporativa divergen.</div>
+          </div>
+        </div>
+        <div class="mission-right">
+          <div class="card result-card">
+            <div class="card-label">RESULTADO</div>
+            <div id="m-delta" class="m-delta-big">—</div>
+            <div id="m-tag" class="m-tag"></div>
+            <div id="m-breakdown" class="m-breakdown" style="margin-top:12px"></div>
+            <div id="m-narrative" class="m-narrative" style="display:none;margin-top:12px"></div>
+            <button id="m-apply-btn" class="btn-primary" style="width:100%;margin-top:1rem" disabled onclick="applyMission()">Aplicar a héroes seleccionados →</button>
+            <p id="m-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;display:none"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KARMA -->
+    <section class="page" id="page-karma">
+      <div class="page-header"><h1 class="page-title">SESIÓN — KARMA</h1><p class="page-sub">Sistema Invincible · registra lo que ocurrió en sesión.</p></div>
+      <div id="karma-chips" class="chips-row" style="margin-bottom:1rem"></div>
+      <div id="karma-panel" style="display:none">
+        <div class="karma-layout">
+          <div class="karma-left">
+            <div class="card karma-meta-card">
+              <div class="karma-hero-row"><div id="kh-av" class="av-md"></div><div><div id="kh-name" class="kh-name"></div><div id="kh-corp" class="kh-corp"></div></div></div>
+              <div class="karma-metrics-row">
+                <div class="km"><div class="km-label">ACTUAL</div><div id="km-cur" class="km-val green">0</div></div>
+                <div class="km"><div class="km-label">SESIÓN</div><div id="km-delta" class="km-val">+0</div></div>
+                <div class="km"><div class="km-label">TOTAL</div><div id="km-total" class="km-val">0</div></div>
+              </div>
+              <div class="divider"></div>
+              <div class="card-label">ACTUALIZAR SCORE (OPCIONAL)</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input type="number" id="k-score-delta" placeholder="+300 o -150" style="width:140px">
+                <input type="text" id="k-score-note" placeholder="Motivo..." style="flex:1;min-width:120px">
+              </div>
+              <button class="btn-primary" style="width:100%;margin-top:12px" onclick="confirmSession()">Confirmar sesión →</button>
+            </div>
+          </div>
+          <div class="karma-right">
+            <div class="card"><div class="card-label green-label">KARMA POSITIVO</div><div id="good-checks" class="check-list"></div></div>
+            <div class="card"><div class="card-label red-label">KARMA NEGATIVO</div><div id="bad-checks" class="check-list"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RANKING -->
+    <section class="page" id="page-ranking">
+      <div class="page-header"><h1 class="page-title">RANKING</h1><p class="page-sub">Global · Nacional · Corporativo · actualizado por sesión.</p></div>
+
+      <!-- Scope tabs -->
+      <div class="ranking-tabs">
+        <button class="rtab active" onclick="setRankingScope('global',this)">🌐 GLOBAL</button>
+        <button class="rtab" onclick="setRankingScope('pais',this)">🏴 NACIONAL</button>
+        <button class="rtab" onclick="setRankingScope('corp',this)">🏢 CORPORATIVO</button>
+      </div>
+
+      <!-- Filter row (hidden in global) -->
+      <div id="ranking-filter-row" class="ranking-filters" style="display:none">
+        <span class="filter-label" id="filter-label">FILTRAR:</span>
+        <div id="filter-chips" class="filter-group"></div>
+      </div>
+
+      <!-- Scope header -->
+      <div class="ranking-scope-header">
+        <span class="scope-title" id="scope-title">TODOS LOS HÉROES</span>
+        <span class="scope-count" id="scope-count"></span>
+      </div>
+
+      <!-- Top 3 -->
+      <div id="top3-area" class="top3"></div>
+
+      <!-- Table -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="ranking-table">
+          <thead><tr>
+            <th>#</th><th>Héroe</th><th>Score</th><th>Karma</th>
+            <th id="rth-scope">País</th>
+            <th>Rol</th><th>Tipo</th><th class="gm-col">Risk</th>
+          </tr></thead>
+          <tbody id="ranking-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PERFILES -->
+    <section class="page" id="page-perfil">
+      <div class="page-header"><h1 class="page-title">PERFILES</h1><p class="page-sub">Haz clic en un héroe para ver su ficha completa.</p></div>
+      <div id="profiles-grid" class="profiles-grid"></div>
+    </section>
+
+    <!-- GM -->
+    <section class="page gm-only" id="page-gm">
+      <div class="page-header"><h1 class="page-title">PANEL GM</h1><p class="page-sub">Registrar héroes · importar CSV · Risk Index · exportar datos.</p></div>
+      <div class="gm-layout">
+        <div class="gm-form-col">
+
+          <!-- CSV IMPORT -->
+          <div class="card" style="border-color:rgba(0,200,255,0.2)">
+            <div class="card-label" style="color:var(--accent)">IMPORTAR HÉROES EN MASA — CSV</div>
+            <p style="font-size:12px;color:var(--muted2);margin-bottom:12px;line-height:1.6">Sube un CSV con múltiples héroes. Descarga la plantilla para ver el formato exacto.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+              <button class="btn-primary" onclick="downloadTemplate()">↓ Plantilla CSV</button>
+              <label class="btn-sec" style="cursor:pointer">↑ Cargar CSV<input type="file" accept=".csv" style="display:none" onchange="handleCSV(this)"></label>
+            </div>
+            <div id="csv-preview" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span id="csv-count" style="font-size:13px;color:var(--green)"></span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn-sec" onclick="cancelCSV()">Cancelar</button>
+                  <button class="btn-primary" onclick="confirmCSV()">Importar todos →</button>
+                </div>
+              </div>
+              <div class="csv-preview"><table class="csv-preview-table" id="csv-table"></table></div>
+            </div>
+          </div>
+
+          <!-- MANUAL FORM -->
+          <div class="card">
+            <div class="card-label">REGISTRAR HÉROE MANUALMENTE</div>
+            <div class="gm-form">
+              <div class="fg"><label>Alias *</label><input type="text" id="n-alias" placeholder="Eclipse..."></div>
+              <div class="fg"><label>Nombre real (GM)</label><input type="text" id="n-real" placeholder="Identidad secreta"></div>
+              <div class="fg"><label>Corporación</label><input type="text" id="n-corp" placeholder="Aurora Corporation..."></div>
+              <div class="fg"><label>Tipo</label><select id="n-type"><option value="PC">PC — Jugador</option><option value="NPC">NPC</option></select></div>
+              <div class="fg"><label>Rol</label>
+                <select id="n-role"><option value="">— Sin rol —</option><option>Blaster</option><option>Brains</option><option>Brawn</option><option>Controller</option><option>Defender</option><option>Leader</option><option>Striker</option><option>Wildcard</option></select>
+              </div>
+              <div class="fg"><label>Score inicial</label><input type="number" id="n-score" placeholder="3500"></div>
+              <div class="fg"><label>Risk Index</label><select id="n-risk"><option value="low">Bajo</option><option value="med">Moderado</option><option value="high">Alto</option><option value="critical">Crítico</option></select></div>
+              <div class="fg"><label>Ocupación</label><input type="text" id="n-occupation" placeholder="Estudiante, detective..."></div>
+              <div class="fg"><label>País</label>
+                <select id="n-country">
+                  <option value="">— Sin país —</option>
+                  <option value="Chile">🇨🇱 Chile</option>
+                  <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                  <option value="Japón">🇯🇵 Japón</option>
+                  <option value="Europa">🇪🇺 Europa</option>
+                  <option value="Canadá">🇨🇦 Canadá</option>
+                  <option value="Brasil">🇧🇷 Brasil</option>
+                  <option value="México">🇲🇽 México</option>
+                  <option value="Argentina">🇦🇷 Argentina</option>
+                  <option value="Independiente">⚪ Independiente</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="card-label" style="color:var(--accent)">ATRIBUTOS (1–12)</div>
+            <div class="attrs-grid" style="margin-bottom:0">
+              <div class="fg"><label>Fighting</label><input type="number" id="a-fighting" min="1" max="12" placeholder="1–12"></div>
+              <div class="fg"><label>Agility</label><input type="number" id="a-agility" min="1" max="12" placeholder="1–12"></div>
+              <div class="fg"><label>Strength</label><input type="number" id="a-strength" min="1" max="12" placeholder="1–12"></div>
+              <div class="fg"><label>Reason</label><input type="number" id="a-reason" min="1" max="12" placeholder="1–12"></div>
+              <div class="fg"><label>Intuition</label><input type="number" id="a-intuition" min="1" max="12" placeholder="1–12"></div>
+              <div class="fg"><label>Presence</label><input type="number" id="a-presence" min="1" max="12" placeholder="1–12"></div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="card-label" style="color:var(--accent)">PODERES</div>
+            <div id="powers-form-list"></div>
+            <button class="btn-sec" style="width:100%;margin-top:8px" onclick="addPowerField()">+ Agregar poder</button>
+
+            <div class="divider"></div>
+            <div class="gm-form">
+              <div class="fg full"><label>Talentos (separar con ;)</label><input type="text" id="n-talents" placeholder="Combate cuerpo a cuerpo; Intimidación..."></div>
+              <div class="fg full"><label>Defectos / Drawbacks (separar con ;)</label><input type="text" id="n-drawbacks" placeholder="Fobia a las alturas; Identidad conocida..."></div>
+              <div class="fg full"><label>Relaciones clave (nombre:tipo, separar con ;)</label><input type="text" id="n-relationships" placeholder="María López:familia; Cóndor:rival..."></div>
+              <div class="fg full"><label>Personalidad · Impulso · Falla</label><textarea id="n-personality" placeholder="Personalidad: impulsivo&#10;Impulso: proteger inocentes&#10;Falla: no confía en nadie"></textarea></div>
+              <div class="fg full"><label>Flags ORÁCULO (separar con ;)</label><textarea id="n-flags" placeholder="Conoce archivos Espectro; Contacto mercado negro"></textarea></div>
+            </div>
+
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+              <button class="btn-sec" onclick="clearGMForm()">Limpiar</button>
+              <button class="btn-primary" onclick="addHero()">Registrar →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="gm-list-col">
+          <div class="card-label" style="margin-bottom:8px">HÉROES REGISTRADOS</div>
+          <div id="gm-list"></div>
+          <div style="display:flex;gap:8px;margin-top:1rem">
+            <button class="btn-sec" style="flex:1" onclick="doExport()">↓ Exportar JSON</button>
+            <label class="btn-sec" style="flex:1;text-align:center;cursor:pointer">↑ Importar JSON<input type="file" accept=".json" style="display:none" onchange="handleImport(this)"></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="bottom-nav mobile-only">
+    <button class="bnav active" data-page="inicio"   onclick="showPage('inicio',this)"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3l9 9M5 10v9h4v-5h6v5h4v-9" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>INICIO</span></button>
+    <button class="bnav" data-page="misiones" onclick="showPage('misiones',this)"><svg viewBox="0 0 24 24" fill="none"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>MISIÓN</span></button>
+    <button class="bnav bnav-center" data-page="karma" onclick="showPage('karma',this)"><div class="bnav-center-icon"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1.2"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.6"/><circle cx="22" cy="22" r="5" fill="#00c8ff"/></svg></div></button>
+    <button class="bnav" data-page="ranking"  onclick="showPage('ranking',this)"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="8" width="4" height="14" stroke="currentColor" stroke-width="1.5"/><rect x="16" y="3" width="4" height="19" stroke="currentColor" stroke-width="1.5"/></svg><span>RANKING</span></button>
+    <button class="bnav" data-page="perfil"   onclick="showPage('perfil',this)"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>PERFIL</span></button>
+  </nav>
+</div>
+
+<!-- GM MODAL (mobile) -->
+<div id="gm-modal" class="modal-overlay" style="display:none" onclick="closeGMModal(event)">
+  <div class="modal-box">
+    <div class="modal-title">MODO GM</div>
+    <div class="modal-sub">Activa para ver Risk Index, flags ORÁCULO, atributos e identidades reales.</div>
+    <div class="modal-toggle-row">
+      <span>Vista pública</span>
+      <label class="toggle"><input type="checkbox" id="gm-toggle-mobile" checked onchange="toggleGM('mobile')"><span class="toggle-track"></span></label>
+      <span>Modo GM</span>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:1rem" onclick="document.getElementById('gm-modal').style.display='none'">Cerrar</button>
+  </div>
+</div>
+
+<!-- HERO DETAIL MODAL -->
+<div id="hero-modal" class="hero-modal-overlay" style="display:none" onclick="closeHeroModal(event)">
+  <div class="hero-modal" id="hero-modal-content"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
