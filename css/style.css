@@ -1388,7 +1388,6 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .ad-cta{pointer-events:none;}
 
 
-
 /* ── HOME ENHANCEMENTS: LAYERS, RANKING MOTION, TRENDS ───── */
 .layer-pill.hero{color:#7dd3fc;border-color:#38bdf8;background:rgba(56,189,248,.12);}
 .layer-pill.gm{color:#fca5a5;border-color:#ef4444;background:rgba(239,68,68,.12);}
@@ -1398,3 +1397,39 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .hr-move.down{color:var(--red);border-color:rgba(255,82,82,.4);background:rgba(255,82,82,.08);}
 .hr-move.steady{color:var(--muted2);}
 .quick-trends{display:inline-block;margin-top:6px;font-size:11px;color:var(--muted2);}
+
+
+/* ── FIRST PASS: SOCIAL HOME EXPERIENCE ───────────────────── */
+.social-hero-card{padding:0;overflow:hidden;background:linear-gradient(125deg,#071427 0%,#0c2440 55%,#24103a 100%);}
+.hero-spotlight{padding:20px;position:relative;}
+.hero-spotlight-kicker{font:600 10px 'Orbitron',sans-serif;letter-spacing:1.4px;color:#b9f0ff;margin-bottom:10px;}
+.hero-spotlight-title{font-size:30px;line-height:1.15;font-weight:800;max-width:760px;margin-bottom:10px;}
+.hero-spotlight-summary{font-size:14px;color:var(--muted2);max-width:780px;line-height:1.6;}
+.hero-spotlight-metrics{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-top:14px;}
+.spot-metric{background:rgba(0,0,0,.22);border:1px solid var(--border2);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;}
+.spot-metric span{font-size:10px;color:#b2d7e8;letter-spacing:.8px;}
+.spot-metric b{font-size:18px;color:#fff;}
+
+.social-feed{gap:12px;}
+.social-post{border:1px solid var(--border);background:linear-gradient(145deg,var(--surface2),#0b1d30);border-radius:12px;padding:12px;}
+.social-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;}
+.social-tag{font-size:10px;padding:2px 8px;border-radius:12px;background:rgba(167,85,255,.15);border:1px solid rgba(167,85,255,.4);color:#d8b4fe;}
+.social-title{font-size:17px;font-weight:700;margin-bottom:6px;}
+.social-body{font-size:13px;color:var(--muted2);line-height:1.6;}
+.social-engagement{margin-top:10px;font-size:12px;color:#a6d0e6;}
+.tone-sponsor{border-color:rgba(255,171,64,.35);}
+.tone-corp{border-color:rgba(0,200,255,.28);}
+.gm-post{border-color:rgba(255,68,68,.5);background:linear-gradient(135deg,#1d0c14,#160911);}
+.social-censored{margin-top:8px;color:#ff8a8a;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.6px;}
+
+.home-trending{margin-bottom:4px;}
+.trending-wrap{border:1px solid rgba(167,85,255,.35);background:linear-gradient(135deg,#140f24,#0f1f33);border-radius:12px;padding:12px;}
+.trending-title{font:600 10px 'Orbitron',sans-serif;letter-spacing:1.4px;color:#d8b4fe;margin-bottom:8px;}
+.trending-list{display:flex;flex-wrap:wrap;gap:8px;}
+.trend-pill{font-size:12px;color:#efe7ff;background:rgba(167,85,255,.18);border:1px solid rgba(167,85,255,.35);padding:6px 10px;border-radius:20px;}
+.trend-pill b{color:#fde68a;}
+
+@media (max-width: 900px){
+  .hero-spotlight-title{font-size:22px;}
+  .hero-spotlight-metrics{grid-template-columns:repeat(2,minmax(120px,1fr));}
+}

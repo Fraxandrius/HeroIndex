@@ -305,23 +305,22 @@ function renderHome(){
       <div class="hr-score-wrap"><span class="hr-move ${getScoreMove(h.deltaTag).cls}">${getScoreMove(h.deltaTag).icon} ${getScoreMove(h.deltaTag).label}</span><span class="hr-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
     </div>`).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
 
-  // Home news feed
-  const hnf=document.getElementById('home-news-feed');
+    // Home headline media
   const featured=document.getElementById('featured-media');
-  if(hnf){
+  if(featured){
     loadNews().then(all=>{
-     const visibility=getNewsVisibilityByRole(session);
-      const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public')).slice(0,4);
-      hnf.innerHTML=news.length?news.map(n=>renderHomeFeedItem(n)).join('')
-        :'<div class="news-empty">Sin noticias publicadas aún.</div>';
-             if(featured){
-        const top=news[0];
-        featured.innerHTML=top?renderFeaturedMedia(top, session.type==='gm')
-          :'<div class="news-empty">Sin cobertura destacada.</div>';
-      }
+      const visibility=getNewsVisibilityByRole(session);
+      const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public'));
+      const top=news[0];
+      featured.innerHTML=top?renderFeaturedMedia(top, session.type==='gm'):'<div class="news-empty">Sin cobertura destacada.</div>';
     });
   }
-    renderHomeAds();
+  
+  // Social home feed rendered from dedicated mock stream
+  renderHeroSpotlight();
+  renderHomeSocialFeed();
+  renderHomeTrending();
+  renderHomeAds();
   renderHomeQuickActions();
 }
 
@@ -350,6 +349,47 @@ function renderHomeFeedItem(n){
     ${n.body?`<div class="home-feed-body">${n.body}</div>`:''}
   </article>`;
 }
+
+function renderHeroSpotlight(){
+  const box=document.getElementById('home-hero-spotlight');
+  if(!box) return;
+  const story=(typeof getHomeFeaturedStory==='function')?getHomeFeaturedStory():null;
+  if(!story){ box.innerHTML=''; return; }
+  box.innerHTML=`<div class="hero-spotlight">
+    <div class="hero-spotlight-kicker">${story.label} · HeroIndex International</div>
+    <h2 class="hero-spotlight-title">${story.title}</h2>
+    <p class="hero-spotlight-summary">${story.summary}</p>
+    <div class="hero-spotlight-metrics">${(story.metrics||[]).map(m=>`<div class="spot-metric"><span>${m.label}</span><b>${m.value}</b></div>`).join('')}</div>
+  </div>`;
+}
+
+function renderHomeSocialFeed(){
+  const feed=document.getElementById('home-news-feed');
+  if(!feed) return;
+  const session=currentSession||{type:'public'};
+  const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
+    .filter(p=>!p.gmOnly || session.type==='gm');
+  feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
+}
+
+function renderSocialPost(p,isGM){
+  const censored=p.censored?`<div class="social-censored">ORÁCULO: contenido removido de la vista pública.</div>`:'';
+  return `<article class="social-post tone-${p.tone}${p.gmOnly?' gm-post':''}">
+    <div class="social-meta"><span class="news-source ${p.source==='public'?'heroindex':p.source}">${p.source.toUpperCase()}</span><span class="social-tag">${p.tag}</span><span class="news-date">${p.date}</span></div>
+    <div class="social-title">${p.headline}</div>
+    <div class="social-body">${p.body}</div>
+    ${isGM?censored:''}
+    <div class="social-engagement">❤ ${p.engagement.likes} · 💬 ${p.engagement.comments} · ↻ ${p.engagement.shares}</div>
+  </article>`;
+}
+
+function renderHomeTrending(){
+  const box=document.getElementById('home-trending');
+  if(!box) return;
+  const topics=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]);
+  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${topics.map(t=>`<span class="trend-pill">${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
+}
+
 function renderHomeAds(){
   const adEl=document.getElementById('home-ads');
   if(!adEl) return;
