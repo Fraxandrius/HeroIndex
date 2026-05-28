@@ -478,6 +478,7 @@ function openHeroModal(id){
         </div>
     </div>
 
+    ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:6px">● ${h.publicStatus}</div>`:''}
     ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${h.publicSlogan}"</div>`:''}
     ${h.publicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${h.publicBio}</div>`:''}
     ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
@@ -835,6 +836,7 @@ const qEl=document.getElementById('profile-search');
       </div>
       ${powersSnippet}
       ${hasAttrs?miniAttrs:''}
+      ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px">● ${h.publicStatus}</div>`:''}
       ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${h.publicSlogan}"</div>`:''}
       ${h.publicBio?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${h.publicBio}</div>`:''}
       <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
@@ -869,41 +871,55 @@ const rank=[...heroes].sort((a,b)=>b.score-a.score).findIndex(h=>h.id===me.id)+1
   const ps=document.getElementById('my-profile-stats');
   if(ps) ps.innerHTML=`<div style="font-size:12px;color:var(--muted2)">Alias: <strong>${me.alias}</strong> · Rol: ${me.role||'—'} · Corp: ${me.corp||'—'}</div><div style="font-size:12px;color:var(--muted2);margin-top:4px">Score: <strong style="color:${scoreColor(me.score)}">${me.score.toLocaleString('es-CL')}</strong> · Ranking global: <strong>#${rank}</strong></div>`;
 if(identity) identity.innerHTML=`<span class="badge badge-pc">✔ Verificado</span> <span style="font-size:12px;color:var(--muted2);margin-left:8px">ID público activo</span>`;
-  myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'' };
+  const statusIn=document.getElementById('my-status');
+  if(statusIn) statusIn.value=me.publicStatus||'';
+  myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'', status: me.publicStatus||'' };
   bindMyProfileInputs();
   renderMyPublicPreview(me);
+  const sl=document.getElementById('my-score-log');
+  if(sl){
+    const rows=(me.scoreLog||[]).slice(-5).reverse();
+    sl.innerHTML=rows.length?rows.map(r=>`<div class="klog-row"><span>${r.date||'—'} · ${r.note||'Actualización'}</span><span style="color:${(r.delta||0)>=0?'var(--green)':'var(--red)'};font-family:'DM Mono',monospace">${(r.delta||0)>=0?'+':''}${r.delta||0}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">Sin movimientos recientes</span>';
+  }
   const st=document.getElementById('my-profile-status');
   if(st) st.textContent = me.publicUpdatedAt ? `Última actualización: ${me.publicUpdatedAt}` : 'Aún no hay cambios guardados';
 }
 function bindMyProfileInputs(){
   const slogan=document.getElementById('my-slogan');
   const bio=document.getElementById('my-bio');
+  const status=document.getElementById('my-status');
   if(slogan) slogan.oninput=onMyProfileInput;
   if(bio) bio.oninput=onMyProfileInput;
+  if(status) status.oninput=onMyProfileInput;
   onMyProfileInput();
 }
 function onMyProfileInput(){
   const slogan=(document.getElementById('my-slogan')?.value||'').trim();
   const bio=(document.getElementById('my-bio')?.value||'').trim();
+  const status=(document.getElementById('my-status')?.value||'').trim();
   const sc=document.getElementById('my-slogan-count');
   const bc=document.getElementById('my-bio-count');
+  const stc=document.getElementById('my-status-count');
   if(sc) sc.textContent=`${slogan.length}/60`;
   if(bc) bc.textContent=`${bio.length}/180`;
-  const dirty=!myProfileDraft || slogan!==myProfileDraft.slogan || bio!==myProfileDraft.bio;
+  if(stc) stc.textContent=`${status.length}/80`;
+  const dirty=!myProfileDraft || slogan!==myProfileDraft.slogan || bio!==myProfileDraft.bio || status!==myProfileDraft.status;
   const saveBtn=document.getElementById('my-save-btn');
   if(saveBtn) saveBtn.disabled=!dirty;
   const session=currentSession||{type:'public'};
   const me=heroes.find(h=>h.id===session.heroId);
-  if(me) renderMyPublicPreview({...me,publicSlogan:slogan,publicBio:bio});
+  if(me) renderMyPublicPreview({...me,publicSlogan:slogan,publicBio:bio,publicStatus:status});
 }
 function renderMyPublicPreview(h){
   const el=document.getElementById('my-public-preview'); if(!el) return;
   el.innerHTML=`<div class="profile-card" style="margin:0">
     <div class="profile-header">${makeHeroAv(h,'md')}<div><div class="profile-name">${h.alias}</div><div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div></div></div>
+    ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin:6px 0">● ${h.publicStatus}</div>`:''}
     ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin:8px 0">"${h.publicSlogan}"</div>`:''}
     ${h.publicBio?`<div style="font-size:11px;color:var(--muted)">${h.publicBio}</div>`:''}
   </div>`;
 }
+
 
 function saveMyPublicProfile(){
   const session = currentSession || { type:'public' };
@@ -911,10 +927,10 @@ function saveMyPublicProfile(){
   const me=heroes.find(h=>h.id===session.heroId);
   if(!me) return;
   me.publicSlogan=(document.getElementById('my-slogan')?.value||'').trim().slice(0,60);
-  me.publicBio=(document.getElementById('my-bio')?.value||'').trim().slice(0,180);
+   me.publicStatus=(document.getElementById('my-status')?.value||'').trim().slice(0,80);
   me.publicUpdatedAt=today();
   saveHeroes(heroes).then(()=>{
-    myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'' };
+    myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'', status: me.publicStatus||'' };
     renderProfiles();
     const st=document.getElementById('my-profile-status'); if(st) st.textContent=`Guardado ✓ · ${me.publicUpdatedAt}`;
     const saveBtn=document.getElementById('my-save-btn'); if(saveBtn) saveBtn.disabled=true;
@@ -940,6 +956,7 @@ function handleMyAvatarUpload(event){
       const data=c.toDataURL('image/jpeg',0.72);
       if(data.length>170000){ toast('Imagen excede tamaño recomendado'); return; }
       me.publicAvatar=data;
+      me.publicUpdatedAt=today();
       saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); toast('Foto pública actualizada'); });
     };
     img.src=reader.result;
@@ -951,6 +968,7 @@ function removeMyAvatar(){
   if(session.type!=='hero') return;
   const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
   me.publicAvatar='';
+  me.publicUpdatedAt=today();
   saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); renderRanking(); toast('Foto eliminada'); });
 }
 
@@ -1086,7 +1104,7 @@ function addHero(){
     strength:parseInt(get('a-strength'))||0,reason:parseInt(get('a-reason'))||0,
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
-  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',publicAvatar:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
+  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',publicStatus:'',publicAvatar:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
   saveHeroes(heroes).then(()=>{renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();});
 }
 
@@ -1176,7 +1194,7 @@ function parseCSVRow(row){
     occupation:row.occupation||'',
     attrs,powers,talents,drawbacks,relationships,
     personality:(row.personality||'').replace(/\\n/g,'\n'),
-    publicSlogan:'',publicBio:'',publicAvatar:'',flags,karmaLog:[],
+    publicSlogan:'',publicBio:'',publicStatus:'',publicAvatar:'',flags,karmaLog:[],
     scoreLog:[{delta:0,note:'Importado CSV',date:today()}]
   };
 }

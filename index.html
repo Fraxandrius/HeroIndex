@@ -241,11 +241,17 @@
         <div class="card-label">SLOGAN PÚBLICO</div>
         <input type="text" id="my-slogan" placeholder="Tu frase pública..." maxlength="60">
         <div id="my-slogan-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/60</div>
+         <div class="card-label" style="margin-top:12px">ESTADO ACTUAL</div>
+        <input type="text" id="my-status" placeholder="En patrulla nocturna..." maxlength="80">
+        <div id="my-status-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/80</div>
         <div class="card-label" style="margin-top:12px">BIO PÚBLICA</div>
         <textarea id="my-bio" placeholder="Texto visible para todos..." maxlength="180"></textarea>
         <div id="my-bio-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/180</div>
         <button id="my-save-btn" class="btn-primary" style="margin-top:12px" onclick="saveMyPublicProfile()" disabled>Guardar cambios →</button>
         <div id="my-profile-status" style="font-size:11px;color:var(--muted2);margin-top:8px"></div>
+        <div class="divider"></div>
+        <div class="card-label">HISTORIAL RECIENTE DE SCORE</div>
+        <div id="my-score-log"></div>
         <div class="divider"></div>
         <div class="card-label">VISTA PREVIA PÚBLICA</div>
         <div id="my-public-preview"></div>
