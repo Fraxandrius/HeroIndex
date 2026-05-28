@@ -364,10 +364,19 @@ function renderHeroSpotlight(){
   if(!box) return;
   const story=(typeof getHomeFeaturedStory==='function')?getHomeFeaturedStory():null;
   if(!story){ box.innerHTML=''; return; }
+   const session=currentSession||{type:'public'};
+  const top=[...heroes].sort((a,b)=>b.score-a.score)[0];
+  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
+  const contextChips=[
+    top?`<span>🏆 Nº1: <b>${top.alias}</b></span>`:'',
+    me?`<span>👤 Tu vista: <b>${me.alias}</b></span>`:'<span>🌍 Modo Público Internacional</span>',
+    `<span>📡 Estado: <b>${gmActive?'GM / ORÁCULO':'Open Civic Feed'}</b></span>`
+  ].filter(Boolean).join('');
   box.innerHTML=`<div class="hero-spotlight">
     <div class="hero-spotlight-kicker">${story.label} · HeroIndex International</div>
     <h2 class="hero-spotlight-title">${story.title}</h2>
     <p class="hero-spotlight-summary">${story.summary}</p>
+    <div class="hero-context-chips">${contextChips}</div>
     <div class="hero-spotlight-metrics">${(story.metrics||[]).map(m=>`<div class="spot-metric"><span>${m.label}</span><b>${m.value}</b></div>`).join('')}</div>
   </div>`;
 }
@@ -396,7 +405,8 @@ function renderHomeTrending(){
   const box=document.getElementById('home-trending');
   if(!box) return;
   const topics=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]);
-  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${topics.map(t=>`<span class="trend-pill">${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
+   const ranked=topics.map((t,i)=>({...t,rank:i+1}));
+  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${ranked.map(t=>`<span class="trend-pill"><em>#${t.rank}</em> ${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
 }
 
 function renderHomeAds(){

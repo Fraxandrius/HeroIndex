@@ -1447,3 +1447,19 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .social-actions span:hover{color:var(--accent);}
 .ad-slot{position:relative;}
 .ad-slot::after{content:'PUBLICIDAD';position:absolute;top:8px;right:8px;font-size:9px;letter-spacing:.9px;color:#c9eaff;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);}
+
+
+/* ── HOME PASS 3: POLISH + MICROINTERACTIONS ──────────────── */
+.social-hero-card,.media-featured-card,.dash-card{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;}
+.social-hero-card:hover,.media-featured-card:hover,.dash-card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 14px 30px rgba(0,0,0,.22);}
+.hero-context-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px;}
+.hero-context-chips span{font-size:11px;color:#cdefff;background:rgba(7,22,39,.6);border:1px solid rgba(0,200,255,.25);padding:4px 9px;border-radius:999px;}
+.hero-context-chips b{color:#fff;font-weight:700;}
+.social-post{position:relative;overflow:hidden;}
+.social-post::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,200,255,.8),transparent);opacity:.6;}
+.tone-sponsor::before{background:linear-gradient(90deg,transparent,rgba(255,171,64,.85),transparent);}
+.trend-pill em{font-style:normal;color:#f0abfc;font-size:10px;margin-right:4px;}
+@media (max-width:700px){
+  .social-actions{justify-content:space-between;gap:8px;}
+  .hero-context-chips span{font-size:10px;}
+}
