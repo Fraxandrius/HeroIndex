@@ -285,6 +285,50 @@ function renderHome(){
         :'<div class="news-empty">Sin noticias publicadas aún.</div>';
     });
   }
+ renderHomeQuickActions();
+}
+
+function renderHomeQuickActions(){
+  const box=document.getElementById('home-quick-actions');
+  if(!box) return;
+  const session=currentSession||{type:'public'};
+  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
+  const profileMissing=me && (!cleanPublicText(me.publicSlogan) || !cleanPublicText(me.publicStatus) || !cleanPublicText(me.publicBio));
+  const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
+  const newsHint=session.type==='gm'
+    ?'Publica comunicados, rumores y reportes clasificados para mover la narrativa pública.'
+    :'Revisa el pulso público y los reportes corporativos más recientes.';
+  const gmCard=session.type==='gm'?`
+    <div class="quick-action">
+      <div class="quick-action-title" style="color:var(--gm-red)">ORÁCULO — CONSOLA GM</div>
+      <div class="quick-action-body">Hay <b>${highRisk}</b> héroe(s) en vigilancia alta/critica. Ajusta score, risk y flags en tiempo real.</div>
+      <button class="btn-primary" onclick="showPage('gm')">Abrir Panel GM →</button>
+    </div>`:'';
+  const heroCard=session.type==='hero'?`
+    <div class="quick-action">
+      <div class="quick-action-title" style="color:var(--accent)">IDENTIDAD PÚBLICA</div>
+      <div class="quick-action-body">${profileMissing?'Tu ficha pública está incompleta. Completa slogan, estado y bio para ganar presencia.':'Tu perfil público está completo y listo para prensa.'}</div>
+      <button class="${profileMissing?'btn-primary':'btn-sec'}" onclick="showPage('miperfil')">${profileMissing?'Completar Mi Perfil →':'Editar Mi Perfil →'}</button>
+    </div>`:'';
+  const publicCard=session.type==='public'?`
+    <div class="quick-action">
+      <div class="quick-action-title" style="color:var(--green)">ACCESO DE HÉROE</div>
+      <div class="quick-action-body">Inicia sesión como héroe para editar tu perfil, revisar tu progreso y acceder a herramientas privadas.</div>
+      <button class="btn-sec" onclick="logout()">Cambiar sesión →</button>
+    </div>`:'';
+  box.innerHTML=`
+    <div class="quick-action">
+      <div class="quick-action-title" style="color:var(--amber)">CENTRAL DE NOTICIAS</div>
+      <div class="quick-action-body">${newsHint}</div>
+      <button class="btn-sec" onclick="showPage('noticias')">Abrir Noticias →</button>
+    </div>
+    <div class="quick-action">
+      <div class="quick-action-title" style="color:var(--accent)">CENTRO DE OPERACIONES</div>
+      <div class="quick-action-body">Consulta ranking, vigilancia y perfiles para coordinar respuestas entre corporaciones y equipos.</div>
+      <button class="btn-sec" onclick="showPage('ranking')">Abrir Ranking →</button>
+    </div>
+    ${session.type==='gm'?gmCard:(session.type==='hero'?heroCard:publicCard)}
+  `;
 }
 
 function renderMiniChart(hero){

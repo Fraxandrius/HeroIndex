@@ -1072,6 +1072,31 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   color: var(--text);
   font-family: 'DM Mono', monospace;
 }
+.home-quick-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+@media (min-width:900px){
+  .home-quick-actions{ grid-template-columns:repeat(3,1fr); }
+}
+.quick-action{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px;
+}
+.quick-action-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:10px;
+  letter-spacing:1px;
+  margin-bottom:6px;
+}
+.quick-action-body{ font-size:12px;color:var(--muted2);min-height:34px; }
+.quick-action .btn-sec,.quick-action .btn-primary{
+  width:100%;
+  margin-top:8px;
+}
 
 .risk-distribution {
   display: flex; gap: 4px; margin-top: 8px; align-items: flex-end; height: 32px;
