@@ -204,6 +204,17 @@ function renderHome(){
       <div class="metric-number" style="color:${m.color}">${m.val}</div>
     </div>`).join('');
 
+    const ops=document.getElementById('home-ops-strip');
+  if(ops){
+    const topHero=sorted[0];
+    const critical=heroes.filter(h=>h.risk==='critical').length;
+    const riskShare=totalH?Math.round(((riskCounts.high+riskCounts.critical)/totalH)*100):0;
+    ops.innerHTML=`
+      <div class="ops-pill">🏆 Top de hoy: <b>${topHero?topHero.alias:'Sin datos'}</b>${topHero?` · ${topHero.score.toLocaleString('es-CL')}`:''}</div>
+      <div class="ops-pill">⚠️ Riesgo alto+ en red: <b>${riskShare}%</b> (${riskCounts.high+riskCounts.critical}/${totalH||0})</div>
+      <div class="ops-pill">🛑 Riesgo crítico activo: <b>${critical}</b> ${critical===1?'héroe':'héroes'}</div>`;
+  }
+
   // Surveillance (high/critical risk)
   const survEl=document.getElementById('surveillance-list');
   if(survEl){
