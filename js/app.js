@@ -364,47 +364,21 @@ function renderHeroSpotlight(){
   if(!box) return;
   const story=(typeof getHomeFeaturedStory==='function')?getHomeFeaturedStory():null;
   if(!story){ box.innerHTML=''; return; }
-   const session=currentSession||{type:'public'};
-  const top=[...heroes].sort((a,b)=>b.score-a.score)[0];
-  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
-  const contextChips=[
-    top?`<span>🏆 Nº1: <b>${top.alias}</b></span>`:'',
-    me?`<span>👤 Tu vista: <b>${me.alias}</b></span>`:'<span>🌍 Modo Público Internacional</span>',
-   `<span>📡 Estado: <b>${session.type==='gm'?'GM / ORÁCULO':'Open Civic Feed'}</b></span>`
-  ].filter(Boolean).join('');
   box.innerHTML=`<div class="hero-spotlight">
     <div class="hero-spotlight-kicker">${story.label} · HeroIndex International</div>
     <h2 class="hero-spotlight-title">${story.title}</h2>
     <p class="hero-spotlight-summary">${story.summary}</p>
-    <div class="hero-context-chips">${contextChips}</div>
     <div class="hero-spotlight-metrics">${(story.metrics||[]).map(m=>`<div class="spot-metric"><span>${m.label}</span><b>${m.value}</b></div>`).join('')}</div>
   </div>`;
-}
-
-function setHomeFeedChannel(channel){
-  homeFeedChannel=channel;
-  renderHomeSocialFeed();
 }
 
 function renderHomeSocialFeed(){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
   const session=currentSession||{type:'public'};
-  const all=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
+  const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
     .filter(p=>!p.gmOnly || session.type==='gm');
-  const scoped=all.filter(p=>{
-    if(homeFeedChannel==='all') return true;
-    if(homeFeedChannel==='gm') return p.channel==='gm';
-    return (p.channel||'foryou')===homeFeedChannel;
-  }).sort((a,b)=>(b.signal||0)-(a.signal||0));
-  const featured=scoped[0];
-  const tabs=[
-    ['foryou','Para Ti'],['global','Global'],['corporativo','Corporativo'],['all','Todo']
-  ];
-  if(session.type==='gm') tabs.push(['gm','ORÁCULO']);
-  feed.innerHTML=`<div class="feed-toolbar">${tabs.map(t=>`<button class="feed-tab ${homeFeedChannel===t[0]?'active':''}" onclick="setHomeFeedChannel('${t[0]}')">${t[1]}</button>`).join('')}</div>
-  ${featured?`<div class="feed-pinned">🔥 Prioridad alta · ${featured.headline} <span>Signal ${featured.signal||'—'}</span></div>`:''}
-  ${(scoped.length?scoped:all.slice(0,3)).map(p=>renderSocialPost(p, session.type==='gm')).join('')}`;
+  feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
 }
 
 function renderSocialPost(p,isGM){
@@ -422,8 +396,7 @@ function renderHomeTrending(){
   const box=document.getElementById('home-trending');
   if(!box) return;
   const topics=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]);
-   const ranked=topics.map((t,i)=>({...t,rank:i+1}));
-  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${ranked.map(t=>`<span class="trend-pill"><em>#${t.rank}</em> ${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
+  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${topics.map(t=>`<span class="trend-pill">${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
 }
 
 function renderHomeAds(){
@@ -1552,40 +1525,26 @@ if(currentSession?.type==='gm'){
   const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
 }
 
-// Keep UI fully readable while loading data
+// Show loading overlay
 const appEl=document.getElementById('app');
-if(appEl) appEl.style.opacity='1';
-
-// Render Home dynamic sections immediately so placeholders don't get stuck
-renderHome();
-renderHomeSocialFeed();
-renderHomeTrending();
-renderHomeAds();
-renderHomeQuickActions();
+if(appEl) appEl.style.opacity='0.3';
 
 // Load from Firebase then render
 loadHeroes().then(h=>{
-    heroes=(Array.isArray(h)&&h.length)?h:getDefaultHeroes();
+  heroes=h;
   renderAll();
   if(appEl) appEl.style.opacity='1';
 
   // Real-time listeners
   onHeroesChange(updated=>{
-   if(Array.isArray(updated) && updated.length){
-      heroes=updated;
-      renderAll();
-    }
+    heroes=updated;
+    renderAll();
   });
   onNewsChange(()=>{
     renderHome();
     const np=document.getElementById('page-noticias');
     if(np&&np.classList.contains('active')) renderNewsFeed();
    });
-}).catch(()=>{
-    heroes=getDefaultHeroes();
-  renderAll();
-}).finally(()=>{
-  if(appEl) appEl.style.opacity='1';
-  });
+});
 }
 initLogin();
