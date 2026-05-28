@@ -301,7 +301,8 @@ function renderHome(){
       <div style="flex:1">
         <div class="hr-name">${h.alias}</div>
         <div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
-      </div>
+        <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+        </div>
       <div class="hr-score-wrap"><span class="hr-move ${getScoreMove(h.deltaTag).cls}">${getScoreMove(h.deltaTag).icon} ${getScoreMove(h.deltaTag).label}</span><span class="hr-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
     </div>`).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
 
@@ -322,6 +323,14 @@ function renderHome(){
   renderHomeTrending();
   renderHomeAds();
   renderHomeQuickActions();
+}
+
+function getHeroPublicBadges(h){
+  const out=['<span class="mini-badge verified">✔ Verificado</span>'];
+  if((h.corp||'').toLowerCase().includes('aurora')) out.push('<span class="mini-badge sponsor">Sponsor</span>');
+  if(!h.corp || h.corp==='Independiente') out.push('<span class="mini-badge indie">Independiente</span>');
+  if((h.type||'').toUpperCase()==='PC') out.push('<span class="mini-badge public">En tendencia</span>');
+  return out.slice(0,3).join('');
 }
 
 function getScoreMove(deltaTag='steady'){
@@ -379,7 +388,7 @@ function renderSocialPost(p,isGM){
     <div class="social-title">${p.headline}</div>
     <div class="social-body">${p.body}</div>
     ${isGM?censored:''}
-    <div class="social-engagement">❤ ${p.engagement.likes} · 💬 ${p.engagement.comments} · ↻ ${p.engagement.shares}</div>
+        <div class="social-engagement">❤ ${p.engagement.likes} · 💬 ${p.engagement.comments} · ↻ ${p.engagement.shares}</div><div class="social-actions"><span>Me gusta</span><span>Comentar</span><span>Compartir</span></div>
   </article>`;
 }
 

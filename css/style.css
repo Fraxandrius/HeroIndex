@@ -1433,3 +1433,17 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   .hero-spotlight-title{font-size:22px;}
   .hero-spotlight-metrics{grid-template-columns:repeat(2,minmax(120px,1fr));}
 }
+
+
+/* ── HOME PASS 2: CELEBRITY + SOCIAL DEPTH ─────────────────── */
+.hr-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.mini-badge{font-size:9px;padding:2px 6px;border-radius:999px;border:1px solid var(--border);font-family:'Orbitron',sans-serif;letter-spacing:.4px;color:var(--muted2);}
+.mini-badge.verified{border-color:rgba(0,200,255,.45);color:#9be8ff;background:rgba(0,200,255,.1);}
+.mini-badge.sponsor{border-color:rgba(255,171,64,.5);color:#ffd08a;background:rgba(255,171,64,.12);}
+.mini-badge.indie{border-color:rgba(16,185,129,.45);color:#86efac;background:rgba(16,185,129,.12);}
+.mini-badge.public{border-color:rgba(244,114,182,.45);color:#f9a8d4;background:rgba(244,114,182,.14);}
+.social-actions{display:flex;gap:16px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);font-size:11px;color:var(--muted2);}
+.social-actions span{cursor:pointer;transition:color .15s;}
+.social-actions span:hover{color:var(--accent);}
+.ad-slot{position:relative;}
+.ad-slot::after{content:'PUBLICIDAD';position:absolute;top:8px;right:8px;font-size:9px;letter-spacing:.9px;color:#c9eaff;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);}

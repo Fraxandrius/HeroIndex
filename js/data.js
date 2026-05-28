@@ -180,19 +180,35 @@ function getHomeMediaSlots() {
   return [
     {
       id: 'ad-main',
-      title: 'HeroIndex Global Summit 2049',
-      sponsor: 'HeroIndex International',
-      cta: 'Ver agenda global',
+            title: 'VOLT Energy · Grid Zero-Latency',
+      sponsor: 'VOLT Energy',
+      cta: 'Explorar infraestructura',
       image: 'images/ads/heroindex-main.jpg',
-      fallbackColor: 'linear-gradient(135deg,#001a2a 0%,#003a57 100%)'
+       fallbackColor: 'linear-gradient(135deg,#03202f 0%,#005775 100%)'
     },
     {
       id: 'ad-aurora',
-      title: 'Programa de Reclutamiento Metahumano',
-      sponsor: 'Aurora Corporation',
-      cta: 'Revisar convocatoria',
+      title: 'Aurora Academy · Ingreso 2049',
+      sponsor: 'Aurora Academy',
+      cta: 'Postular ahora',
       image: 'images/ads/aurora-recruitment.jpg',
-      fallbackColor: 'linear-gradient(135deg,#1b1029 0%,#3a1e5c 100%)'
+      fallbackColor: 'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'
+    },
+    {
+      id: 'ad-insure',
+      title: 'HeroInsure · Cobertura de Daño Colateral',
+      sponsor: 'HeroInsure',
+      cta: 'Ver pólizas',
+      image: '',
+      fallbackColor: 'linear-gradient(135deg,#1f240d 0%,#4f5f18 100%)'
+    },
+    {
+      id: 'ad-kuvyn',
+      title: 'KÜVYN Wearables · Telemetría táctica civil',
+      sponsor: 'KÜVYN',
+      cta: 'Conocer productos',
+      image: '',
+      fallbackColor: 'linear-gradient(135deg,#1b1628 0%,#2f2a5e 100%)'
     }
   ];
 }
