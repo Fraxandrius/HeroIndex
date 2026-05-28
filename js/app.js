@@ -182,6 +182,7 @@ function renderAll(){renderHome();renderRanking();renderProfiles();}
 // ── HOME — CORPORATE DASHBOARD ───────────────────────────────
 function renderHome(){
   const sorted=[...heroes].sort((a,b)=>b.score-a.score);
+  const session=currentSession||{type:'public'};
 
   // Metrics row
   const totalH=heroes.length;
@@ -204,7 +205,15 @@ function renderHome(){
       <div class="metric-number" style="color:${m.color}">${m.val}</div>
     </div>`).join('');
 
-    const ops=document.getElementById('home-ops-strip');
+    const layerEl=document.getElementById('layer-indicator');
+  if(layerEl){
+    const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
+    const layer=session.type==='gm'?'ORÁCULO / GM VIEW':(session.type==='hero'?'HERO PERSONAL VIEW':'PUBLIC VIEW');
+    const sub=session.type==='hero'&&me?`Operador: ${me.alias}`:(session.type==='gm'?'Acceso clasificado activo':'Cobertura pública internacional');
+    layerEl.innerHTML=`<span class="layer-pill">${layer}</span><span class="layer-sub">${sub}</span>`;
+  }
+
+  const ops=document.getElementById('home-ops-strip');
   if(ops){
     const topHero=sorted[0];
     const critical=heroes.filter(h=>h.risk==='critical').length;
@@ -266,7 +275,7 @@ function renderHome(){
   // Top heroes
   const hr=document.getElementById('home-ranking');
   if(hr) hr.innerHTML=sorted.slice(0,5).map((h,i)=>`
-    <div class="hr-row" style="cursor:pointer" onclick="openHeroModal(${h.id})">
+      <div class="hr-row ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <span class="hr-pos">${i+1}</span>
       ${makeHeroAv(h)}
       <div style="flex:1">
@@ -278,14 +287,56 @@ function renderHome(){
 
   // Home news feed
   const hnf=document.getElementById('home-news-feed');
+  const featured=document.getElementById('featured-media');
   if(hnf){
     loadNews().then(all=>{
-      const news=all.filter(n=>n.source!=='oracle').slice(0,3);
-      hnf.innerHTML=news.length?news.map(n=>renderNewsItem(n,false)).join('')
+      const news=all.map(normalizeNewsItem).filter(n=>n.visibility!=='gm').slice(0,4);
+      hnf.innerHTML=news.length?news.map(n=>renderHomeFeedItem(n)).join('')
         :'<div class="news-empty">Sin noticias publicadas aún.</div>';
+             if(featured){
+        const top=news[0];
+        featured.innerHTML=top?renderFeaturedMedia(top, session.type==='gm')
+          :'<div class="news-empty">Sin cobertura destacada.</div>';
+      }
     });
   }
- renderHomeQuickActions();
+    renderHomeAds();
+  renderHomeQuickActions();
+}
+
+function renderFeaturedMedia(n,isGM){
+  return `<div class="featured-media source-${n.source}">
+    <div class="featured-kicker">${SOURCE_LABELS[n.source]||'HEROINDEX'} · ${CAT_LABELS[n.category]||n.category} · ${n.date}</div>
+    <div class="featured-title">${n.headline}</div>
+    <div class="featured-body">${n.body||'Cobertura en desarrollo. Más detalles en el feed oficial.'}</div>
+    ${isGM?'<div class="featured-oracle gm-only">ORÁCULO: monitoreo narrativo activo sobre esta cobertura.</div>':''}
+  </div>`;
+}
+function renderHomeFeedItem(n){
+  return `<article class="home-feed-item source-${n.source}">
+    <div class="home-feed-meta">
+      <span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||n.source}</span>
+      <span class="news-category ${CAT_CLASSES[n.category]||'cat-comunicado'}">${CAT_LABELS[n.category]||n.category}</span>
+      <span class="news-date">${n.date}</span>
+    </div>
+    <div class="home-feed-headline">${n.headline}</div>
+    ${n.body?`<div class="home-feed-body">${n.body}</div>`:''}
+  </article>`;
+}
+function renderHomeAds(){
+  const adEl=document.getElementById('home-ads');
+  if(!adEl) return;
+  const slots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
+  adEl.innerHTML=slots.map(slot=>`<div class="ad-slot">
+    <div class="ad-visual" style="background:${slot.fallbackColor}">
+      <img src="${slot.image}" alt="${slot.title}" onerror="this.style.display='none'">
+      <div class="ad-overlay">
+        <div class="ad-sponsor">${slot.sponsor}</div>
+        <div class="ad-title">${slot.title}</div>
+        <button class="btn-sec ad-cta">${slot.cta}</button>
+      </div>
+    </div>
+  </div>`).join('')||'<div class="news-empty">Sin espacios comerciales activos.</div>';
 }
 
 function renderHomeQuickActions(){

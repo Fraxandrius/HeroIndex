@@ -175,3 +175,24 @@ function importData(file, cb) {
   };
   r.readAsText(file);
 }
+
+function getHomeMediaSlots() {
+  return [
+    {
+      id: 'ad-main',
+      title: 'HeroIndex Global Summit 2049',
+      sponsor: 'HeroIndex International',
+      cta: 'Ver agenda global',
+      image: 'images/ads/heroindex-main.jpg',
+      fallbackColor: 'linear-gradient(135deg,#001a2a 0%,#003a57 100%)'
+    },
+    {
+      id: 'ad-aurora',
+      title: 'Programa de Reclutamiento Metahumano',
+      sponsor: 'Aurora Corporation',
+      cta: 'Revisar convocatoria',
+      image: 'images/ads/aurora-recruitment.jpg',
+      fallbackColor: 'linear-gradient(135deg,#1b1029 0%,#3a1e5c 100%)'
+    }
+  ];
+}

@@ -65,6 +65,7 @@
           <div class="hi-status-dot">SISTEMA ACTIVO</div>
         </div>
         <div id="metrics-row" class="metrics-row"></div>
+         <div id="layer-indicator" class="layer-indicator"></div>
         <div id="home-ops-strip" class="home-ops-strip"></div>
       </div>
 
@@ -86,6 +87,15 @@
             <span class="dash-card-action" onclick="showPage('ranking')">Ranking ›</span>
           </div>
           <div id="corp-breakdown" class="corp-breakdown"></div>
+        </div>
+
+         <!-- Media destacada -->
+        <div class="dash-card media-featured-card span2">
+          <div class="dash-card-header">
+            <span class="dash-card-title">PORTADA GLOBAL — COBERTURA DESTACADA</span>
+            <span class="dash-card-action" onclick="showPage('noticias')">Abrir feed ›</span>
+          </div>
+          <div id="featured-media"></div>
         </div>
 
         <!-- Alertas globales -->
@@ -122,6 +132,13 @@
           <div id="home-quick-actions" class="home-quick-actions"></div>
         </div>
            
+        <div class="dash-card span2">
+          <div class="dash-card-header">
+            <span class="dash-card-title">PATROCINIOS Y COBERTURA COMERCIAL</span>
+          </div>
+          <div id="home-ads" class="home-ads"></div>
+        </div>
+        
       </div>
     </section>
 
