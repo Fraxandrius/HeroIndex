@@ -1473,3 +1473,32 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .feed-pinned span{color:#fff;font-family:'DM Mono',monospace;}
 
 .news-empty{font-size:12px;color:var(--muted2);padding:10px 2px;}
+
+
+/* ── HOME BRIGHTNESS RECOVERY (requested) ─────────────────── */
+:root{
+  --bg:#071428;
+  --bg2:#0b1b33;
+  --surface:#10233f;
+  --surface2:#153052;
+  --border:rgba(94,220,255,0.20);
+  --border2:rgba(94,220,255,0.38);
+  --muted:#77a9c7;
+  --muted2:#b8dcf0;
+}
+body{background:radial-gradient(circle at 22% 0%, #143a66 0%, #08172c 40%, #071428 100%);} 
+body::before{background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,140,200,0.02) 2px, rgba(0,140,200,0.02) 4px);} 
+
+.hi-header{background:linear-gradient(135deg,#112b4a 0%, #0b1f39 100%);} 
+.dash-card{background:linear-gradient(155deg,#11243f 0%,#0d1f36 100%);} 
+.metric-card{background:linear-gradient(145deg,#173154 0%, #112742 100%);} 
+.ops-pill{background:rgba(90,205,255,0.08);} 
+
+.social-hero-card{background:linear-gradient(125deg,#123763 0%,#144f79 55%,#39205f 100%);} 
+.spot-metric{background:rgba(7,30,56,.45);} 
+.social-post{background:linear-gradient(145deg,#173252,#112846);} 
+.trending-wrap{background:linear-gradient(135deg,#271841,#143153);} 
+.feed-tab{background:rgba(19,52,82,.85);color:#d7efff;} 
+
+.dash-card-title,.hi-tagline,.social-body,.home-feed-body,.alert-loc{color:var(--muted2);} 
+.metric-number,.hero-spotlight-title,.social-title{color:#f1f8ff;} 
