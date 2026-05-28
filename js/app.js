@@ -13,6 +13,7 @@ let newsTab = 'all';
 let newsSource = 'heroindex';  // composer source
 let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
+let myProfileDraft = null;
 
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
@@ -860,12 +861,48 @@ function renderMyProfile(){
   const slogan=document.getElementById('my-slogan');
   const bio=document.getElementById('my-bio');
   const pv=document.getElementById('my-avatar-preview');
+  const identity=document.getElementById('my-profile-identity');
   if(slogan) slogan.value=me.publicSlogan||'';
   if(bio) bio.value=me.publicBio||'';
   if(pv) pv.innerHTML=me.publicAvatar?`<img src="${me.publicAvatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover">`:'';
 const rank=[...heroes].sort((a,b)=>b.score-a.score).findIndex(h=>h.id===me.id)+1;
   const ps=document.getElementById('my-profile-stats');
   if(ps) ps.innerHTML=`<div style="font-size:12px;color:var(--muted2)">Alias: <strong>${me.alias}</strong> · Rol: ${me.role||'—'} · Corp: ${me.corp||'—'}</div><div style="font-size:12px;color:var(--muted2);margin-top:4px">Score: <strong style="color:${scoreColor(me.score)}">${me.score.toLocaleString('es-CL')}</strong> · Ranking global: <strong>#${rank}</strong></div>`;
+if(identity) identity.innerHTML=`<span class="badge badge-pc">✔ Verificado</span> <span style="font-size:12px;color:var(--muted2);margin-left:8px">ID público activo</span>`;
+  myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'' };
+  bindMyProfileInputs();
+  renderMyPublicPreview(me);
+  const st=document.getElementById('my-profile-status');
+  if(st) st.textContent = me.publicUpdatedAt ? `Última actualización: ${me.publicUpdatedAt}` : 'Aún no hay cambios guardados';
+}
+function bindMyProfileInputs(){
+  const slogan=document.getElementById('my-slogan');
+  const bio=document.getElementById('my-bio');
+  if(slogan) slogan.oninput=onMyProfileInput;
+  if(bio) bio.oninput=onMyProfileInput;
+  onMyProfileInput();
+}
+function onMyProfileInput(){
+  const slogan=(document.getElementById('my-slogan')?.value||'').trim();
+  const bio=(document.getElementById('my-bio')?.value||'').trim();
+  const sc=document.getElementById('my-slogan-count');
+  const bc=document.getElementById('my-bio-count');
+  if(sc) sc.textContent=`${slogan.length}/60`;
+  if(bc) bc.textContent=`${bio.length}/180`;
+  const dirty=!myProfileDraft || slogan!==myProfileDraft.slogan || bio!==myProfileDraft.bio;
+  const saveBtn=document.getElementById('my-save-btn');
+  if(saveBtn) saveBtn.disabled=!dirty;
+  const session=currentSession||{type:'public'};
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(me) renderMyPublicPreview({...me,publicSlogan:slogan,publicBio:bio});
+}
+function renderMyPublicPreview(h){
+  const el=document.getElementById('my-public-preview'); if(!el) return;
+  el.innerHTML=`<div class="profile-card" style="margin:0">
+    <div class="profile-header">${makeHeroAv(h,'md')}<div><div class="profile-name">${h.alias}</div><div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div></div></div>
+    ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin:8px 0">"${h.publicSlogan}"</div>`:''}
+    ${h.publicBio?`<div style="font-size:11px;color:var(--muted)">${h.publicBio}</div>`:''}
+  </div>`;
 }
 
 function saveMyPublicProfile(){
@@ -875,7 +912,14 @@ function saveMyPublicProfile(){
   if(!me) return;
   me.publicSlogan=(document.getElementById('my-slogan')?.value||'').trim().slice(0,60);
   me.publicBio=(document.getElementById('my-bio')?.value||'').trim().slice(0,180);
-  saveHeroes(heroes).then(()=>{ renderProfiles(); toast('Perfil público actualizado'); });
+  me.publicUpdatedAt=today();
+  saveHeroes(heroes).then(()=>{
+    myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'' };
+    renderProfiles();
+    const st=document.getElementById('my-profile-status'); if(st) st.textContent=`Guardado ✓ · ${me.publicUpdatedAt}`;
+    const saveBtn=document.getElementById('my-save-btn'); if(saveBtn) saveBtn.disabled=true;
+    toast('Perfil público actualizado');
+  });
 }
 
 function handleMyAvatarUpload(event){
