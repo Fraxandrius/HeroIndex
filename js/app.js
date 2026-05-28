@@ -118,16 +118,35 @@ function calcResolve(attrs){
 function canViewPrivateHero(session, heroId){
   return session.type==='gm' || (session.type==='hero' && currentSession.heroId===heroId);
 }
+function canAccessPage(session, page){
+  if(['gm','karma','misiones'].includes(page)) return session.type==='gm';
+  if(page==='miperfil') return session.type==='hero';
+  return true;
+}
+function canManageNews(session){ return session.type==='gm'; }
+function getNewsVisibilityByRole(session){
+  if(session.type==='gm') return ['public','heroes','gm'];
+  if(session.type==='hero') return ['public','heroes'];
+  return ['public'];
+}
+function normalizeNewsItem(n){
+  if(n.visibility) return n;
+  if(n.source==='oracle') return {...n, visibility:'gm'};
+  return {...n, visibility:'public'};
+}
+function cleanPublicText(txt=''){
+  return String(txt)
+    .replace(/const allowed=\['image\/png','image\/jpeg','image\/webp'\];/g,'')
+    .replace(/if\(!allowed\.includes\(file\.type\)\)\{\s*toast\('Formato no permitido \(usa PNG, JPG o WEBP\)'\);\s*return;\s*\}/g,'')
+    .trim();
+}
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
   const session = currentSession || {type:'public'};
-  const gmOnly = ['gm','karma','misiones'];
-  const heroOnly = ['miperfil'];
-  if(gmOnly.includes(name) && session.type !== 'gm') return;
-  if(heroOnly.includes(name) && session.type !== 'hero') return;
-
+  if(!canAccessPage(session,name)) return;
+  
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.snav,.bnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
@@ -841,15 +860,13 @@ const qEl=document.getElementById('profile-search');
       </div>
       ${powersSnippet}
       ${hasAttrs?miniAttrs:''}
-      ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px">● ${h.publicStatus}</div>`:''}
-      ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${h.publicSlogan}"</div>`:''}
-      ${h.publicBio?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${h.publicBio}</div>`:''}
+      ${cleanPublicText(h.publicStatus)?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px">● ${cleanPublicText(h.publicStatus)}</div>`:''}
+      ${cleanPublicText(h.publicSlogan)?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${cleanPublicText(h.publicSlogan)}"</div>`:''}
+      ${cleanPublicText(h.publicBio)?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${cleanPublicText(h.publicBio)}</div>`:''}
       <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
       ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
       ${risk}
       <div class="divider"></div>
-      const allowed=['image/png','image/jpeg','image/webp'];
-      if(!allowed.includes(file.type)){ toast('Formato no permitido (usa PNG, JPG o WEBP)'); return; }
       <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${canSeePrivate?'KARMA — ÚLTIMAS SESIONES':'VISTA PÚBLICA'}</div>
       ${klog}${flags}
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
@@ -919,22 +936,25 @@ function onMyProfileInput(){
 }
 function renderMyPublicPreview(h){
   const el=document.getElementById('my-public-preview'); if(!el) return;
+  const status=cleanPublicText(h.publicStatus||'');
+  const slogan=cleanPublicText(h.publicSlogan||'');
+  const bio=cleanPublicText(h.publicBio||'');
   el.innerHTML=`<div class="profile-card" style="margin:0">
     <div class="profile-header">${makeHeroAv(h,'md')}<div><div class="profile-name">${h.alias}</div><div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div></div></div>
-    ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin:6px 0">● ${h.publicStatus}</div>`:''}
-    ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin:8px 0">"${h.publicSlogan}"</div>`:''}
-    ${h.publicBio?`<div style="font-size:11px;color:var(--muted)">${h.publicBio}</div>`:''}
+   ${status?`<div style="font-size:11px;color:var(--accent);margin:6px 0">● ${status}</div>`:''}
+    ${slogan?`<div style="font-size:12px;color:var(--muted2);margin:8px 0">"${slogan}"</div>`:''}
+    ${bio?`<div style="font-size:11px;color:var(--muted)">${bio}</div>`:''}
   </div>`;
 }
-
 
 function saveMyPublicProfile(){
   const session = currentSession || { type:'public' };
   if(session.type!=='hero') return;
   const me=heroes.find(h=>h.id===session.heroId);
   if(!me) return;
-  me.publicSlogan=(document.getElementById('my-slogan')?.value||'').trim().slice(0,60);
-   me.publicStatus=(document.getElementById('my-status')?.value||'').trim().slice(0,80);
+  me.publicSlogan=cleanPublicText((document.getElementById('my-slogan')?.value||'').trim()).slice(0,60);
+  me.publicBio=cleanPublicText((document.getElementById('my-bio')?.value||'').trim()).slice(0,180);
+  me.publicStatus=cleanPublicText((document.getElementById('my-status')?.value||'').trim()).slice(0,80);
   me.publicUpdatedAt=today();
   saveHeroes(heroes).then(()=>{
     myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'', status: me.publicStatus||'' };
@@ -1004,7 +1024,7 @@ function setNewsTab(tab, btn){
 
 function publishNews(){
   const session = currentSession || { type:'public' };
-  if(session.type!=='gm'){ toast('Solo GM puede publicar noticias'); return; }
+  if(!canManageNews(session)){ toast('Solo GM puede publicar noticias'); return; }
   const headline=document.getElementById('news-headline')?.value.trim();
   const body=document.getElementById('news-body')?.value.trim();
   const category=document.getElementById('news-category')?.value||'comunicado';
@@ -1013,7 +1033,7 @@ function publishNews(){
   loadNews().then(currentNews=>{
     currentNews.unshift({
       id:Date.now(), source:newsSource, category, headline,
-      body:body||'', corp, date:today()
+      body:body||'', corp, date:today(), visibility: newsSource==='oracle'?'gm':'public'
     });
     saveNews(currentNews).then(()=>{
       clearNewsForm();
@@ -1031,7 +1051,7 @@ function clearNewsForm(){
 
 function deleteNews(id){
   const session = currentSession || { type:'public' };
-  if(session.type!=='gm'){ toast('Solo GM puede eliminar noticias'); return; }
+  if(!canManageNews(session)){ toast('Solo GM puede eliminar noticias'); return; }
   const news=loadNews().filter(n=>n.id!==id);
   saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
 }
@@ -1057,15 +1077,18 @@ function renderNewsItem(n, showDelete=false){
 }
 
 function renderNewsFeed(){
+  const session = currentSession || { type:'public' };
   const feed=document.getElementById('news-feed');
   if(!feed) return;
   feed.innerHTML='<div class="news-empty" style="color:var(--muted)">Cargando...</div>';
   loadNews().then(all=>{
-    let filtered=all;
-    if(newsTab==='heroindex') filtered=all.filter(n=>n.source==='heroindex');
-    else if(newsTab==='corp')  filtered=all.filter(n=>n.source==='corp');
-    else if(newsTab==='oracle') filtered=all.filter(n=>n.source==='oracle');
-    else filtered=gmActive?all:all.filter(n=>n.source!=='oracle');
+     const visible = getNewsVisibilityByRole(session);
+    const base = all.map(normalizeNewsItem).filter(n=>visible.includes(n.visibility));
+    let filtered=base;
+    if(newsTab==='heroindex') filtered=base.filter(n=>n.source==='heroindex');
+    else if(newsTab==='corp')  filtered=base.filter(n=>n.source==='corp');
+    else if(newsTab==='oracle') filtered=base.filter(n=>n.source==='oracle');
+    else filtered=base;
     feed.innerHTML=filtered.length
       ?filtered.map(n=>renderNewsItem(n,true)).join('')
       :'<div class="news-empty">Sin noticias en esta categoría.</div>';
