@@ -11,8 +11,22 @@ const firebaseConfig = {
   appId: "1:409816657047:web:350347b7cfdc8e3119cdd2"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const hasFirebase = typeof firebase !== 'undefined' && firebase?.initializeApp;
+if (hasFirebase) firebase.initializeApp(firebaseConfig);
+const db = hasFirebase ? firebase.database() : null;
+
+function readLocal(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function writeLocal(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 
 // ── GM ACCESS ────────────────────────────────────────────────
 function loadGMPasswordHash() {
@@ -26,6 +40,10 @@ function loadGMPasswordHash() {
 
 // ── HEROES ───────────────────────────────────────────────────
 function loadHeroes() {
+ if (!db) {
+    const localHeroes = readLocal('heroindex-heroes', null);
+    return Promise.resolve(Array.isArray(localHeroes) && localHeroes.length ? localHeroes : getDefaultHeroes());
+  }
   return db.ref('heroes').once('value').then(snapshot => {
     if (snapshot.exists()) {
       const data = snapshot.val();
@@ -40,10 +58,12 @@ function loadHeroes() {
 }
 
 function saveHeroes(heroes) {
+  if (!db) { writeLocal('heroindex-heroes', heroes); return Promise.resolve(); }
   return db.ref('heroes').set(heroes).catch(e => console.error('Firebase write error:', e));
 }
 
 function onHeroesChange(callback) {
+   if (!db) { callback(readLocal('heroindex-heroes', getDefaultHeroes())); return; }
   db.ref('heroes').on('value', snapshot => {
     if (snapshot.exists()) {
       const data = snapshot.val();
@@ -54,6 +74,10 @@ function onHeroesChange(callback) {
 
 // ── NEWS ─────────────────────────────────────────────────────
 function loadNews() {
+  if (!db) {
+    const localNews = readLocal('heroindex-news', null);
+    return Promise.resolve(Array.isArray(localNews) && localNews.length ? localNews : getDefaultNews());
+  }
   return db.ref('news').once('value').then(snapshot => {
     if (snapshot.exists()) {
       const data = snapshot.val();
@@ -68,10 +92,12 @@ function loadNews() {
 }
 
 function saveNews(news) {
+ if (!db) { writeLocal('heroindex-news', news); return Promise.resolve(); }
   return db.ref('news').set(news).catch(e => console.error('Firebase write error:', e));
 }
 
 function onNewsChange(callback) {
+  if (!db) { callback(readLocal('heroindex-news', getDefaultNews())); return; }
   db.ref('news').on('value', snapshot => {
     if (snapshot.exists()) {
       const data = snapshot.val();

@@ -185,7 +185,13 @@ function enterGM() {
    setMsg('login-gm-msg', 'Validando...', '');
   loadGMPasswordHash().then(async hash => {
     if (!hash) {
-      setMsg('login-gm-msg', 'Acceso GM no configurado. Define config/gmPasswordHash en Firebase.', 'error');
+      try {
+        const passHash = await sha256(pass);
+        localStorage.setItem('heroindex-gmhash', JSON.stringify(passHash));
+        setMsg('login-gm-msg', 'GM configurado localmente. Intenta de nuevo con la misma contraseña.', 'success');
+      } catch {
+        setMsg('login-gm-msg', 'Acceso GM no configurado. Define config/gmPasswordHash en Firebase.', 'error');
+      }
       return;
     }
     const passHash = await sha256(pass);
