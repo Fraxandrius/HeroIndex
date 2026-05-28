@@ -237,12 +237,39 @@ function getHomeFeaturedStory() {
   };
 }
 
-function getHomeSocialPosts() {
+function getHomeStories(heroes=[]) {
+  const top = [...heroes].sort((a,b)=>b.score-a.score).slice(0,5).map(h=>(
+    { name:h.alias, initials:h.alias.slice(0,2).toUpperCase(), avatar:h.publicAvatar||'' }
+  ));
   return [
-    { source: 'heroindex', tag: 'Oficial', tone:'official', date: 'Hoy · 08:30', headline: 'HeroIndex activa cobertura prioritaria en litoral central', body: 'Se desplegaron 12 equipos certificados en menos de 9 minutos. Ciudadanos pueden seguir estado en vivo.', engagement: { likes:'48K', comments:'7.2K', shares:'12K' } },
-    { source: 'public', tag: 'Comunidad', tone:'public', date: 'Hoy · 09:10', headline: '“Viento Sur respondió en 3 minutos”', body: 'Reporte ciudadano verificado por sensores municipales. Aplausos en estación Puerto Norte.', engagement: { likes:'22K', comments:'1.8K', shares:'4.1K' } },
-    { source: 'corp', tag: 'Newsroom', tone:'corp', date: 'Hoy · 09:42', headline: 'Aurora Academy abre 240 becas para entrenamiento metahumano', body: 'Programa de entrenamiento técnico-social con certificación HeroIndex.', engagement: { likes:'12K', comments:'980', shares:'2.9K' } },
-    { source: 'sponsor', tag: 'Patrocinado', tone:'sponsor', date: 'Hoy · 10:05', headline: 'VOLT Energy impulsa red de estaciones de recarga de exotrajes', body: 'Alianza con cinco corporaciones para reducir tiempos de despliegue urbano.', engagement: { likes:'9.1K', comments:'640', shares:'1.3K' } },
-    { source: 'oracle', tag: 'Clasificado', tone:'gm', date: 'Hoy · 10:22', headline: '[CENSURADO] Evento con divergencia narrativa en Distrito Norte', body: 'Post retirado por ORÁCULO. Referencia de incidente disponible solo para modo GM.', engagement: { likes:'—', comments:'—', shares:'—' }, gmOnly: true, censored: true }
+    ...top,
+    { name:'FanFeed', initials:'FF' },
+    { name:'VOLT', initials:'VO' },
+    { name:'Alertas', initials:'AL' },
+    { name:'ORÁCULO', initials:'OR', oracle:true }
   ];
 }
+
+function getFeaturedHashtags() {
+  return ['#HeroIndexLive','#GoldenAge','#RescateGlobal','#HeroesDelDia'];
+}
+
+function getHomeSocialPosts() {
+  return [
+    { source:'heroindex', sourceLabel:'HeroIndex Official', avatar:'HI', badge:'Verificado', badgeType:'verified', tone:'official', date:'Hoy · 08:30', body:'Cóndor y Viento Sur lideraron corredor humanitario con récord de respuesta en la costa central. Las transmisiones ciudadanas superaron 4.8M vistas en 2 horas.', hashtags:['#HeroIndexLive','#Condor','#Rescate'], engagement:{likes:'148K',comments:'12K',shares:'31K'} },
+    { source:'public', sourceLabel:'FanFeed', avatar:'FF', badge:'Tendencia', badgeType:'trend', tone:'public', date:'Hoy · 09:10', body:'“Violet Lightbeam apareció en plena tormenta y convirtió el caos en show.” Miles de fans comparten clips desde Puerto Norte.', hashtags:['#FanFeed','#VioletLightbeam','#GoldenAge'], engagement:{likes:'92K',comments:'8.1K',shares:'19K'} },
+    { source:'corp', sourceLabel:'Corporate Newsroom', avatar:'CN', badge:'Newsroom', badgeType:'corp', tone:'corp', date:'Hoy · 09:42', body:'Aurora Academy abre 240 becas para entrenamiento metahumano con alianzas universitarias y certificación HeroIndex.', hashtags:['#AuroraAcademy','#FutureHeroes','#Publicidad'], engagement:{likes:'38K',comments:'2.4K',shares:'6.8K'} },
+    { source:'sponsor', sourceLabel:'Sponsor · VOLT Energy', avatar:'VE', badge:'Promoted', badgeType:'promo', tone:'sponsor', date:'Hoy · 10:05', body:'Nueva red de recarga instantánea para exotrajes: menos tiempo en taller, más héroes en acción.', hashtags:['#VOLT','#HeroTech','#Ad'], engagement:{likes:'27K',comments:'1.2K',shares:'3.1K'} },
+    { source:'alert', sourceLabel:'Civil Alert', avatar:'CA', badge:'Alerta Pública', badgeType:'alert', tone:'public', date:'Hoy · 10:22', body:'Municipio de Valparaíso solicita apoyo para evacuación preventiva por humo industrial. Seguimiento abierto para ciudadanos.', hashtags:['#CivilAlert','#Valparaiso','#Seguridad'], engagement:{likes:'12K',comments:'4.3K',shares:'9.4K'}, oracleNote:'El origen del incidente coincide con activo encubierto en prueba.' }
+  ];
+}
+
+function getHomeClips(){
+  return [
+    {title:'Cóndor: 14 días en la cima',meta:'HeroIndex Sports · 8:21',bg:'linear-gradient(135deg,#2f1f65,#0ea5e9)'},
+    {title:'Violet Lightbeam: speedster emergente',meta:'FanFeed Studio · 6:10',bg:'linear-gradient(135deg,#9d174d,#7c3aed)'},
+    {title:'Top 5 rescates de la semana',meta:'HeroIndex Recap · 11:02',bg:'linear-gradient(135deg,#0f766e,#2563eb)'},
+    {title:'Aurora Academy: clase abierta',meta:'Corporate Live · 4:44',bg:'linear-gradient(135deg,#78350f,#f59e0b)'}
+  ];
+}
+

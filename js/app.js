@@ -294,17 +294,21 @@ function renderHome(){
 
   // Top heroes
   const hr=document.getElementById('home-ranking');
-  if(hr) hr.innerHTML=sorted.slice(0,5).map((h,i)=>`
-      <div class="hr-row ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
-      <span class="hr-pos">${i+1}</span>
-      ${makeHeroAv(h)}
-      <div style="flex:1">
-        <div class="hr-name">${h.alias}</div>
-        <div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
-        <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+   if(hr) hr.innerHTML=sorted.slice(0,6).map((h,i)=>{
+      const move=getScoreMove(h.deltaTag);
+      return `<div class="hero-trend-card ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" onclick="openHeroModal(${h.id})">
+        <div class="hero-trend-head"><span class="hero-trend-pos">#${i+1}</span><span class="hero-trend-move ${move.cls}">${move.icon} ${move.label}</span></div>
+        <div class="hero-trend-body">
+          ${makeHeroAv(h,'md')}
+          <div class="hero-trend-info">
+            <div class="hr-name">${h.alias}</div>
+            <div class="hero-trend-sub" style="color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
+            <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+          </div>
+          <div class="hero-trend-score"><b style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</b><span>${Math.max(52,Math.min(98,Math.round(h.score/120)))}% aprobación</span></div>
         </div>
-      <div class="hr-score-wrap"><span class="hr-move ${getScoreMove(h.deltaTag).cls}">${getScoreMove(h.deltaTag).icon} ${getScoreMove(h.deltaTag).label}</span><span class="hr-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
-    </div>`).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
+      </div>`;
+    }).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
 
     // Home headline media
   const featured=document.getElementById('featured-media');
@@ -317,12 +321,10 @@ function renderHome(){
     });
   }
   
-  // Social home feed rendered from dedicated mock stream
-  renderHeroSpotlight();
+    renderHomeStories();
   renderHomeSocialFeed();
-  renderHomeTrending();
+    renderHomeClips();
   renderHomeAds();
-  renderHomeQuickActions();
 }
 
 function getHeroPublicBadges(h){
@@ -340,12 +342,15 @@ function getScoreMove(deltaTag='steady'){
 }
 
 function renderFeaturedMedia(n,isGM){
-  return `<div class="featured-media source-${n.source}">
-    <div class="featured-kicker">${SOURCE_LABELS[n.source]||'HEROINDEX'} · ${CAT_LABELS[n.category]||n.category} · ${n.date}</div>
-    <div class="featured-title">${n.headline}</div>
+  const tags=(typeof getFeaturedHashtags==='function'?getFeaturedHashtags(n):['#HeroIndex','#Live']);
+  return `<article class="featured-media source-${n.source}">
+    <div class="featured-badge-row"><span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||'HeroIndex'}</span><span class="social-tag">${CAT_LABELS[n.category]||n.category}</span><span class="news-date">${n.date}</span></div>
+    <h2 class="featured-title">${n.headline}</h2>
     <div class="featured-body">${n.body||'Cobertura en desarrollo. Más detalles en el feed oficial.'}</div>
-    ${isGM?'<div class="featured-oracle gm-only">ORÁCULO: monitoreo narrativo activo sobre esta cobertura.</div>':''}
-  </div>`;
+     <div class="featured-placeholder"><span>▶ HeroIndex Media</span><small>4.8M reproducciones · 96K comentarios</small></div>
+    <div class="featured-hashtags">${tags.map(t=>`<span>${t}</span>`).join('')}</div>
+    ${isGM?'<div class="featured-oracle gm-only">ORÁCULO: divergencia detectada entre narrativa pública y reporte interno.</div>':''}
+  </article>`;
 }
 function renderHomeFeedItem(n){
   return `<article class="home-feed-item source-${n.source}">
@@ -381,6 +386,17 @@ function renderHeroSpotlight(){
   </div>`;
 }
 
+function renderHomeStories(){
+  const row=document.getElementById('home-stories');
+  if(!row) return;
+  const stories=(typeof getHomeStories==='function'?getHomeStories(heroes):[]);
+  row.innerHTML=stories.map(st=>`<div class="story-item ${st.oracle?'story-oracle':''}">
+    <div class="story-ring">${st.avatar?`<img src="${st.avatar}" alt="${st.name}">`:`<span>${st.initials||initials(st.name)}</span>`}</div>
+    <div class="story-name">${st.name}</div>
+  </div>`).join('');
+}
+
+
 function renderHomeSocialFeed(){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
@@ -391,13 +407,13 @@ function renderHomeSocialFeed(){
 }
 
 function renderSocialPost(p,isGM){
-  const censored=p.censored?`<div class="social-censored">ORÁCULO: contenido removido de la vista pública.</div>`:'';
+    const censored=p.oracleNote?`<div class="social-censored">ORÁCULO: ${p.oracleNote}</div>`:'';
   return `<article class="social-post tone-${p.tone}${p.gmOnly?' gm-post':''}">
-    <div class="social-meta"><span class="news-source ${p.source==='public'?'heroindex':p.source}">${p.source.toUpperCase()}</span><span class="social-tag">${p.tag}</span><span class="news-date">${p.date}</span></div>
-    <div class="social-title">${p.headline}</div>
+     <div class="social-meta"><span class="post-avatar">${p.avatar||initials(p.sourceLabel||p.source)}</span><strong>${p.sourceLabel||p.source}</strong><span class="social-badge ${p.badgeType||''}">${p.badge||p.tag}</span><span class="news-date">${p.date}</span></div>
     <div class="social-body">${p.body}</div>
-    ${isGM?censored:''}
-        <div class="social-engagement">❤ ${p.engagement.likes} · 💬 ${p.engagement.comments} · ↻ ${p.engagement.shares}</div><div class="social-actions"><span>Me gusta</span><span>Comentar</span><span>Compartir</span></div>
+    <div class="featured-hashtags">${(p.hashtags||[]).map(t=>`<span>${t}</span>`).join('')}</div>
+    ${isGM&&p.oracleNote?censored:''}
+    <div class="social-engagement">❤ ${p.engagement.likes} · 💬 ${p.engagement.comments} · ↻ ${p.engagement.shares}</div><div class="social-actions"><span>Me gusta</span><span>Comentar</span><span>Compartir</span></div>
   </article>`;
 }
 
@@ -1558,3 +1574,10 @@ loadHeroes().then(h=>{
 });
 }
 initLogin();
+
+function renderHomeClips(){
+  const rail=document.getElementById('home-clips');
+  if(!rail) return;
+  const clips=(typeof getHomeClips==='function'?getHomeClips():[]);
+  rail.innerHTML=clips.map(c=>`<div class="clip-card"><div class="clip-thumb" style="background:${c.bg}"><span>▶</span></div><div class="clip-title">${c.title}</div><div class="clip-meta">${c.meta}</div></div>`).join('');
+}
