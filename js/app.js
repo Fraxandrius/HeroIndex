@@ -1552,26 +1552,40 @@ if(currentSession?.type==='gm'){
   const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
 }
 
-// Show loading overlay
+// Keep UI fully readable while loading data
 const appEl=document.getElementById('app');
-if(appEl) appEl.style.opacity='0.3';
+if(appEl) appEl.style.opacity='1';
+
+// Render Home dynamic sections immediately so placeholders don't get stuck
+renderHome();
+renderHomeSocialFeed();
+renderHomeTrending();
+renderHomeAds();
+renderHomeQuickActions();
 
 // Load from Firebase then render
 loadHeroes().then(h=>{
-  heroes=h;
+    heroes=(Array.isArray(h)&&h.length)?h:getDefaultHeroes();
   renderAll();
   if(appEl) appEl.style.opacity='1';
 
   // Real-time listeners
   onHeroesChange(updated=>{
-    heroes=updated;
-    renderAll();
+   if(Array.isArray(updated) && updated.length){
+      heroes=updated;
+      renderAll();
+    }
   });
   onNewsChange(()=>{
     renderHome();
     const np=document.getElementById('page-noticias');
     if(np&&np.classList.contains('active')) renderNewsFeed();
    });
-});
+}).catch(()=>{
+    heroes=getDefaultHeroes();
+  renderAll();
+}).finally(()=>{
+  if(appEl) appEl.style.opacity='1';
+  });
 }
 initLogin();
