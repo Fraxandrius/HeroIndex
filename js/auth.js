@@ -1,8 +1,6 @@
 // ── AUTH SYSTEM ───────────────────────────────────────────────
 // Gestiona sesiones: GM, héroe con código, o invitado público
 
-const GM_PASSWORD = 'oraculo2049'; // Cámbialo por el que quieras
-
 let currentSession = null;
 // currentSession = { type: 'gm' }
 // currentSession = { type: 'hero', heroId: 123, alias: 'Eclipse' }
@@ -180,16 +178,34 @@ function enterHeroCode() {
 // ── GM LOGIN ──────────────────────────────────────────────────
 function enterGM() {
   const pass = document.getElementById('login-gm-pass').value;
-  if (pass === GM_PASSWORD) {
-    setMsg('login-gm-msg', 'Acceso concedido', 'success');
-    setTimeout(() => {
-      saveSession({ type: 'gm' });
-      startApp();
-    }, 600);
-  } else {
-    setMsg('login-gm-msg', 'Contraseña incorrecta', 'error');
-  }
+   if (!pass) {
+    setMsg('login-gm-msg', 'Ingresa la contraseña GM', 'error');
+    return;
+    }
+   setMsg('login-gm-msg', 'Validando...', '');
+  loadGMPasswordHash().then(async hash => {
+    if (!hash) {
+      setMsg('login-gm-msg', 'Acceso GM no configurado. Define config/gmPasswordHash en Firebase.', 'error');
+      return;
+    }
+    const passHash = await sha256(pass);
+    if (passHash === hash) {
+      setMsg('login-gm-msg', 'Acceso concedido', 'success');
+      setTimeout(() => {
+        saveSession({ type: 'gm' });
+        startApp();
+      }, 600);
+    } else {
+      setMsg('login-gm-msg', 'Contraseña incorrecta', 'error');
+    }
+  });
 }
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+
 
 // ── PUBLIC ACCESS ─────────────────────────────────────────────
 // triggered by "Continuar como invitado" button which calls loginStep('public')

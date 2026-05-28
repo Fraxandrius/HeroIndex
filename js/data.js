@@ -14,6 +14,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// ── GM ACCESS ────────────────────────────────────────────────
+function loadGMPasswordHash() {
+  return db.ref('config/gmPasswordHash').once('value')
+    .then(snapshot => snapshot.exists() ? String(snapshot.val() || '') : '')
+    .catch(e => {
+      console.error('Firebase GM hash read error:', e);
+      return '';
+    });
+}
+
 // ── HEROES ───────────────────────────────────────────────────
 function loadHeroes() {
   return db.ref('heroes').once('value').then(snapshot => {

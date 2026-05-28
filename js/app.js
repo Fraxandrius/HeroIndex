@@ -1109,8 +1109,10 @@ function clearNewsForm(){
 function deleteNews(id){
   const session = currentSession || { type:'public' };
   if(!canManageNews(session)){ toast('Solo GM puede eliminar noticias'); return; }
-  const news=loadNews().filter(n=>n.id!==id);
-  saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
+  loadNews().then(currentNews=>{
+    const news=currentNews.filter(n=>n.id!==id);
+    saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
+  });
 }
 
 const CAT_CLASSES={comunicado:'cat-comunicado',operacion:'cat-operacion',cobertura:'cat-cobertura',rumor:'cat-rumor',clasificado:'cat-clasificado'};
