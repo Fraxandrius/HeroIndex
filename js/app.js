@@ -136,7 +136,7 @@ function normalizeNewsItem(n){
 }
 function cleanPublicText(txt=''){
   return String(txt)
-    ..replace(/[<>]/g,'')
+    .replace(/[<>]/g,'')
     .replace(/\s+/g,' ')
     .trim();
 }
@@ -1330,8 +1330,14 @@ function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHe
 
 // ── INIT — llamado por auth.js después del login ──────────────
 function initHeroIndex(){
-document.body.classList.add('gm-active');
-const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
+// Apply role-based chrome from auth session (GM/hero/public)
+if(currentSession?.type==='gm'){
+  document.body.classList.add('gm-active');
+  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
+}else{
+  document.body.classList.remove('gm-active');
+  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
+}
 
 // Show loading overlay
 const appEl=document.getElementById('app');
