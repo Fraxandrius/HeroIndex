@@ -136,8 +136,8 @@ function normalizeNewsItem(n){
 }
 function cleanPublicText(txt=''){
   return String(txt)
-    .replace(/const allowed=\['image\/png','image\/jpeg','image\/webp'\];/g,'')
-    .replace(/if\(!allowed\.includes\(file\.type\)\)\{\s*toast\('Formato no permitido \(usa PNG, JPG o WEBP\)'\);\s*return;\s*\}/g,'')
+    ..replace(/[<>]/g,'')
+    .replace(/\s+/g,' ')
     .trim();
 }
 
@@ -970,6 +970,8 @@ function handleMyAvatarUpload(event){
   if(session.type!=='hero') return;
   const file = event.target.files?.[0];
   if(!file) return;
+  const allowed=['image/png','image/jpeg','image/webp'];
+  if(!allowed.includes(file.type)){ toast('Formato no permitido (usa PNG, JPG o WEBP)'); return; }
   if(file.size > 1_000_000){ toast('Archivo muy pesado (máx 1MB)'); return; }
   const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
   const reader=new FileReader();
@@ -988,7 +990,7 @@ function handleMyAvatarUpload(event){
       if(data.length>170000){ toast('Imagen excede tamaño recomendado'); return; }
       me.publicAvatar=data;
       me.publicUpdatedAt=today();
-      saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); toast('Foto pública actualizada'); });
+      saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); renderRanking(); renderHome(); toast('Foto pública actualizada'); });
     };
     img.src=reader.result;
   };
