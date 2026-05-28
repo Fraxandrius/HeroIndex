@@ -1415,7 +1415,7 @@ loadHeroes().then(h=>{
     renderHome();
     const np=document.getElementById('page-noticias');
     if(np&&np.classList.contains('active')) renderNewsFeed();
-  });
+   });
 });
 }
 initLogin();
