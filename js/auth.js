@@ -66,10 +66,6 @@ function applySession() {
   if (currentSession.type !== 'hero') {
     document.querySelectorAll('[data-page="miperfil"]').forEach(el => el.style.display = 'none');
   }
-  if (currentSession.type === 'public') {
-    document.querySelectorAll('[data-page="miperfil"]')
-      .forEach(el => el.style.display = 'none');
-  }
 }
 function updateSessionBadge(label, color) {
   const topbarRight = document.querySelector('.topbar-right');

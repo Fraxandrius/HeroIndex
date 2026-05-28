@@ -365,7 +365,7 @@ function renderRanking(){
       <div class="top-name">${h.alias}</div>
       ${scopeDetail}
       <div class="top-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
-      <div class="top-karma">Karma: ${h.karma}</div>
+       ${showKarma?`<div class="top-karma">Karma: ${h.karma}</div>`:''}
     </div>`;
   }).join('');
 
