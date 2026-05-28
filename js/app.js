@@ -252,7 +252,7 @@ function renderHome(){
         </div>
        <div class="surv-risk"><span class="badge ${isGM?riskClass(h.risk):'badge-low'}">${isGM?riskLabel(h.risk):'Visible'}</span></div>
       </div>`).join('')
-    :' :'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Sin actividad destacada</div>';
+    :'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Sin actividad destacada</div>';
   }
 
   // Corp breakdown
