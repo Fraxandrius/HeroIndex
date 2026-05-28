@@ -381,13 +381,30 @@ function renderHeroSpotlight(){
   </div>`;
 }
 
+function setHomeFeedChannel(channel){
+  homeFeedChannel=channel;
+  renderHomeSocialFeed();
+}
+
 function renderHomeSocialFeed(){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
   const session=currentSession||{type:'public'};
-  const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
+  const all=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
     .filter(p=>!p.gmOnly || session.type==='gm');
-  feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
+  const scoped=all.filter(p=>{
+    if(homeFeedChannel==='all') return true;
+    if(homeFeedChannel==='gm') return p.channel==='gm';
+    return (p.channel||'foryou')===homeFeedChannel;
+  }).sort((a,b)=>(b.signal||0)-(a.signal||0));
+  const featured=scoped[0];
+  const tabs=[
+    ['foryou','Para Ti'],['global','Global'],['corporativo','Corporativo'],['all','Todo']
+  ];
+  if(session.type==='gm') tabs.push(['gm','ORÁCULO']);
+  feed.innerHTML=`<div class="feed-toolbar">${tabs.map(t=>`<button class="feed-tab ${homeFeedChannel===t[0]?'active':''}" onclick="setHomeFeedChannel('${t[0]}')">${t[1]}</button>`).join('')}</div>
+  ${featured?`<div class="feed-pinned">🔥 Prioridad alta · ${featured.headline} <span>Signal ${featured.signal||'—'}</span></div>`:''}
+  ${(scoped.length?scoped:all.slice(0,3)).map(p=>renderSocialPost(p, session.type==='gm')).join('')}`;
 }
 
 function renderSocialPost(p,isGM){
