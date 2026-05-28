@@ -1463,3 +1463,40 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   .social-actions{justify-content:space-between;gap:8px;}
   .hero-context-chips span{font-size:10px;}
 }
+
+/* --- Radical social home redesign --- */
+.social-home-grid .dash-card{background:linear-gradient(160deg,#0f172a,#111827);border-color:rgba(255,255,255,.08)}
+.home-stories{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px}
+.story-item{min-width:72px;text-align:center}
+.story-ring{width:58px;height:58px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#f59e0b,#ec4899,#22d3ee);display:grid;place-items:center;margin:0 auto 6px}
+.story-ring span,.story-ring img{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:#1f2937;color:#fff;font-weight:700;object-fit:cover}
+.story-name{font-size:11px;color:#dbeafe}
+.story-oracle .story-ring{background:linear-gradient(135deg,#7f1d1d,#ef4444)}
+
+.featured-media{background:linear-gradient(135deg,#1e1b4b,#312e81 45%,#0e7490);border:none;padding:20px}
+.featured-placeholder{margin:14px 0;border-radius:12px;padding:24px;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.05));display:flex;flex-direction:column;gap:6px}
+.featured-hashtags{display:flex;flex-wrap:wrap;gap:8px}
+.featured-hashtags span{font-size:11px;background:rgba(255,255,255,.16);padding:4px 9px;border-radius:999px}
+
+.social-post{background:#111827;border:1px solid rgba(255,255,255,.1)}
+.post-avatar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#f59e0b,#ec4899);font-size:10px;font-weight:700}
+.social-badge{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.4)}
+.social-badge.verified{background:rgba(59,130,246,.18)}
+.social-badge.promo{background:rgba(245,158,11,.2)}
+.social-badge.alert{background:rgba(239,68,68,.22)}
+
+.hero-trend-card{padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.02);margin-bottom:10px;cursor:pointer}
+.hero-trend-head,.hero-trend-body{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hero-trend-pos{font:700 14px 'Orbitron',sans-serif}
+.hero-trend-info{flex:1}
+.hero-trend-sub{font-size:11px}
+.hero-trend-score{text-align:right;display:flex;flex-direction:column;font-size:11px;color:#cbd5e1}
+.hero-trend-card.is-me{border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.3) inset}
+
+.clips-rail{display:flex;gap:10px;overflow-x:auto}
+.clip-card{min-width:180px}
+.clip-thumb{height:92px;border-radius:12px;display:grid;place-items:center;font-size:28px}
+.clip-title{font-size:12px;font-weight:600;margin-top:6px}
+.clip-meta{font-size:11px;color:var(--muted2)}
+
+.public-alerts .alert-item{background:linear-gradient(130deg,#1f2937,#0f172a);border-color:rgba(255,255,255,.1)}

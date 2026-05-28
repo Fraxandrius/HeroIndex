@@ -69,79 +69,54 @@
         <div id="home-ops-strip" class="home-ops-strip"></div>
       </div>
 
-      <div class="dashboard-grid">
+      <div class="dashboard-grid social-home-grid">
 
-        <div class="dash-card span2 social-hero-card">
-          <div id="home-hero-spotlight"></div>
+        <div class="dash-card span2 stories-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">MOMENTOS EN VIVO</span>
+          </div>
+          <div id="home-stories" class="home-stories"></div>
         </div>
 
-        <!-- Vigilancia activa -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-           <span class="dash-card-title" id="home-surveillance-title">VIGILANCIA ACTIVA — ORÁCULO</span>
-            <span class="dash-card-action gm-only" onclick="showPage('gm')">Ver todos ›</span>
-          </div>
-          <div id="surveillance-list"></div>
-        </div>
-
-        <!-- Distribución por corporación -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">DISTRIBUCIÓN CORPORATIVA</span>
-            <span class="dash-card-action" onclick="showPage('ranking')">Ranking ›</span>
-          </div>
-          <div id="corp-breakdown" class="corp-breakdown"></div>
-        </div>
-
-         <!-- Media destacada -->
-        <div class="dash-card media-featured-card span2">
-          <div class="dash-card-header">
-            <span class="dash-card-title">PORTADA GLOBAL — COBERTURA DESTACADA</span>
-            <span class="dash-card-action" onclick="showPage('noticias')">Abrir feed ›</span>
-          </div>
+        <div class="dash-card span2 media-featured-card">
           <div id="featured-media"></div>
         </div>
 
-        <!-- Alertas globales -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">ALERTAS GLOBALES</span>
-            <span class="dash-card-action" onclick="showPage('noticias')">Ver noticias ›</span>
-          </div>
-          <div id="alerts-list" class="alerts-list"></div>
-        </div>
-
-        <!-- Ranking preview -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">TOP HÉROES — SCORE GLOBAL</span>
-            <span class="dash-card-action" onclick="showPage('ranking')">Ver ranking ›</span>
-          </div>
-          <div id="home-ranking" class="home-ranking-card"></div>
-        </div>
-
-        <!-- Últimas noticias públicas -->
         <div class="dash-card span2">
           <div class="dash-card-header">
-            <span class="dash-card-title">FEED SOCIAL PÚBLICO — HEROINDEX</span>
-            <span class="dash-card-action" onclick="showPage('noticias')">Ver todas ›</span>
+            <span class="dash-card-title">FEED SOCIAL</span>
+            <span class="dash-card-action" onclick="showPage('noticias')">Abrir feed ›</span>
           </div>
           <div id="home-news-feed" class="news-feed social-feed"></div>
         </div>
 
-        <div class="dash-card span2">
+        <div class="dash-card">
           <div class="dash-card-header">
-            <span class="dash-card-title">HUB DE OPERACIONES — ENLACES RÁPIDOS</span>
+            <span class="dash-card-title">HÉROES EN TENDENCIA</span>
+            <span class="dash-card-action" onclick="showPage('ranking')">Ver ranking ›</span>
           </div>
-          <div id="home-trending" class="home-trending"></div>
-          <div id="home-quick-actions" class="home-quick-actions" style="margin-top:12px"></div>
+          <div id="home-ranking" class="home-ranking-card trending-heroes"></div>
         </div>
-           
+
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">CLIPS DESTACADOS</span>
+          </div>
+          <div id="home-clips" class="clips-rail"></div>
+        </div>
+
         <div class="dash-card span2">
           <div class="dash-card-header">
-            <span class="dash-card-title">PATROCINIOS Y COBERTURA COMERCIAL</span>
+            <span class="dash-card-title">PATROCINADO</span>
           </div>
           <div id="home-ads" class="home-ads"></div>
+        </div>
+
+        <div class="dash-card span2">
+          <div class="dash-card-header">
+            <span class="dash-card-title">ALERTAS PÚBLICAS</span>
+          </div>
+          <div id="alerts-list" class="alerts-list public-alerts"></div>
         </div>
 
       </div>
@@ -175,7 +150,6 @@
             <p id="m-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;display:none"></p>
           </div>
         </div>
-      </div>
     </section>
 
     <!-- KARMA -->
@@ -206,8 +180,7 @@
             <div class="card"><div class="card-label red-label">KARMA NEGATIVO</div><div id="bad-checks" class="check-list"></div></div>
           </div>
         </div>
-      </div>
-    </section>
+       </section>
 
     <!-- RANKING -->
     <section class="page" id="page-ranking">
@@ -447,7 +420,6 @@
             <label class="btn-sec" style="flex:1;text-align:center;cursor:pointer">↑ Importar JSON<input type="file" accept=".json" style="display:none" onchange="handleImport(this)"></label>
           </div>
         </div>
-      </div>
     </section>
 
   </main>
