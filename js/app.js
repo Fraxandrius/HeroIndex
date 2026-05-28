@@ -370,7 +370,7 @@ function renderHeroSpotlight(){
   const contextChips=[
     top?`<span>🏆 Nº1: <b>${top.alias}</b></span>`:'',
     me?`<span>👤 Tu vista: <b>${me.alias}</b></span>`:'<span>🌍 Modo Público Internacional</span>',
-    `<span>📡 Estado: <b>${session.type==='gm'?'GM / ORÁCULO':'Open Civic Feed'}</b></span>``
+    `<span>📡 Estado: <b>${session.type==='gm'?'GM / ORÁCULO':'Open Civic Feed'}</b></span>`
   ].filter(Boolean).join('');
   box.innerHTML=`<div class="hero-spotlight">
     <div class="hero-spotlight-kicker">${story.label} · HeroIndex International</div>
