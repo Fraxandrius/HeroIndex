@@ -1566,14 +1566,16 @@ renderHomeQuickActions();
 
 // Load from Firebase then render
 loadHeroes().then(h=>{
-  heroes=h;
+    heroes=(Array.isArray(h)&&h.length)?h:getDefaultHeroes();
   renderAll();
   if(appEl) appEl.style.opacity='1';
 
   // Real-time listeners
   onHeroesChange(updated=>{
-    heroes=updated;
-    renderAll();
+   if(Array.isArray(updated) && updated.length){
+      heroes=updated;
+      renderAll();
+    }
   });
   onNewsChange(()=>{
     renderHome();
@@ -1581,6 +1583,7 @@ loadHeroes().then(h=>{
     if(np&&np.classList.contains('active')) renderNewsFeed();
    });
 }).catch(()=>{
+    heroes=getDefaultHeroes();
   renderAll();
 }).finally(()=>{
   if(appEl) appEl.style.opacity='1';
