@@ -397,14 +397,15 @@ function renderHomeSocialFeed(){
     if(homeFeedChannel==='gm') return p.channel==='gm';
     return (p.channel||'foryou')===homeFeedChannel;
   }).sort((a,b)=>(b.signal||0)-(a.signal||0));
-  const featured=scoped[0];
+   const fallbackList = all.length ? all : [{source:'heroindex',tag:'Sistema',tone:'official',date:'Ahora',headline:'Sin publicaciones sincronizadas',body:'Actualiza la sesión o cambia de vista para recuperar el feed.',engagement:{likes:'0',comments:'0',shares:'0'}}];
+  const featured=scoped[0]||fallbackList[0];
   const tabs=[
     ['foryou','Para Ti'],['global','Global'],['corporativo','Corporativo'],['all','Todo']
   ];
   if(session.type==='gm') tabs.push(['gm','ORÁCULO']);
   feed.innerHTML=`<div class="feed-toolbar">${tabs.map(t=>`<button class="feed-tab ${homeFeedChannel===t[0]?'active':''}" onclick="setHomeFeedChannel('${t[0]}')">${t[1]}</button>`).join('')}</div>
   ${featured?`<div class="feed-pinned">🔥 Prioridad alta · ${featured.headline} <span>Signal ${featured.signal||'—'}</span></div>`:''}
-  ${(scoped.length?scoped:all.slice(0,3)).map(p=>renderSocialPost(p, session.type==='gm')).join('')}`;
+  ${(scoped.length?scoped:fallbackList.slice(0,4)).map(p=>renderSocialPost(p, session.type==='gm')).join('')}`;
 }
 
 function renderSocialPost(p,isGM){
