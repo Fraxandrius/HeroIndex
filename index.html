@@ -211,7 +211,7 @@
           <thead><tr>
             <th>#</th><th>Héroe</th><th>Score</th><th id="rth-karma">Karma</th>
             <th id="rth-scope">País</th>
-            <th>Rol</th><th>Tipo</th><th class="gm-col">Risk</th>
+            <th>Rol</th><th>Tipo</th><th id="rth-risk" class="gm-col">Risk</th>
           </tr></thead>
           <tbody id="ranking-body"></tbody>
         </table>
@@ -234,6 +234,8 @@
         <div class="card-label">FOTO PÚBLICA (LIVIANA)</div>
         <input type="file" id="my-avatar-file" accept="image/png,image/jpeg,image/webp" onchange="handleMyAvatarUpload(event)">
         <div id="my-avatar-preview" style="margin-top:10px"></div>
+        <button class="btn-sec" style="margin-top:8px" onclick="removeMyAvatar()">Eliminar foto</button>
+        <div id="my-profile-stats" style="margin-top:12px"></div>
         <div class="card-label">SLOGAN PÚBLICO</div>
         <input type="text" id="my-slogan" placeholder="Tu frase pública..." maxlength="60">
         <div class="card-label" style="margin-top:12px">BIO PÚBLICA</div>

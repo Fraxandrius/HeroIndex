@@ -91,6 +91,13 @@ function makeAv(alias,size=''){
   const av=avColor(alias);const cls=size==='md'?'av-md':'av';
   return `<div class="${cls}" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(alias)}</div>`;
 }
+function makeHeroAv(h,size=''){
+  if(h?.publicAvatar){
+    const cls=size==='md'?'av-md':'av';
+    return `<img src="${h.publicAvatar}" alt="avatar" class="${cls}" style="object-fit:cover;border:1px solid var(--border2)">`;
+  }
+  return makeAv(h?.alias||'?',size);
+}
 
 // Health = (Fighting+Agility+Strength)/2 rounded up
 // Resolve = (Reason+Intuition+Presence)/2 rounded up
@@ -226,7 +233,7 @@ function renderHome(){
   if(hr) hr.innerHTML=sorted.slice(0,5).map((h,i)=>`
     <div class="hr-row" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <span class="hr-pos">${i+1}</span>
-      ${makeAv(h.alias)}
+      ${makeHeroAv(h)}
       <div style="flex:1">
         <div class="hr-name">${h.alias}</div>
         <div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
@@ -324,8 +331,11 @@ function setRankingFilter(val){
 function renderRanking(){
   const session = currentSession || { type:'public' };
   const showKarma = session.type==='gm';
+  const showRisk = session.type==='gm';
   const karmaHeader=document.getElementById('rth-karma');
   if(karmaHeader) karmaHeader.style.display=showKarma?'table-cell':'none';
+  const riskHeader=document.getElementById('rth-risk');
+  if(riskHeader) riskHeader.style.display=showRisk?'table-cell':'none';
   renderFilterChips();
   const sorted = getFilteredHeroes();
   const medals = ['gold','silver','bronze'];
@@ -350,7 +360,7 @@ function renderRanking(){
       : `<div class="top-corp">${h.corp||'—'}</div>`;
     return `<div class="top-card ${medals[i]}">
       <div class="top-pos">${['🥇','🥈','🥉'][i]}</div>
-      ${makeAv(h.alias)}
+      ${makeHeroAv(h)}
       <div class="top-name">${h.alias}</div>
       ${scopeDetail}
       <div class="top-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
@@ -373,13 +383,13 @@ function renderRanking(){
     const statsMini = (health!=='—'||resolve!=='—') ? `<div class="mini-stat-row"><span class="mini-stat">❤️${health}</span><span class="mini-stat">🧠${resolve}</span></div>` : '';
     return `<tr style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${i+1}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">${makeAv(h.alias)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px">${makeHeroAv(h)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
       <td><div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${scoreColor(h.score)}"></div></div><span class="sval" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div></td>
       <td style="display:${showKarma?'table-cell':'none'}"><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
       ${scopeCell}
       <td>${roleBadge}</td>
       <td><span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></td>
-      <td class="gm-col"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></td>
+      <td class="gm-col" style="display:${showRisk?'table-cell':'none'}"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></td>
     </tr>`;
   }).join('')||`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sin héroes en esta categoría</td></tr>`;
 }
@@ -853,6 +863,9 @@ function renderMyProfile(){
   if(slogan) slogan.value=me.publicSlogan||'';
   if(bio) bio.value=me.publicBio||'';
   if(pv) pv.innerHTML=me.publicAvatar?`<img src="${me.publicAvatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover">`:'';
+const rank=[...heroes].sort((a,b)=>b.score-a.score).findIndex(h=>h.id===me.id)+1;
+  const ps=document.getElementById('my-profile-stats');
+  if(ps) ps.innerHTML=`<div style="font-size:12px;color:var(--muted2)">Alias: <strong>${me.alias}</strong> · Rol: ${me.role||'—'} · Corp: ${me.corp||'—'}</div><div style="font-size:12px;color:var(--muted2);margin-top:4px">Score: <strong style="color:${scoreColor(me.score)}">${me.score.toLocaleString('es-CL')}</strong> · Ranking global: <strong>#${rank}</strong></div>`;
 }
 
 function saveMyPublicProfile(){
@@ -889,6 +902,13 @@ function handleMyAvatarUpload(event){
   };
   reader.readAsDataURL(file);
 }
+function removeMyAvatar(){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
+  me.publicAvatar='';
+  saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); renderRanking(); toast('Foto eliminada'); });
+}
 
 // ── NEWS UI ───────────────────────────────────────────────────
 
@@ -910,6 +930,8 @@ function setNewsTab(tab, btn){
 }
 
 function publishNews(){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='gm'){ toast('Solo GM puede publicar noticias'); return; }
   const headline=document.getElementById('news-headline')?.value.trim();
   const body=document.getElementById('news-body')?.value.trim();
   const category=document.getElementById('news-category')?.value||'comunicado';
@@ -944,7 +966,8 @@ const CAT_LABELS={comunicado:'Comunicado',operacion:'Operación',cobertura:'Cobe
 const SOURCE_LABELS={heroindex:'HEROINDEX INTL.',corp:'CORPORACIÓN',oracle:'ORÁCULO'};
 
 function renderNewsItem(n, showDelete=false){
-  const deleteBtn=showDelete&&gmActive?`<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;margin-top:4px">✕ eliminar</button>`:'';
+  const session = currentSession || { type:'public' };
+  const deleteBtn=showDelete&&session.type==='gm'?`<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;margin-top:4px">✕ eliminar</button>`:'';
   return `<div class="news-item source-${n.source}">
     <div class="news-meta">
       <span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||n.source.toUpperCase()}</span>
