@@ -61,8 +61,11 @@ function applySession() {
   if (currentSession.type !== 'gm') {
     document.querySelectorAll('[data-page="gm"]').forEach(el => el.style.display = 'none');
   }
+  if (currentSession.type !== 'hero') {
+    document.querySelectorAll('[data-page="miperfil"]').forEach(el => el.style.display = 'none');
+  }
   if (currentSession.type === 'public') {
-    document.querySelectorAll('[data-page="karma"],[data-page="misiones"],[data-page="perfil"]')
+    document.querySelectorAll('[data-page="karma"],[data-page="misiones"],[data-page="miperfil"]')
       .forEach(el => el.style.display = 'none');
   }
 }

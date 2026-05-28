@@ -112,7 +112,7 @@ function showPage(name, btn){
   // Permission check
   const session = currentSession || {type:'public'};
   const gmOnly = ['gm','karma','misiones'];
-  const heroAndGm = [];
+  const heroAndGm = ['miperfil'];
   if(gmOnly.includes(name) && session.type !== 'gm') return;
   if(heroAndGm.includes(name) && session.type === 'public') return;
 
@@ -123,6 +123,7 @@ function showPage(name, btn){
   if(name==='inicio')   renderHome();
   if(name==='ranking')  renderRanking();
   if(name==='perfil')   renderProfiles();
+  if(name==='miperfil') renderMyProfile();
   if(name==='karma')    renderKarmaChips();
   if(name==='misiones') renderMissionChips();
   if(name==='gm')       renderGMList();
@@ -462,6 +463,8 @@ function openHeroModal(id){
         </div>
     </div>
 
+    ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${h.publicSlogan}"</div>`:''}
+    ${h.publicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${h.publicBio}</div>`:''}
     ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
     
     <div class="card-label" style="color:var(--accent)">ATRIBUTOS</div>
@@ -817,6 +820,8 @@ const qEl=document.getElementById('profile-search');
       </div>
       ${powersSnippet}
       ${hasAttrs?miniAttrs:''}
+      ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${h.publicSlogan}"</div>`:''}
+      ${h.publicBio?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${h.publicBio}</div>`:''}
       <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
       ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
       ${risk}
@@ -826,6 +831,32 @@ const qEl=document.getElementById('profile-search');
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
     </div>`;
   }).join('')||'<p style="color:var(--muted)">Sin héroes registrados.</p>';
+}
+
+function renderMyProfile(){
+  const session = currentSession || { type:'public' };
+  const page=document.getElementById('page-miperfil');
+  if(!page) return;
+  if(session.type!=='hero'){
+    page.innerHTML='<div class="page-header"><h1 class="page-title">MI PERFIL PÚBLICO</h1><p class="page-sub">Disponible solo para héroes.</p></div>';
+    return;
+  }
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(!me) return;
+  const slogan=document.getElementById('my-slogan');
+  const bio=document.getElementById('my-bio');
+  if(slogan) slogan.value=me.publicSlogan||'';
+  if(bio) bio.value=me.publicBio||'';
+}
+
+function saveMyPublicProfile(){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(!me) return;
+  me.publicSlogan=(document.getElementById('my-slogan')?.value||'').trim().slice(0,60);
+  me.publicBio=(document.getElementById('my-bio')?.value||'').trim().slice(0,180);
+  saveHeroes(heroes).then(()=>{ renderProfiles(); toast('Perfil público actualizado'); });
 }
 
 // ── NEWS UI ───────────────────────────────────────────────────
@@ -957,7 +988,7 @@ function addHero(){
     strength:parseInt(get('a-strength'))||0,reason:parseInt(get('a-reason'))||0,
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
-  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
+  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
   saveHeroes(heroes).then(()=>{renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();});
 }
 
