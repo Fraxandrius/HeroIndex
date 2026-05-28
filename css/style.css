@@ -1471,7 +1471,6 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 
 /* ── FEED INTELLIGENCE UX ─────────────────────────────────── */
 .feed-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
-.feed-tab{background:rgba(8,26,42,.8);border:1px solid var(--border);color:var(--muted2);font-size:11px;padding:6px 10px;border-radius:999px;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.6px;}
 .feed-tab.active{color:#fff;border-color:rgba(0,200,255,.55);background:rgba(0,200,255,.15);box-shadow:0 0 0 1px rgba(0,200,255,.2) inset;}
 .feed-pinned{margin-bottom:10px;border:1px solid rgba(250,204,21,.45);background:linear-gradient(90deg,rgba(250,204,21,.10),rgba(0,0,0,.1));padding:8px 10px;border-radius:10px;font-size:12px;color:#fde68a;display:flex;justify-content:space-between;gap:12px;}
 .feed-pinned span{color:#fff;font-family:'DM Mono',monospace;}
