@@ -40,9 +40,12 @@ body {
 }
 body::before {
   content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 9000;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,120,180,0.015) 3px, rgba(0,120,180,0.015) 6px);
+  opacity: 0.45;
+
 }
+#app, .topbar, .sidebar, .main-content { position: relative; z-index: 1; }
 
 /* ── RESPONSIVE VISIBILITY ─────────────────────────────────── */
 .desktop-only { display: none; }
