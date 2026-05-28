@@ -115,14 +115,18 @@ function calcResolve(attrs){
   return Math.ceil((r+i+p)/2);
 }
 
+function canViewPrivateHero(session, heroId){
+  return session.type==='gm' || (session.type==='hero' && currentSession.heroId===heroId);
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
   const session = currentSession || {type:'public'};
   const gmOnly = ['gm','karma','misiones'];
-  const heroAndGm = ['miperfil'];
+  const heroOnly = ['miperfil'];
   if(gmOnly.includes(name) && session.type !== 'gm') return;
-  if(heroAndGm.includes(name) && session.type === 'public') return;
+  if(heroOnly.includes(name) && session.type !== 'hero') return;
 
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.snav,.bnav').forEach(b=>b.classList.remove('active'));
@@ -379,8 +383,9 @@ function renderRanking(){
     const scopeCell = rankingScope==='corp'
       ? `<td><span style="font-size:12px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</span></td>`
       : `<td><span style="font-size:12px">${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}</span></td>`;
-    const health = calcHealth(h.attrs||{});
-    const resolve = calcResolve(h.attrs||{});
+     const canSeePrivate = canViewPrivateHero(session, h.id);
+    const health = canSeePrivate ? calcHealth(h.attrs||{}) : '—';
+    const resolve = canSeePrivate ? calcResolve(h.attrs||{}) : '—';
     const statsMini = (health!=='—'||resolve!=='—') ? `<div class="mini-stat-row"><span class="mini-stat">❤️${health}</span><span class="mini-stat">🧠${resolve}</span></div>` : '';
     return `<tr style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${i+1}</td>
@@ -399,7 +404,7 @@ function renderRanking(){
 function openHeroModal(id){
   const h=heroes.find(h=>h.id===id); if(!h) return;
   const session = currentSession || { type:'public' };
-  const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
+  const canSeePrivate = canViewPrivateHero(session, h.id);
   const av=avColor(h.alias);
   const attrs=canSeePrivate?(h.attrs||{}):{};
   const health=calcHealth(attrs);
@@ -809,7 +814,7 @@ const qEl=document.getElementById('profile-search');
   const pg=document.getElementById('profiles-grid'); if(!pg) return;
    pg.innerHTML=filtered.map(h=>{
     const av=avColor(h.alias);
-    const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
+    const canSeePrivate = canViewPrivateHero(session, h.id);
     const attrs=canSeePrivate?(h.attrs||{}):{};
     const health=calcHealth(attrs);
     const resolve=calcResolve(attrs);
@@ -843,6 +848,8 @@ const qEl=document.getElementById('profile-search');
       ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
       ${risk}
       <div class="divider"></div>
+      const allowed=['image/png','image/jpeg','image/webp'];
+      if(!allowed.includes(file.type)){ toast('Formato no permitido (usa PNG, JPG o WEBP)'); return; }
       <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${canSeePrivate?'KARMA — ÚLTIMAS SESIONES':'VISTA PÚBLICA'}</div>
       ${klog}${flags}
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
@@ -952,7 +959,11 @@ function handleMyAvatarUpload(event){
       const c=document.createElement('canvas');
       const size=160; c.width=size; c.height=size;
       const ctx=c.getContext('2d');
-      ctx.drawImage(img,0,0,size,size);
+      const srcW=img.width, srcH=img.height;
+      const side=Math.min(srcW,srcH);
+      const sx=Math.floor((srcW-side)/2);
+      const sy=Math.floor((srcH-side)/2);
+      ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
       const data=c.toDataURL('image/jpeg',0.72);
       if(data.length>170000){ toast('Imagen excede tamaño recomendado'); return; }
       me.publicAvatar=data;
@@ -1019,6 +1030,8 @@ function clearNewsForm(){
 }
 
 function deleteNews(id){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='gm'){ toast('Solo GM puede eliminar noticias'); return; }
   const news=loadNews().filter(n=>n.id!==id);
   saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
 }
