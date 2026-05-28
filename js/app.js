@@ -322,6 +322,10 @@ function setRankingFilter(val){
 }
 
 function renderRanking(){
+  const session = currentSession || { type:'public' };
+  const showKarma = session.type==='gm';
+  const karmaHeader=document.getElementById('rth-karma');
+  if(karmaHeader) karmaHeader.style.display=showKarma?'table-cell':'none';
   renderFilterChips();
   const sorted = getFilteredHeroes();
   const medals = ['gold','silver','bronze'];
@@ -371,7 +375,7 @@ function renderRanking(){
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${i+1}</td>
       <td><div style="display:flex;align-items:center;gap:8px">${makeAv(h.alias)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
       <td><div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${scoreColor(h.score)}"></div></div><span class="sval" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div></td>
-      <td><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
+      <td style="display:${showKarma?'table-cell':'none'}"><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
       ${scopeCell}
       <td>${roleBadge}</td>
       <td><span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></td>
@@ -446,7 +450,7 @@ function openHeroModal(id){
   const content=`
     <button class="hero-modal-close" onclick="document.getElementById('hero-modal').style.display='none'">✕</button>
     <div class="hero-modal-header">
-      <div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>
+       ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="width:56px;height:56px;object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>`}
       <div style="flex:1">
         <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--text)">${h.alias}</div>
         ${h.realName&&session.type==='gm'?`<div style="font-size:12px;color:var(--gm-red)">${h.realName}</div>`:''}
@@ -811,7 +815,7 @@ const qEl=document.getElementById('profile-search');
     const pctS=Math.round((h.score/10000)*100),pctK=Math.min(100,h.karma*5);
     return `<div class="profile-card ${gmActive?'gm-card':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <div class="profile-header">
-        <div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(h.alias)}</div>
+        ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(h.alias)}</div>`}
         <div><div class="profile-name">${h.alias}</div>${real}<div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
           <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
@@ -845,8 +849,10 @@ function renderMyProfile(){
   if(!me) return;
   const slogan=document.getElementById('my-slogan');
   const bio=document.getElementById('my-bio');
+  const pv=document.getElementById('my-avatar-preview');
   if(slogan) slogan.value=me.publicSlogan||'';
   if(bio) bio.value=me.publicBio||'';
+  if(pv) pv.innerHTML=me.publicAvatar?`<img src="${me.publicAvatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover">`:'';
 }
 
 function saveMyPublicProfile(){
@@ -857,6 +863,31 @@ function saveMyPublicProfile(){
   me.publicSlogan=(document.getElementById('my-slogan')?.value||'').trim().slice(0,60);
   me.publicBio=(document.getElementById('my-bio')?.value||'').trim().slice(0,180);
   saveHeroes(heroes).then(()=>{ renderProfiles(); toast('Perfil público actualizado'); });
+}
+
+function handleMyAvatarUpload(event){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const file = event.target.files?.[0];
+  if(!file) return;
+  if(file.size > 1_000_000){ toast('Archivo muy pesado (máx 1MB)'); return; }
+  const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
+  const reader=new FileReader();
+  reader.onload=()=> {
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      const size=160; c.width=size; c.height=size;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,size,size);
+      const data=c.toDataURL('image/jpeg',0.72);
+      if(data.length>170000){ toast('Imagen excede tamaño recomendado'); return; }
+      me.publicAvatar=data;
+      saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); toast('Foto pública actualizada'); });
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 // ── NEWS UI ───────────────────────────────────────────────────
@@ -988,7 +1019,7 @@ function addHero(){
     strength:parseInt(get('a-strength'))||0,reason:parseInt(get('a-reason'))||0,
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
-  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
+  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',publicAvatar:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
   saveHeroes(heroes).then(()=>{renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();});
 }
 
@@ -1078,7 +1109,7 @@ function parseCSVRow(row){
     occupation:row.occupation||'',
     attrs,powers,talents,drawbacks,relationships,
     personality:(row.personality||'').replace(/\\n/g,'\n'),
-    flags,karmaLog:[],
+    publicSlogan:'',publicBio:'',publicAvatar:'',flags,karmaLog:[],
     scoreLog:[{delta:0,note:'Importado CSV',date:today()}]
   };
 }
