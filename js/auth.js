@@ -214,13 +214,7 @@ async function sha256(text) {
 
 
 // ── PUBLIC ACCESS ─────────────────────────────────────────────
-// triggered by "Continuar como invitado" button which calls loginStep('public')
-// but we need it to actually start the app
-document.addEventListener('DOMContentLoaded', () => {
-  // Override the public button to start app directly
-  const btn = document.querySelector('[onclick="loginStep(\'public\')"]');
-  if (btn) btn.onclick = () => {
-    saveSession({ type: 'public' });
-    startApp();
-  };
-});
+function continueAsPublic() {
+  saveSession({ type: 'public' });
+  startApp();
+}
