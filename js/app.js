@@ -1556,6 +1556,14 @@ if(currentSession?.type==='gm'){
 // Keep UI fully readable while loading data
 const appEl=document.getElementById('app');
 if(appEl) appEl.style.opacity='1';
+
+// Render Home dynamic sections immediately so placeholders don't get stuck
+renderHome();
+renderHomeSocialFeed();
+renderHomeTrending();
+renderHomeAds();
+renderHomeQuickActions();
+
 // Load from Firebase then render
 loadHeroes().then(h=>{
   heroes=h;
