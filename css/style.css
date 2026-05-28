@@ -40,9 +40,12 @@ body {
 }
 body::before {
   content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 9000;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,120,180,0.015) 3px, rgba(0,120,180,0.015) 6px);
+  opacity: 0.45;
+
 }
+#app, .topbar, .sidebar, .main-content { position: relative; z-index: 1; }
 
 /* ── RESPONSIVE VISIBILITY ─────────────────────────────────── */
 .desktop-only { display: none; }
@@ -1232,6 +1235,7 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   text-align: center; padding: 2rem;
   color: var(--muted); font-size: 13px;
 }
+.news-empty{font-size:12px;color:var(--muted2);padding:10px 2px;}
 
 /* News composer */
 .news-composer {
@@ -1463,3 +1467,13 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   .social-actions{justify-content:space-between;gap:8px;}
   .hero-context-chips span{font-size:10px;}
 }
+
+
+/* ── FEED INTELLIGENCE UX ─────────────────────────────────── */
+.feed-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.feed-tab{background:rgba(8,26,42,.8);border:1px solid var(--border);color:var(--muted2);font-size:11px;padding:6px 10px;border-radius:999px;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:.6px;}
+.feed-tab.active{color:#fff;border-color:rgba(0,200,255,.55);background:rgba(0,200,255,.15);box-shadow:0 0 0 1px rgba(0,200,255,.2) inset;}
+.feed-pinned{margin-bottom:10px;border:1px solid rgba(250,204,21,.45);background:linear-gradient(90deg,rgba(250,204,21,.10),rgba(0,0,0,.1));padding:8px 10px;border-radius:10px;font-size:12px;color:#fde68a;display:flex;justify-content:space-between;gap:12px;}
+.feed-pinned span{color:#fff;font-family:'DM Mono',monospace;}
+
+
