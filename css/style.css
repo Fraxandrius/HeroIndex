@@ -1505,3 +1505,8 @@ body::before{background:repeating-linear-gradient(0deg, transparent, transparent
 
 .dash-card-title,.hi-tagline,.social-body,.home-feed-body,.alert-loc{color:var(--muted2);} 
 .metric-number,.hero-spotlight-title,.social-title{color:#f1f8ff;} 
+
+/* ── READABILITY HOTFIX: disable global scanline overlay ───── */
+body::before{
+  display:none !important;
+}
