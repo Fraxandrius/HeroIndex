@@ -187,16 +187,24 @@ function renderHome(){
   // Metrics row
   const totalH=heroes.length;
   const pcs=heroes.filter(h=>h.type==='PC');
+  const isGM=session.type==='gm';
   const riskCounts={low:0,med:0,high:0,critical:0};
   heroes.forEach(h=>{ if(riskCounts[h.risk]!==undefined) riskCounts[h.risk]++; });
   const avgScore=totalH?Math.round(heroes.reduce((s,h)=>s+h.score,0)/totalH):0;
-  const metrics=[
+  const metrics=isGM?[
     {label:'REGISTRADOS',val:totalH,color:'var(--accent)'},
     {label:'ACTIVOS PC',val:pcs.length,color:'var(--green)'},
     {label:'NPC',val:heroes.filter(h=>h.type==='NPC').length,color:'var(--muted2)'},
     {label:'RIESGO ALTO+',val:riskCounts.high+riskCounts.critical,color:'var(--red)'},
     {label:'SCORE MEDIO',val:avgScore.toLocaleString('es-CL'),color:'var(--amber)'},
     {label:'KARMA TOTAL',val:pcs.reduce((s,h)=>s+h.karma,0),color:'#c084fc'},
+   ]:[
+    {label:'HÉROES VERIFICADOS',val:totalH,color:'var(--accent)'},
+    {label:'EQUIPOS ACTIVOS',val:Math.max(1,Math.ceil(pcs.length/2)),color:'var(--green)'},
+    {label:'CORPORACIONES',val:new Set(heroes.map(h=>h.corp||'Independiente')).size,color:'var(--muted2)'},
+    {label:'SCORE MEDIO',val:avgScore.toLocaleString('es-CL'),color:'var(--amber)'},
+    {label:'MISIONES EN COBERTURA',val:3,color:'#60a5fa'},
+    {label:'SEÑAL GLOBAL',val:'ESTABLE',color:'#00e676'},
   ];
   const mr=document.getElementById('metrics-row');
   if(mr) mr.innerHTML=metrics.map(m=>`
@@ -218,26 +226,33 @@ function renderHome(){
     const topHero=sorted[0];
     const critical=heroes.filter(h=>h.risk==='critical').length;
     const riskShare=totalH?Math.round(((riskCounts.high+riskCounts.critical)/totalH)*100):0;
-    ops.innerHTML=`
+    ops.innerHTML=isGM?`
       <div class="ops-pill">🏆 Top de hoy: <b>${topHero?topHero.alias:'Sin datos'}</b>${topHero?` · ${topHero.score.toLocaleString('es-CL')}`:''}</div>
       <div class="ops-pill">⚠️ Riesgo alto+ en red: <b>${riskShare}%</b> (${riskCounts.high+riskCounts.critical}/${totalH||0})</div>
-      <div class="ops-pill">🛑 Riesgo crítico activo: <b>${critical}</b> ${critical===1?'héroe':'héroes'}</div>`;
+         <div class="ops-pill">🛑 Riesgo crítico activo: <b>${critical}</b> ${critical===1?'héroe':'héroes'}</div>`:`
+      <div class="ops-pill">🏆 Héroe destacado: <b>${topHero?topHero.alias:'Sin datos'}</b></div>
+      <div class="ops-pill">🌐 Cobertura ciudadana: <b>Alta</b> en capitales regionales</div>
+      <div class="ops-pill">🛰️ Estado de red: <b>Monitoreo continuo</b> 24/7</div>`;
   }
 
   // Surveillance (high/critical risk)
   const survEl=document.getElementById('surveillance-list');
+  const survTitle=document.getElementById('home-surveillance-title');
+  if(survTitle) survTitle.textContent=isGM?'VIGILANCIA ACTIVA — ORÁCULO':'SEGUIMIENTO OPERATIVO — RED PÚBLICA';
   if(survEl){
-    const watched=heroes.filter(h=>h.risk==='high'||h.risk==='critical').sort((a,b)=>b.score-a.score).slice(0,5);
+     const watched=isGM
+      ?heroes.filter(h=>h.risk==='high'||h.risk==='critical').sort((a,b)=>b.score-a.score).slice(0,5)
+      :sorted.slice(0,5);
     survEl.innerHTML=watched.length?watched.map(h=>`
       <div class="surv-item">
         ${makeAv(h.alias)}
         <div class="surv-info">
           <div class="surv-name">${h.alias}</div>
-          <div class="surv-reason">${h.corp||'Independiente'}${h.flags&&h.flags.length?' · '+h.flags[0]:''}</div>
+          <div class="surv-reason">${h.corp||'Independiente'}${isGM&&h.flags&&h.flags.length?' · '+h.flags[0]:' · Seguimiento estándar'}</div>
         </div>
-        <div class="surv-risk"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></div>
+       <div class="surv-risk"><span class="badge ${isGM?riskClass(h.risk):'badge-low'}">${isGM?riskLabel(h.risk):'Visible'}</span></div>
       </div>`).join('')
-    :'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Sin héroes bajo vigilancia activa</div>';
+    :' :'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Sin actividad destacada</div>';
   }
 
   // Corp breakdown
