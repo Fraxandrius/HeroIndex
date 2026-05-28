@@ -196,3 +196,14 @@ function getHomeMediaSlots() {
     }
   ];
 }
+
+
+
+
+function getHomeTrendingTopics() {
+  return [
+    { tag: '#CrisisCostera', pulse: '+18%' },
+    { tag: '#AuroraWatch', pulse: '+11%' },
+    { tag: '#CorredorNorte', pulse: '+9%' }
+  ];
+}

@@ -1386,3 +1386,15 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 .ad-sponsor{font-size:10px;color:var(--muted);letter-spacing:1px;font-family:'Orbitron',sans-serif;}
 .ad-title{font-size:16px;font-weight:700;margin:6px 0 10px;}
 .ad-cta{pointer-events:none;}
+
+
+
+/* ── HOME ENHANCEMENTS: LAYERS, RANKING MOTION, TRENDS ───── */
+.layer-pill.hero{color:#7dd3fc;border-color:#38bdf8;background:rgba(56,189,248,.12);}
+.layer-pill.gm{color:#fca5a5;border-color:#ef4444;background:rgba(239,68,68,.12);}
+.hr-score-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.hr-move{font-size:9px;font-family:'Orbitron',sans-serif;letter-spacing:.7px;padding:2px 6px;border-radius:10px;border:1px solid var(--border);}
+.hr-move.up{color:var(--green);border-color:rgba(0,230,118,.4);background:rgba(0,230,118,.08);}
+.hr-move.down{color:var(--red);border-color:rgba(255,82,82,.4);background:rgba(255,82,82,.08);}
+.hr-move.steady{color:var(--muted2);}
+.quick-trends{display:inline-block;margin-top:6px;font-size:11px;color:var(--muted2);}

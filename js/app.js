@@ -181,7 +181,7 @@ function renderAll(){renderHome();renderRanking();renderProfiles();}
 
 // ── HOME — CORPORATE DASHBOARD ───────────────────────────────
 function renderHome(){
-  const sorted=[...heroes].sort((a,b)=>b.score-a.score);
+  const sorted=[...heroes].sort((a,b)=>b.score-a.score).map((h,i)=>({...h,deltaTag:i%3===0?'up':(i%4===0?'down':'steady')}));
   const session=currentSession||{type:'public'};
 
   // Metrics row
@@ -218,7 +218,12 @@ function renderHome(){
     const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
     const layer=session.type==='gm'?'ORÁCULO / GM VIEW':(session.type==='hero'?'HERO PERSONAL VIEW':'PUBLIC VIEW');
     const sub=session.type==='hero'&&me?`Operador: ${me.alias}`:(session.type==='gm'?'Acceso clasificado activo':'Cobertura pública internacional');
-    layerEl.innerHTML=`<span class="layer-pill">${layer}</span><span class="layer-sub">${sub}</span>`;
+     const badges=[
+      '<span class="layer-pill">PUBLIC VIEW</span>',
+      session.type==='hero'?'<span class="layer-pill hero">HERO VIEW</span>':'',
+      session.type==='gm'?'<span class="layer-pill gm">ORÁCULO / GM</span>':''
+    ].filter(Boolean).join('');
+    layerEl.innerHTML=`${badges}<span class="layer-sub">${sub}</span>`;
   }
 
   const ops=document.getElementById('home-ops-strip');
@@ -297,7 +302,7 @@ function renderHome(){
         <div class="hr-name">${h.alias}</div>
         <div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
       </div>
-      <span class="hr-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span>
+      <div class="hr-score-wrap"><span class="hr-move ${getScoreMove(h.deltaTag).cls}">${getScoreMove(h.deltaTag).icon} ${getScoreMove(h.deltaTag).label}</span><span class="hr-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
     </div>`).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
 
   // Home news feed
@@ -305,7 +310,8 @@ function renderHome(){
   const featured=document.getElementById('featured-media');
   if(hnf){
     loadNews().then(all=>{
-      const news=all.map(normalizeNewsItem).filter(n=>n.visibility!=='gm').slice(0,4);
+     const visibility=getNewsVisibilityByRole(session);
+      const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public')).slice(0,4);
       hnf.innerHTML=news.length?news.map(n=>renderHomeFeedItem(n)).join('')
         :'<div class="news-empty">Sin noticias publicadas aún.</div>';
              if(featured){
@@ -317,6 +323,12 @@ function renderHome(){
   }
     renderHomeAds();
   renderHomeQuickActions();
+}
+
+function getScoreMove(deltaTag='steady'){
+  if(deltaTag==='up') return {icon:'▲',label:'Sube',cls:'up'};
+  if(deltaTag==='down') return {icon:'▼',label:'Baja',cls:'down'};
+  return {icon:'◆',label:'Estable',cls:'steady'};
 }
 
 function renderFeaturedMedia(n,isGM){
@@ -361,6 +373,8 @@ function renderHomeQuickActions(){
   const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
   const profileMissing=me && (!cleanPublicText(me.publicSlogan) || !cleanPublicText(me.publicStatus) || !cleanPublicText(me.publicBio));
   const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
+  const trending=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]).slice(0,3);
+  const trendText=trending.length?trending.map(t=>`${t.tag} ${t.pulse}`).join(' · '):'Sin tendencias destacadas';
   const newsHint=session.type==='gm'
     ?'Publica comunicados, rumores y reportes clasificados para mover la narrativa pública.'
     :'Revisa el pulso público y los reportes corporativos más recientes.';
@@ -385,7 +399,7 @@ function renderHomeQuickActions(){
   box.innerHTML=`
     <div class="quick-action">
       <div class="quick-action-title" style="color:var(--amber)">CENTRAL DE NOTICIAS</div>
-      <div class="quick-action-body">${newsHint}</div>
+       <div class="quick-action-body">${newsHint}<br><span class="quick-trends">Tendencias: ${trendText}</span></div>
       <button class="btn-sec" onclick="showPage('noticias')">Abrir Noticias →</button>
     </div>
     <div class="quick-action">
