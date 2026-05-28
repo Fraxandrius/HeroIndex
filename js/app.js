@@ -1553,10 +1553,9 @@ if(currentSession?.type==='gm'){
   const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
 }
 
-// Show loading overlay
+// Keep UI fully readable while loading data
 const appEl=document.getElementById('app');
-if(appEl) appEl.style.opacity='0.3';
-
+if(appEl) appEl.style.opacity='1';
 // Load from Firebase then render
 loadHeroes().then(h=>{
   heroes=h;
@@ -1573,6 +1572,10 @@ loadHeroes().then(h=>{
     const np=document.getElementById('page-noticias');
     if(np&&np.classList.contains('active')) renderNewsFeed();
    });
-});
+}).catch(()=>{
+  renderAll();
+}).finally(()=>{
+  if(appEl) appEl.style.opacity='1';
+  });
 }
 initLogin();
