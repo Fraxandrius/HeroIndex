@@ -13,6 +13,7 @@ let newsTab = 'all';
 let newsSource = 'heroindex';  // composer source
 let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
+let myProfileDraft = null;
 
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
@@ -91,6 +92,13 @@ function makeAv(alias,size=''){
   const av=avColor(alias);const cls=size==='md'?'av-md':'av';
   return `<div class="${cls}" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(alias)}</div>`;
 }
+function makeHeroAv(h,size=''){
+  if(h?.publicAvatar){
+    const cls=size==='md'?'av-md':'av';
+    return `<img src="${h.publicAvatar}" alt="avatar" class="${cls}" style="object-fit:cover;border:1px solid var(--border2)">`;
+  }
+  return makeAv(h?.alias||'?',size);
+}
 
 // Health = (Fighting+Agility+Strength)/2 rounded up
 // Resolve = (Reason+Intuition+Presence)/2 rounded up
@@ -107,15 +115,38 @@ function calcResolve(attrs){
   return Math.ceil((r+i+p)/2);
 }
 
+function canViewPrivateHero(session, heroId){
+  return session.type==='gm' || (session.type==='hero' && currentSession.heroId===heroId);
+}
+function canAccessPage(session, page){
+  if(['gm','karma','misiones'].includes(page)) return session.type==='gm';
+  if(page==='miperfil') return session.type==='hero';
+  return true;
+}
+function canManageNews(session){ return session.type==='gm'; }
+function getNewsVisibilityByRole(session){
+  if(session.type==='gm') return ['public','heroes','gm'];
+  if(session.type==='hero') return ['public','heroes'];
+  return ['public'];
+}
+function normalizeNewsItem(n){
+  if(n.visibility) return n;
+  if(n.source==='oracle') return {...n, visibility:'gm'};
+  return {...n, visibility:'public'};
+}
+function cleanPublicText(txt=''){
+  return String(txt)
+    .replace(/[<>]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
   const session = currentSession || {type:'public'};
-  const gmOnly = ['gm','karma','misiones'];
-  const heroAndGm = [];
-  if(gmOnly.includes(name) && session.type !== 'gm') return;
-  if(heroAndGm.includes(name) && session.type === 'public') return;
-
+  if(!canAccessPage(session,name)) return;
+  
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.snav,.bnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
@@ -123,6 +154,7 @@ function showPage(name, btn){
   if(name==='inicio')   renderHome();
   if(name==='ranking')  renderRanking();
   if(name==='perfil')   renderProfiles();
+  if(name==='miperfil') renderMyProfile();
   if(name==='karma')    renderKarmaChips();
   if(name==='misiones') renderMissionChips();
   if(name==='gm')       renderGMList();
@@ -236,7 +268,7 @@ function renderHome(){
   if(hr) hr.innerHTML=sorted.slice(0,5).map((h,i)=>`
     <div class="hr-row" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <span class="hr-pos">${i+1}</span>
-      ${makeAv(h.alias)}
+      ${makeHeroAv(h)}
       <div style="flex:1">
         <div class="hr-name">${h.alias}</div>
         <div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
@@ -376,6 +408,13 @@ function setRankingFilter(val){
 }
 
 function renderRanking(){
+  const session = currentSession || { type:'public' };
+  const showKarma = session.type==='gm';
+  const showRisk = session.type==='gm';
+  const karmaHeader=document.getElementById('rth-karma');
+  if(karmaHeader) karmaHeader.style.display=showKarma?'table-cell':'none';
+  const riskHeader=document.getElementById('rth-risk');
+  if(riskHeader) riskHeader.style.display=showRisk?'table-cell':'none';
   renderFilterChips();
   const sorted = getFilteredHeroes();
   const medals = ['gold','silver','bronze'];
@@ -400,11 +439,11 @@ function renderRanking(){
       : `<div class="top-corp">${h.corp||'—'}</div>`;
     return `<div class="top-card ${medals[i]}">
       <div class="top-pos">${['🥇','🥈','🥉'][i]}</div>
-      ${makeAv(h.alias)}
+      ${makeHeroAv(h)}
       <div class="top-name">${h.alias}</div>
       ${scopeDetail}
       <div class="top-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
-      <div class="top-karma">Karma: ${h.karma}</div>
+       ${showKarma?`<div class="top-karma">Karma: ${h.karma}</div>`:''}
     </div>`;
   }).join('');
 
@@ -418,18 +457,19 @@ function renderRanking(){
     const scopeCell = rankingScope==='corp'
       ? `<td><span style="font-size:12px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</span></td>`
       : `<td><span style="font-size:12px">${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}</span></td>`;
-    const health = calcHealth(h.attrs||{});
-    const resolve = calcResolve(h.attrs||{});
+     const canSeePrivate = canViewPrivateHero(session, h.id);
+    const health = canSeePrivate ? calcHealth(h.attrs||{}) : '—';
+    const resolve = canSeePrivate ? calcResolve(h.attrs||{}) : '—';
     const statsMini = (health!=='—'||resolve!=='—') ? `<div class="mini-stat-row"><span class="mini-stat">❤️${health}</span><span class="mini-stat">🧠${resolve}</span></div>` : '';
     return `<tr style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${i+1}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">${makeAv(h.alias)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
+      <td><div style="display:flex;align-items:center;gap:8px">${makeHeroAv(h)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
       <td><div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${scoreColor(h.score)}"></div></div><span class="sval" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div></td>
-      <td><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
+      <td style="display:${showKarma?'table-cell':'none'}"><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
       ${scopeCell}
       <td>${roleBadge}</td>
       <td><span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></td>
-      <td class="gm-col"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></td>
+      <td class="gm-col" style="display:${showRisk?'table-cell':'none'}"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></td>
     </tr>`;
   }).join('')||`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sin héroes en esta categoría</td></tr>`;
 }
@@ -438,7 +478,7 @@ function renderRanking(){
 function openHeroModal(id){
   const h=heroes.find(h=>h.id===id); if(!h) return;
   const session = currentSession || { type:'public' };
-  const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
+  const canSeePrivate = canViewPrivateHero(session, h.id);
   const av=avColor(h.alias);
   const attrs=canSeePrivate?(h.attrs||{}):{};
   const health=calcHealth(attrs);
@@ -500,7 +540,7 @@ function openHeroModal(id){
   const content=`
     <button class="hero-modal-close" onclick="document.getElementById('hero-modal').style.display='none'">✕</button>
     <div class="hero-modal-header">
-      <div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>
+       ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="width:56px;height:56px;object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>`}
       <div style="flex:1">
         <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--text)">${h.alias}</div>
         ${h.realName&&session.type==='gm'?`<div style="font-size:12px;color:var(--gm-red)">${h.realName}</div>`:''}
@@ -517,6 +557,9 @@ function openHeroModal(id){
         </div>
     </div>
 
+    ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:6px">● ${h.publicStatus}</div>`:''}
+    ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${h.publicSlogan}"</div>`:''}
+    ${h.publicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${h.publicBio}</div>`:''}
     ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
     
     <div class="card-label" style="color:var(--accent)">ATRIBUTOS</div>
@@ -845,7 +888,7 @@ const qEl=document.getElementById('profile-search');
   const pg=document.getElementById('profiles-grid'); if(!pg) return;
    pg.innerHTML=filtered.map(h=>{
     const av=avColor(h.alias);
-    const canSeePrivate = session.type==='gm' || (session.type==='hero' && currentSession.heroId===h.id);
+    const canSeePrivate = canViewPrivateHero(session, h.id);
     const attrs=canSeePrivate?(h.attrs||{}):{};
     const health=calcHealth(attrs);
     const resolve=calcResolve(attrs);
@@ -863,7 +906,7 @@ const qEl=document.getElementById('profile-search');
     const pctS=Math.round((h.score/10000)*100),pctK=Math.min(100,h.karma*5);
     return `<div class="profile-card ${gmActive?'gm-card':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
       <div class="profile-header">
-        <div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(h.alias)}</div>
+        ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(h.alias)}</div>`}
         <div><div class="profile-name">${h.alias}</div>${real}<div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
           <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
@@ -872,6 +915,9 @@ const qEl=document.getElementById('profile-search');
       </div>
       ${powersSnippet}
       ${hasAttrs?miniAttrs:''}
+      ${cleanPublicText(h.publicStatus)?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px">● ${cleanPublicText(h.publicStatus)}</div>`:''}
+      ${cleanPublicText(h.publicSlogan)?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${cleanPublicText(h.publicSlogan)}"</div>`:''}
+      ${cleanPublicText(h.publicBio)?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${cleanPublicText(h.publicBio)}</div>`:''}
       <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
       ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
       ${risk}
@@ -881,6 +927,137 @@ const qEl=document.getElementById('profile-search');
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
     </div>`;
   }).join('')||'<p style="color:var(--muted)">Sin héroes registrados.</p>';
+}
+
+function renderMyProfile(){
+  const session = currentSession || { type:'public' };
+  const page=document.getElementById('page-miperfil');
+  if(!page) return;
+  if(session.type!=='hero'){
+    page.innerHTML='<div class="page-header"><h1 class="page-title">MI PERFIL PÚBLICO</h1><p class="page-sub">Disponible solo para héroes.</p></div>';
+    return;
+  }
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(!me) return;
+  const slogan=document.getElementById('my-slogan');
+  const bio=document.getElementById('my-bio');
+  const pv=document.getElementById('my-avatar-preview');
+  const identity=document.getElementById('my-profile-identity');
+  if(slogan) slogan.value=me.publicSlogan||'';
+  if(bio) bio.value=me.publicBio||'';
+  if(pv) pv.innerHTML=me.publicAvatar?`<img src="${me.publicAvatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover">`:'';
+const rank=[...heroes].sort((a,b)=>b.score-a.score).findIndex(h=>h.id===me.id)+1;
+  const ps=document.getElementById('my-profile-stats');
+  if(ps) ps.innerHTML=`<div style="font-size:12px;color:var(--muted2)">Alias: <strong>${me.alias}</strong> · Rol: ${me.role||'—'} · Corp: ${me.corp||'—'}</div><div style="font-size:12px;color:var(--muted2);margin-top:4px">Score: <strong style="color:${scoreColor(me.score)}">${me.score.toLocaleString('es-CL')}</strong> · Ranking global: <strong>#${rank}</strong></div>`;
+if(identity) identity.innerHTML=`<span class="badge badge-pc">✔ Verificado</span> <span style="font-size:12px;color:var(--muted2);margin-left:8px">ID público activo</span>`;
+  const statusIn=document.getElementById('my-status');
+  if(statusIn) statusIn.value=me.publicStatus||'';
+  myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'', status: me.publicStatus||'' };
+  bindMyProfileInputs();
+  renderMyPublicPreview(me);
+  const sl=document.getElementById('my-score-log');
+  if(sl){
+    const rows=(me.scoreLog||[]).slice(-5).reverse();
+    sl.innerHTML=rows.length?rows.map(r=>`<div class="klog-row"><span>${r.date||'—'} · ${r.note||'Actualización'}</span><span style="color:${(r.delta||0)>=0?'var(--green)':'var(--red)'};font-family:'DM Mono',monospace">${(r.delta||0)>=0?'+':''}${r.delta||0}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">Sin movimientos recientes</span>';
+  }
+  const st=document.getElementById('my-profile-status');
+  if(st) st.textContent = me.publicUpdatedAt ? `Última actualización: ${me.publicUpdatedAt}` : 'Aún no hay cambios guardados';
+}
+function bindMyProfileInputs(){
+  const slogan=document.getElementById('my-slogan');
+  const bio=document.getElementById('my-bio');
+  const status=document.getElementById('my-status');
+  if(slogan) slogan.oninput=onMyProfileInput;
+  if(bio) bio.oninput=onMyProfileInput;
+  if(status) status.oninput=onMyProfileInput;
+  onMyProfileInput();
+}
+function onMyProfileInput(){
+  const slogan=(document.getElementById('my-slogan')?.value||'').trim();
+  const bio=(document.getElementById('my-bio')?.value||'').trim();
+  const status=(document.getElementById('my-status')?.value||'').trim();
+  const sc=document.getElementById('my-slogan-count');
+  const bc=document.getElementById('my-bio-count');
+  const stc=document.getElementById('my-status-count');
+  if(sc) sc.textContent=`${slogan.length}/60`;
+  if(bc) bc.textContent=`${bio.length}/180`;
+  if(stc) stc.textContent=`${status.length}/80`;
+  const dirty=!myProfileDraft || slogan!==myProfileDraft.slogan || bio!==myProfileDraft.bio || status!==myProfileDraft.status;
+  const saveBtn=document.getElementById('my-save-btn');
+  if(saveBtn) saveBtn.disabled=!dirty;
+  const session=currentSession||{type:'public'};
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(me) renderMyPublicPreview({...me,publicSlogan:slogan,publicBio:bio,publicStatus:status});
+}
+function renderMyPublicPreview(h){
+  const el=document.getElementById('my-public-preview'); if(!el) return;
+  const status=cleanPublicText(h.publicStatus||'');
+  const slogan=cleanPublicText(h.publicSlogan||'');
+  const bio=cleanPublicText(h.publicBio||'');
+  el.innerHTML=`<div class="profile-card" style="margin:0">
+    <div class="profile-header">${makeHeroAv(h,'md')}<div><div class="profile-name">${h.alias}</div><div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div></div></div>
+   ${status?`<div style="font-size:11px;color:var(--accent);margin:6px 0">● ${status}</div>`:''}
+    ${slogan?`<div style="font-size:12px;color:var(--muted2);margin:8px 0">"${slogan}"</div>`:''}
+    ${bio?`<div style="font-size:11px;color:var(--muted)">${bio}</div>`:''}
+  </div>`;
+}
+
+function saveMyPublicProfile(){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const me=heroes.find(h=>h.id===session.heroId);
+  if(!me) return;
+  me.publicSlogan=cleanPublicText((document.getElementById('my-slogan')?.value||'').trim()).slice(0,60);
+  me.publicBio=cleanPublicText((document.getElementById('my-bio')?.value||'').trim()).slice(0,180);
+  me.publicStatus=cleanPublicText((document.getElementById('my-status')?.value||'').trim()).slice(0,80);
+  me.publicUpdatedAt=today();
+  saveHeroes(heroes).then(()=>{
+    myProfileDraft = { slogan: me.publicSlogan||'', bio: me.publicBio||'', status: me.publicStatus||'' };
+    renderProfiles();
+    const st=document.getElementById('my-profile-status'); if(st) st.textContent=`Guardado ✓ · ${me.publicUpdatedAt}`;
+    const saveBtn=document.getElementById('my-save-btn'); if(saveBtn) saveBtn.disabled=true;
+    toast('Perfil público actualizado');
+  });
+}
+
+function handleMyAvatarUpload(event){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const file = event.target.files?.[0];
+  if(!file) return;
+  const allowed=['image/png','image/jpeg','image/webp'];
+  if(!allowed.includes(file.type)){ toast('Formato no permitido (usa PNG, JPG o WEBP)'); return; }
+  if(file.size > 1_000_000){ toast('Archivo muy pesado (máx 1MB)'); return; }
+  const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
+  const reader=new FileReader();
+  reader.onload=()=> {
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      const size=160; c.width=size; c.height=size;
+      const ctx=c.getContext('2d');
+      const srcW=img.width, srcH=img.height;
+      const side=Math.min(srcW,srcH);
+      const sx=Math.floor((srcW-side)/2);
+      const sy=Math.floor((srcH-side)/2);
+      ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
+      const data=c.toDataURL('image/jpeg',0.72);
+      if(data.length>170000){ toast('Imagen excede tamaño recomendado'); return; }
+      me.publicAvatar=data;
+      me.publicUpdatedAt=today();
+      saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); renderRanking(); renderHome(); toast('Foto pública actualizada'); });
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeMyAvatar(){
+  const session = currentSession || { type:'public' };
+  if(session.type!=='hero') return;
+  const me=heroes.find(h=>h.id===session.heroId); if(!me) return;
+  me.publicAvatar='';
+  me.publicUpdatedAt=today();
+  saveHeroes(heroes).then(()=>{ renderMyProfile(); renderProfiles(); renderRanking(); toast('Foto eliminada'); });
 }
 
 // ── NEWS UI ───────────────────────────────────────────────────
@@ -903,6 +1080,8 @@ function setNewsTab(tab, btn){
 }
 
 function publishNews(){
+  const session = currentSession || { type:'public' };
+  if(!canManageNews(session)){ toast('Solo GM puede publicar noticias'); return; }
   const headline=document.getElementById('news-headline')?.value.trim();
   const body=document.getElementById('news-body')?.value.trim();
   const category=document.getElementById('news-category')?.value||'comunicado';
@@ -911,7 +1090,7 @@ function publishNews(){
   loadNews().then(currentNews=>{
     currentNews.unshift({
       id:Date.now(), source:newsSource, category, headline,
-      body:body||'', corp, date:today()
+      body:body||'', corp, date:today(), visibility: newsSource==='oracle'?'gm':'public'
     });
     saveNews(currentNews).then(()=>{
       clearNewsForm();
@@ -928,6 +1107,8 @@ function clearNewsForm(){
 }
 
 function deleteNews(id){
+  const session = currentSession || { type:'public' };
+  if(!canManageNews(session)){ toast('Solo GM puede eliminar noticias'); return; }
   const news=loadNews().filter(n=>n.id!==id);
   saveNews(news).then(()=>{ renderNewsFeed(); renderHome(); toast('Noticia eliminada'); });
 }
@@ -937,7 +1118,8 @@ const CAT_LABELS={comunicado:'Comunicado',operacion:'Operación',cobertura:'Cobe
 const SOURCE_LABELS={heroindex:'HEROINDEX INTL.',corp:'CORPORACIÓN',oracle:'ORÁCULO'};
 
 function renderNewsItem(n, showDelete=false){
-  const deleteBtn=showDelete&&gmActive?`<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;margin-top:4px">✕ eliminar</button>`:'';
+  const session = currentSession || { type:'public' };
+  const deleteBtn=showDelete&&session.type==='gm'?`<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;margin-top:4px">✕ eliminar</button>`:'';
   return `<div class="news-item source-${n.source}">
     <div class="news-meta">
       <span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||n.source.toUpperCase()}</span>
@@ -952,15 +1134,18 @@ function renderNewsItem(n, showDelete=false){
 }
 
 function renderNewsFeed(){
+  const session = currentSession || { type:'public' };
   const feed=document.getElementById('news-feed');
   if(!feed) return;
   feed.innerHTML='<div class="news-empty" style="color:var(--muted)">Cargando...</div>';
   loadNews().then(all=>{
-    let filtered=all;
-    if(newsTab==='heroindex') filtered=all.filter(n=>n.source==='heroindex');
-    else if(newsTab==='corp')  filtered=all.filter(n=>n.source==='corp');
-    else if(newsTab==='oracle') filtered=all.filter(n=>n.source==='oracle');
-    else filtered=gmActive?all:all.filter(n=>n.source!=='oracle');
+     const visible = getNewsVisibilityByRole(session);
+    const base = all.map(normalizeNewsItem).filter(n=>visible.includes(n.visibility));
+    let filtered=base;
+    if(newsTab==='heroindex') filtered=base.filter(n=>n.source==='heroindex');
+    else if(newsTab==='corp')  filtered=base.filter(n=>n.source==='corp');
+    else if(newsTab==='oracle') filtered=base.filter(n=>n.source==='oracle');
+    else filtered=base;
     feed.innerHTML=filtered.length
       ?filtered.map(n=>renderNewsItem(n,true)).join('')
       :'<div class="news-empty">Sin noticias en esta categoría.</div>';
@@ -1012,7 +1197,7 @@ function addHero(){
     strength:parseInt(get('a-strength'))||0,reason:parseInt(get('a-reason'))||0,
     intuition:parseInt(get('a-intuition'))||0,presence:parseInt(get('a-presence'))||0,
   };
-  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
+  heroes.push({id:Date.now(),alias,realName:get('n-real'),corp:get('n-corp'),type:get('n-type')||'PC',role:get('n-role'),country,score,karma:0,risk:get('n-risk')||'low',occupation:get('n-occupation'),attrs,powers:collectPowers(),talents,drawbacks,relationships,personality:get('n-personality'),publicSlogan:'',publicBio:'',publicStatus:'',publicAvatar:'',flags,karmaLog:[],scoreLog:[{delta:0,note:'Registro inicial',date:today()}]});
   saveHeroes(heroes).then(()=>{renderAll();clearGMForm();toast(`${alias} registrado`);renderGMList();});
 }
 
@@ -1102,7 +1287,7 @@ function parseCSVRow(row){
     occupation:row.occupation||'',
     attrs,powers,talents,drawbacks,relationships,
     personality:(row.personality||'').replace(/\\n/g,'\n'),
-    flags,karmaLog:[],
+    publicSlogan:'',publicBio:'',publicStatus:'',publicAvatar:'',flags,karmaLog:[],
     scoreLog:[{delta:0,note:'Importado CSV',date:today()}]
   };
 }
@@ -1200,8 +1385,14 @@ function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHe
 
 // ── INIT — llamado por auth.js después del login ──────────────
 function initHeroIndex(){
-document.body.classList.add('gm-active');
-const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
+// Apply role-based chrome from auth session (GM/hero/public)
+if(currentSession?.type==='gm'){
+  document.body.classList.add('gm-active');
+  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
+}else{
+  document.body.classList.remove('gm-active');
+  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
+}
 
 // Show loading overlay
 const appEl=document.getElementById('app');

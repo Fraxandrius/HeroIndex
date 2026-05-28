@@ -86,6 +86,8 @@ function getDefaultHeroes() {
       drawbacks:['Lealtad institucional absoluta'],
       relationships:[{name:'Aurora Corporation',type:'empleador'}],
       personality:'Personalidad: pragmático, frío bajo presión\nImpulso: estabilidad nacional\nFalla: incapaz de cuestionar el sistema',
+      publicSlogan:'Orden antes del caos.',
+      publicBio:'Figura institucional de alta visibilidad en operativos nacionales.',
       flags:['Conoce ORÁCULO','Ha aprobado eliminaciones preventivas'],
       karmaLog:[], scoreLog:[{delta:0,note:'Registro inicial',date:'01/01/2024'}]
     },
@@ -101,6 +103,8 @@ function getDefaultHeroes() {
       drawbacks:['Impulsivo'],
       relationships:[{name:'Cóndor',type:'superior'}],
       personality:'Personalidad: idealista, impulsivo\nImpulso: proteger vulnerables\nFalla: actúa antes de pensar',
+      publicSlogan:'El viento siempre responde.',
+      publicBio:'Especialista en patrullaje urbano y apoyo aéreo.',
       flags:['Sospechoso de filtrar información','Vigilancia nivel 2'],
       karmaLog:[{session:1,delta:4,pos:4,neg:0,note:'+4 / 0',date:'01/01/2024'}],
       scoreLog:[{delta:0,note:'Registro inicial',date:'01/01/2024'}]

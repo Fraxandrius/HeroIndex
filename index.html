@@ -24,6 +24,7 @@
       <button class="snav" data-page="karma"    onclick="showPage('karma',this)"><span class="snav-icon">◎</span> Sesión — Karma</button>
       <button class="snav" data-page="ranking"  onclick="showPage('ranking',this)"><span class="snav-icon">◈</span> Ranking Global</button>
       <button class="snav" data-page="perfil"   onclick="showPage('perfil',this)"><span class="snav-icon">◉</span> Perfiles</button>
+      <button class="snav" data-page="miperfil" onclick="showPage('miperfil',this)"><span class="snav-icon">✎</span> Mi Perfil</button>
       <button class="snav" data-page="noticias" onclick="showPage('noticias',this)"><span class="snav-icon">📡</span> Noticias</button>
       <button class="snav gm-only" data-page="gm" onclick="showPage('gm',this)"><span class="snav-icon">⬡</span> Panel GM</button>
     </nav>
@@ -65,7 +66,7 @@
           <div class="hi-status-dot">SISTEMA ACTIVO</div>
         </div>
         <div id="metrics-row" class="metrics-row"></div>
-       <div id="home-ops-strip" class="home-ops-strip"></div>
+        <div id="home-ops-strip" class="home-ops-strip"></div>
       </div>
       <div class="dashboard-grid">
 
@@ -120,7 +121,7 @@
           </div>
           <div id="home-quick-actions" class="home-quick-actions"></div>
         </div>
-        
+           
       </div>
     </section>
 
@@ -216,9 +217,9 @@
       <div class="card" style="padding:0;overflow:hidden">
         <table class="ranking-table">
           <thead><tr>
-            <th>#</th><th>Héroe</th><th>Score</th><th>Karma</th>
+            <th>#</th><th>Héroe</th><th>Score</th><th id="rth-karma">Karma</th>
             <th id="rth-scope">País</th>
-            <th>Rol</th><th>Tipo</th><th class="gm-col">Risk</th>
+            <th>Rol</th><th>Tipo</th><th id="rth-risk" class="gm-col">Risk</th>
           </tr></thead>
           <tbody id="ranking-body"></tbody>
         </table>
@@ -227,12 +228,42 @@
 
     <!-- PERFILES -->
     <section class="page" id="page-perfil">
-      <div class="page-header"><h1 class="page-title">PERFILES</h1><p class="page-sub">Haz clic en un héroe para ver su ficha completa.</p></div>
-      <div class="card" style="margin-bottom:12px">
+      <div class="page-header"><h1 class="page-title">PERFILES</h1><p class="page-sub">Consulta perfiles públicos de héroes verificados por HeroIndex.</p></div>
+       <div class="card" style="margin-bottom:12px">
         <div class="card-label">BUSCADOR DE HÉROES</div>
         <input type="text" id="profile-search" placeholder="Buscar por alias, corporación o rol..." oninput="renderProfiles()">
       </div>
       <div id="profiles-grid" class="profiles-grid"></div>
+    </section>
+
+    <section class="page" id="page-miperfil">
+      <div class="page-header"><h1 class="page-title">MI PERFIL PÚBLICO</h1><p class="page-sub">Edita cómo te ve el público en HeroIndex.</p></div>
+      <div class="card">
+        <div class="card-label">IDENTIDAD PÚBLICA</div>
+        <div id="my-profile-identity" style="margin-bottom:12px"></div>
+        <div class="card-label">FOTO PÚBLICA (LIVIANA)</div>
+        <input type="file" id="my-avatar-file" accept="image/png,image/jpeg,image/webp" onchange="handleMyAvatarUpload(event)">
+        <div id="my-avatar-preview" style="margin-top:10px"></div>
+        <button class="btn-sec" style="margin-top:8px" onclick="removeMyAvatar()">Eliminar foto</button>
+        <div id="my-profile-stats" style="margin-top:12px"></div>
+        <div class="card-label">SLOGAN PÚBLICO</div>
+        <input type="text" id="my-slogan" placeholder="Tu frase pública..." maxlength="60">
+        <div id="my-slogan-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/60</div>
+         <div class="card-label" style="margin-top:12px">ESTADO ACTUAL</div>
+        <input type="text" id="my-status" placeholder="En patrulla nocturna..." maxlength="80">
+        <div id="my-status-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/80</div>
+        <div class="card-label" style="margin-top:12px">BIO PÚBLICA</div>
+        <textarea id="my-bio" placeholder="Texto visible para todos..." maxlength="180"></textarea>
+        <div id="my-bio-count" style="font-size:11px;color:var(--muted);margin-top:4px">0/180</div>
+        <button id="my-save-btn" class="btn-primary" style="margin-top:12px" onclick="saveMyPublicProfile()" disabled>Guardar cambios →</button>
+        <div id="my-profile-status" style="font-size:11px;color:var(--muted2);margin-top:8px"></div>
+        <div class="divider"></div>
+        <div class="card-label">HISTORIAL RECIENTE DE SCORE</div>
+        <div id="my-score-log"></div>
+        <div class="divider"></div>
+        <div class="card-label">VISTA PREVIA PÚBLICA</div>
+        <div id="my-public-preview"></div>
+      </div>
     </section>
 
     <!-- NOTICIAS -->
@@ -406,6 +437,7 @@
     <button class="bnav bnav-center" data-page="karma" onclick="showPage('karma',this)"><div class="bnav-center-icon"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1.2"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.6"/><circle cx="22" cy="22" r="5" fill="#00c8ff"/></svg></div></button>
     <button class="bnav" data-page="ranking"  onclick="showPage('ranking',this)"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="4" height="9" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="8" width="4" height="14" stroke="currentColor" stroke-width="1.5"/><rect x="16" y="3" width="4" height="19" stroke="currentColor" stroke-width="1.5"/></svg><span>RANKING</span></button>
     <button class="bnav" data-page="perfil"   onclick="showPage('perfil',this)"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>PERFIL</span></button>
+    <button class="bnav" data-page="miperfil" onclick="showPage('miperfil',this)"><svg viewBox="0 0 24 24" fill="none"><path d="M4 17.5V20h2.5L18.9 7.6l-2.5-2.5L4 17.5z" stroke="currentColor" stroke-width="1.5"/><path d="M14.8 6.5l2.5 2.5" stroke="currentColor" stroke-width="1.5"/></svg><span>MI PERFIL</span></button>
   </nav>
 </div>
 
