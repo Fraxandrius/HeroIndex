@@ -15,6 +15,7 @@ let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
 let myProfileDraft = null;
 
+
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
   fighting:'Fighting', agility:'Agility', strength:'Strength',
@@ -215,21 +216,28 @@ function renderHome(){
 
   // Top heroes
   const hr=document.getElementById('home-ranking');
-   if(hr) hr.innerHTML=sorted.slice(0,6).map((h,i)=>{
-      const move=getScoreMove(h.deltaTag);
-      return `<div class="hero-trend-card ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" onclick="openHeroModal(${h.id})">
-        <div class="hero-trend-head"><span class="hero-trend-pos">#${i+1}</span><span class="hero-trend-move ${move.cls}">${move.icon} ${move.label}</span></div>
-        <div class="hero-trend-body">
-          ${makeHeroAv(h,'md')}
-          <div class="hero-trend-info">
-            <div class="hr-name">${h.alias}</div>
-            <div class="hero-trend-sub" style="color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
-            <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+  if(hr){
+    if(!sorted.length){
+      hr.innerHTML=renderHomeRosterEmpty(session);
+    }else{
+      const cards=sorted.slice(0,6).map((h,i)=>{
+        const move=getScoreMove(h.deltaTag);
+        return `<div class="hero-trend-card ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" onclick="openHeroModal(${h.id})">
+          <div class="hero-trend-head"><span class="hero-trend-pos">#${i+1}</span><span class="hero-trend-move ${move.cls}">${move.icon} ${move.label}</span></div>
+          <div class="hero-trend-body">
+            ${makeHeroAv(h,'md')}
+            <div class="hero-trend-info">
+              <div class="hr-name">${h.alias}</div>
+              <div class="hero-trend-sub" style="color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
+              <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+            </div>
+            <div class="hero-trend-score"><b style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</b><span>${Math.max(52,Math.min(98,Math.round(h.score/120)))}% aprobación</span></div>
           </div>
-          <div class="hero-trend-score"><b style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</b><span>${Math.max(52,Math.min(98,Math.round(h.score/120)))}% aprobación</span></div>
-        </div>
-      </div>`;
-    }).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
+          </div>`;
+      }).join('');
+      hr.innerHTML=cards+renderHomeRosterNote(sorted.length, session);
+    }
+  }
 
       // Home headline media
   const featured=document.getElementById('featured-media');
@@ -248,6 +256,28 @@ function renderHome(){
   renderHomeAds();
 }
 
+
+function renderHomeRosterEmpty(session){
+  const cta=session.type==='gm'
+    ? '<button class="home-empty-cta" onclick="showPage(\'gm\')">Registrar primer héroe →</button>'
+    : '<button class="home-empty-cta" onclick="showPage(\'perfil\')">Ver perfiles públicos →</button>';
+  return `<div class="home-empty-state">
+    <div class="home-empty-icon">✨</div>
+    <div class="home-empty-title">El ranking todavía está por estrenarse</div>
+    <div class="home-empty-body">HeroIndex ya puede funcionar como portada pública, pero necesita héroes registrados para llenar historias, clips y rankings con celebridades reales del universo.</div>
+    ${cta}
+  </div>`;
+}
+
+function renderHomeRosterNote(count, session){
+  if(count>=3) return '';
+  const copy=count===1
+    ? 'Solo hay un héroe registrado: el feed usará más piezas editoriales hasta que agregues rivales, aliados y nuevas corporaciones.'
+    : 'Hay dos héroes registrados: el feed ya puede comparar tendencias, pero ganará variedad cuando agregues más perfiles.';
+  const cta=session.type==='gm'?'<button onclick="showPage(\'gm\')">Agregar héroes</button>':'';
+  return `<div class="home-roster-note"><span>${copy}</span>${cta}</div>`;
+}
+
 function renderHomeMasthead(sorted, session){
   const masthead=document.getElementById('home-masthead');
   if(!masthead) return;
@@ -257,17 +287,21 @@ function renderHomeMasthead(sorted, session){
   const totalH=heroes.length;
   const corps=new Set(heroes.map(h=>h.corp||'Independiente')).size;
   const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
-  const title=session.type==='hero'&&me
-    ? `${me.alias}, tu reputación pública está en vivo`
-    : (session.type==='gm'
-      ? 'ORÁCULO observa la narrativa debajo del espectáculo'
-      : 'La era dorada se transmite en vivo');
-  const body=session.type==='hero'&&me
-    ? 'Gestiona cómo fans, prensa, corporaciones y gobiernos leen cada rescate, clip y titular asociado a tu nombre.'
-    : (session.type==='gm'
-      ? 'La portada pública permanece aspiracional; esta franja privada revela divergencias, riesgos y control narrativo para dirección de juego.'
-      : 'HeroIndex reúne ranking, clips, perfiles y cobertura ciudadana para seguir a los héroes que sostienen el presente.' );
-  const topName=topHero?topHero.alias:'Sin héroes';
+   const title=!totalH
+    ? 'La portada está lista para el primer héroe'
+    : (session.type==='hero'&&me
+      ? `${me.alias}, tu reputación pública está en vivo`
+      : (session.type==='gm'
+        ? 'ORÁCULO observa la narrativa debajo del espectáculo'
+        : 'La era dorada se transmite en vivo'));
+  const body=!totalH
+    ? 'Cuando registres héroes, HeroIndex llenará automáticamente historias, rankings, clips y conversación social con sus datos públicos.'
+    : (session.type==='hero'&&me
+      ? 'Gestiona cómo fans, prensa, corporaciones y gobiernos leen cada rescate, clip y titular asociado a tu nombre.'
+      : (session.type==='gm'
+        ? 'La portada pública permanece aspiracional; esta franja privada revela divergencias, riesgos y control narrativo para dirección de juego.'
+        : 'HeroIndex reúne ranking, clips, perfiles y cobertura ciudadana para seguir a los héroes que sostienen el presente.' ));
+  const topName=topHero?topHero.alias:'Roster en preparación';
   const oracleRibbon=session.type==='gm'?`
     <div class="masthead-oracle gm-only">
       <span>ORÁCULO / GM</span>
@@ -290,9 +324,9 @@ function renderHomeMasthead(sorted, session){
       <div class="masthead-live-pill">● En vivo ahora</div>
       <div class="masthead-hero-label">Héroe destacado</div>
       <div class="masthead-hero-name">${topName}</div>
-      <div class="masthead-hero-sub">${topHero?(getCorpIcon(topHero.corp||'')+' '+(topHero.corp||'Independiente')):'Esperando registros'}</div>
+      <div class="masthead-hero-sub">${topHero?(getCorpIcon(topHero.corp||'')+' '+(topHero.corp||'Independiente')):'Agrega héroes desde el Panel GM para activar la cartelera'}</div>
       <div class="masthead-chip-row">
-        <span>🏆 #1 hoy</span>
+        <span>${topHero?'🏆 #1 hoy':'🆕 Nuevo universo'}</span>
         ${heroChip}
         <span>🏢 ${corps} corporaciones</span>
         <span>✅ ${totalH} verificados</span>
@@ -1199,7 +1233,6 @@ function renderNewsFeed(){
   });
 }
 
-
 // ── GM — POWERS FORM ─────────────────────────────────────────
 function addPowerField(){
   const list=document.getElementById('powers-form-list'); if(!list) return;
@@ -1260,24 +1293,43 @@ function clearGMForm(){
 
 // ── CSV IMPORT ────────────────────────────────────────────────
 const CSV_COLS=['alias','realName','corp','country','type','role','score','risk','occupation',
+  'publicSlogan','publicStatus','publicBio','publicAvatar',
   'fighting','agility','strength','reason','intuition','presence',
   'powers','talents','drawbacks','relationships','personality','flags'];
 
-function downloadTemplate(){
-  const header=CSV_COLS.join(',');
-  const example=[
-    'Eclipse','Clara Vega','Aurora Corporation','NPC','Blaster','4500','med','Detective',
-    '6','8','5','7','9','6',
-    'Proyección de luz MAJOR:Dispara rayos de energía;Vuelo BASIC:Velocidad media',
-    'Investigación;Armas de fuego',
-    'Miedo a la oscuridad;Identidad semi-conocida',
-    'Cóndor:mentor;Familia Vega:familia',
-    'Personalidad: observadora\nImpulso: buscar la verdad\nFalla: desconfía de la autoridad',
-    'Contacto con mercado negro;Bajo vigilancia nivel 1'
-  ].join(',');
-  const blob=new Blob([header+'\n'+example],{type:'text/csv'});
+function csvEscape(value=''){
+  const str=String(value ?? '');
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g,'""')}"` : str;
+}
+
+function rowsToCSV(rows){
+  return [CSV_COLS.map(csvEscape).join(','), ...rows.map(row=>CSV_COLS.map(col=>csvEscape(row[col]||'')).join(','))].join('\n');
+}
+
+
+function downloadCSVFile(filename, rows){
+  const blob=new Blob([rowsToCSV(rows)],{type:'text/csv;charset=utf-8'});
   const u=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=u;a.download='heroindex-plantilla.csv';a.click();URL.revokeObjectURL(u);
+  a.href=u;a.download=filename;a.click();URL.revokeObjectURL(u);
+}
+
+function downloadTemplate(){
+  downloadCSVFile('heroindex-plantilla.csv', [{
+    alias:'Eclipse', realName:'Clara Vega', corp:'Aurora Corporation', country:'Chile', type:'NPC', role:'Blaster', score:'4500', risk:'med', occupation:'Detective',
+    publicSlogan:'La luz siempre encuentra una grieta.', publicStatus:'Investigando actividad nocturna en Santiago.', publicBio:'Heroína urbana asociada a investigaciones de alto perfil y rescates mediáticos.', publicAvatar:'',
+    fighting:'6', agility:'8', strength:'5', reason:'7', intuition:'9', presence:'6',
+    powers:'Proyección de luz MAJOR:Dispara rayos de energía;Vuelo BASIC:Velocidad media',
+    talents:'Investigación;Armas de fuego', drawbacks:'Miedo a la oscuridad;Identidad semi-conocida', relationships:'Cóndor:mentor;Familia Vega:familia',
+    personality:'Personalidad: observadora\nImpulso: buscar la verdad\nFalla: desconfía de la autoridad', flags:'Contacto con mercado negro;Bajo vigilancia nivel 1'
+  }]);
+}
+
+function downloadStarterRosterTemplate(){
+  downloadCSVFile('heroindex-starter-roster.csv', [
+    {alias:'Violet Lightbeam',realName:'',corp:'Nexus Technologies',country:'Estados Unidos',type:'NPC',role:'Striker',score:'7100',risk:'med',occupation:'Speedster mediática',publicSlogan:'Más rápida que el rumor.',publicStatus:'En gira promocional con FanFeed.',publicBio:'Speedster emergente con alto engagement juvenil y contratos de streaming.',publicAvatar:'',fighting:'7',agility:'11',strength:'5',reason:'6',intuition:'8',presence:'9',powers:'Supervelocidad MASSIVE:Desplazamiento hipersónico;Reflejos MAJOR:Reacción sobrehumana',talents:'Acrobacia;Relaciones públicas',drawbacks:'Impulsiva;Dependencia de aprobación pública',relationships:'FanFeed:aliado mediático;Nexus Technologies:patrocinador',personality:'Personalidad: carismática\nImpulso: demostrar que merece la fama\nFalla: no sabe detenerse',flags:'Picos de estrés antes de cámaras'},
+    {alias:'Atlas Prime',realName:'',corp:'Valkyr Industries',country:'Estados Unidos',type:'NPC',role:'Brawn',score:'8600',risk:'high',occupation:'Héroe franquicia',publicSlogan:'Si cae el cielo, yo lo sostengo.',publicStatus:'Entrenamiento abierto patrocinado por VOLT.',publicBio:'Ícono de fuerza corporativa y campañas deportivas internacionales.',publicAvatar:'',fighting:'9',agility:'6',strength:'12',reason:'5',intuition:'6',presence:'10',powers:'Superfuerza MASSIVE:Clase titánica;Invulnerabilidad MAJOR:Resiste artillería pesada',talents:'Atletismo;Intimidación;Marketing deportivo',drawbacks:'Orgullo;Daño colateral recurrente',relationships:'Valkyr Industries:empleador;HeroInsure:sponsor',personality:'Personalidad: competitivo\nImpulso: ganar siempre\nFalla: confunde fuerza con liderazgo',flags:'Incidentes de colateral maquillados'},
+    {alias:'Mirage',realName:'',corp:'Independiente',country:'México',type:'PC',role:'Controller',score:'3900',risk:'low',occupation:'Ilusionista de rescate',publicSlogan:'No todo lo imposible es mentira.',publicStatus:'Aceptando colaboraciones de rescate urbano.',publicBio:'Heroína independiente especializada en evacuación, distracción táctica y rescates de bajo daño.',publicAvatar:'',fighting:'5',agility:'7',strength:'4',reason:'8',intuition:'9',presence:'8',powers:'Ilusiones MAJOR:Proyecta imágenes realistas;Invisibilidad BASIC:Ocultamiento temporal',talents:'Engaño;Teatro;Primeros auxilios',drawbacks:'Recursos limitados;Desconfianza corporativa',relationships:'Comunidad local:protectorado',personality:'Personalidad: empática\nImpulso: proteger sin venderse\nFalla: evita pedir ayuda',flags:'Sin contrato corporativo'}
+  ]);
 }
 
 function handleCSV(input){
@@ -1285,11 +1337,10 @@ function handleCSV(input){
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
-      if(lines.length<2){toast('El CSV debe tener al menos una fila de datos');return;}
-      const headers=lines[0].split(',').map(h=>h.trim());
-      const rows=lines.slice(1).map(line=>{
-        const vals=line.split(',');
+      const parsed=parseCSVText(e.target.result);
+      if(parsed.length<2){toast('El CSV debe tener al menos una fila de datos');return;}
+      const headers=parsed[0].map(h=>h.trim());
+      const rows=parsed.slice(1).filter(vals=>vals.some(v=>String(v||'').trim())).map(vals=>{
         const obj={};
         headers.forEach((h,i)=>obj[h]=(vals[i]||'').trim());
         return obj;
@@ -1300,6 +1351,27 @@ function handleCSV(input){
     }catch(err){toast('Error al leer el CSV: '+err.message);}
   };
   reader.readAsText(file);
+}
+
+function parseCSVText(text=''){
+  const rows=[]; let row=[]; let cur=''; let quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){
+      if(quoted && text[i+1]==='"'){ cur+='"'; i++; }
+      else quoted=!quoted;
+    }else if(ch===',' && !quoted){
+      row.push(cur); cur='';
+    }else if((ch==='\n' || ch==='\r') && !quoted){
+      if(ch==='\r' && text[i+1]==='\n') i++;
+      row.push(cur); cur='';
+      if(row.some(v=>String(v||'').trim())) rows.push(row);
+      row=[];
+    }else cur+=ch;
+  }
+  row.push(cur);
+  if(row.some(v=>String(v||'').trim())) rows.push(row);
+  return rows;
 }
 
 function parseCSVRow(row){
@@ -1334,7 +1406,7 @@ function parseCSVRow(row){
     occupation:row.occupation||'',
     attrs,powers,talents,drawbacks,relationships,
     personality:(row.personality||'').replace(/\\n/g,'\n'),
-    publicSlogan:'',publicBio:'',publicStatus:'',publicAvatar:'',flags,karmaLog:[],
+    publicSlogan:row.publicSlogan||'',publicBio:row.publicBio||'',publicStatus:row.publicStatus||'',publicAvatar:row.publicAvatar||'',flags,karmaLog:[],
     scoreLog:[{delta:0,note:'Importado CSV',date:today()}]
   };
 }
