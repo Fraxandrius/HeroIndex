@@ -58,55 +58,55 @@
       <!-- HeroIndex public masthead -->
       <section id="home-masthead" class="home-masthead" aria-label="HeroIndex portada"></section>
 
-      <div class="dashboard-grid social-home-grid">
+        <div class="home-shell">
 
-        <div class="dash-card span2 stories-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">MOMENTOS EN VIVO</span>
+        <section class="home-section-panel stories-panel span2" aria-labelledby="home-stories-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-stories-title">Momentos en vivo</span>
           </div>
           <div id="home-stories" class="home-stories"></div>
-        </div>
+        </section>
 
-        <div class="dash-card span2 media-featured-card">
+        <section class="home-section-panel featured-panel span2" aria-label="Media destacada">
           <div id="featured-media"></div>
-        </div>
+        </section>
 
-        <div class="dash-card span2">
-          <div class="dash-card-header">
-            <span class="dash-card-title">FEED SOCIAL</span>
-            <span class="dash-card-action" onclick="showPage('noticias')">Abrir feed ›</span>
+        <section class="home-section-panel feed-panel span2" aria-labelledby="home-feed-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-feed-title">Feed social</span>
+            <button class="home-section-link" onclick="showPage('noticias')">Abrir feed ›</button>
           </div>
           <div id="home-news-feed" class="news-feed social-feed"></div>
-        </div>
+        </section>
 
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">HÉROES EN TENDENCIA</span>
-            <span class="dash-card-action" onclick="showPage('ranking')">Ver ranking ›</span>
+        <section class="home-section-panel rankings-panel" aria-labelledby="home-ranking-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-ranking-title">Héroes en tendencia</span>
+            <button class="home-section-link" onclick="showPage('ranking')">Ver ranking ›</button>
           </div>
           <div id="home-ranking" class="home-ranking-card trending-heroes"></div>
-        </div>
+        </section>
 
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-title">CLIPS DESTACADOS</span>
+        <section class="home-section-panel clips-panel" aria-labelledby="home-clips-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-clips-title">Clips destacados</span>
           </div>
           <div id="home-clips" class="clips-rail"></div>
-        </div>
+        </section>
 
-        <div class="dash-card span2">
-          <div class="dash-card-header">
-            <span class="dash-card-title">PATROCINADO</span>
+        <section class="home-section-panel sponsor-panel span2" aria-labelledby="home-sponsor-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-sponsor-title">Patrocinado</span>
           </div>
           <div id="home-ads" class="home-ads"></div>
-        </div>
+        </section>
 
-        <div class="dash-card span2">
-          <div class="dash-card-header">
-            <span class="dash-card-title">ALERTAS PÚBLICAS</span>
+        <section class="home-section-panel public-alerts-panel span2" aria-labelledby="home-alerts-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-alerts-title">Alertas públicas</span>
           </div>
           <div id="alerts-list" class="alerts-list public-alerts"></div>
-        </div>
+        </section>
 
       </div>
     </section>
