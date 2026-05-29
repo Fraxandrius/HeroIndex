@@ -15,8 +15,6 @@ let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
 let myProfileDraft = null;
 
-
-
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
   fighting:'Fighting', agility:'Agility', strength:'Strength',
@@ -624,120 +622,112 @@ function renderRanking(){
     ? sorted.map((h,i)=>renderRankingCard(h,i,session,showKarma,showRisk)).join('')
     : `<div class="ranking-empty">Sin héroes en esta categoría. Importa o crea héroes desde el panel GM para poblar el ranking.</div>`;
   }
+
 // ── HERO DETAIL MODAL ────────────────────────────────────────
+function renderModalPublicStats(h){
+  const rank = getHeroGlobalRank(h);
+  const approval = getRankingApproval(h);
+  const followers = formatRankingAudience(h);
+  return `<div class="hero-public-stats">
+    <div><b style="color:${scoreColor(h.score)}">${(h.score||0).toLocaleString('es-CL')}</b><span>HeroIndex Score</span></div>
+    <div><b>${approval}%</b><span>Aprobación pública</span></div>
+    <div><b>${followers}</b><span>Seguidores</span></div>
+    <div><b>#${rank||'—'}</b><span>Ranking global</span></div>
+  </div>`;
+}
+
+function renderModalInfoTile(label, value){
+  return `<div class="hero-info-tile"><span>${label}</span><b>${value||'—'}</b></div>`;
+}
+
+function renderGMDossier(h){
+  const attrs = h.attrs || {};
+  const health = calcHealth(attrs);
+  const resolve = calcResolve(attrs);
+  const hasAttrs = Object.values(attrs).some(v=>v>0);
+  const attrsHtml = hasAttrs ? `<div class="attrs-grid hero-dossier-attrs">
+    ${Object.entries(ATTR_LABELS).map(([key,label])=>{
+      const v=attrs[key]||0;const pct=Math.round((v/12)*100);
+      return `<div class="attr-box"><div class="attr-name">${label.toUpperCase()}</div><div class="attr-val" style="color:${attrColor(v)}">${v||'—'}</div><div class="attr-desc">${v?attrDesc(v):''}</div>${v?`<div class="attr-bar"><div class="attr-bar-fill" style="width:${pct}%;background:${attrColor(v)}"></div></div>`:''}</div>`;
+    }).join('')}
+  </div>
+  <div class="derived-row">
+    <div class="derived-box"><div class="derived-icon">❤️</div><div><div class="derived-label">HEALTH</div><div class="derived-val" style="color:var(--red)">${health}</div><div class="derived-formula">(Fgt+Agi+Str)÷2</div></div></div>
+    <div class="derived-box"><div class="derived-icon">🧠</div><div><div class="derived-label">RESOLVE</div><div class="derived-val" style="color:var(--accent)">${resolve}</div><div class="derived-formula">(Rea+Int+Pre)÷2</div></div></div>
+  </div>` : '<p class="hero-dossier-empty">Sin atributos registrados.</p>';
+
+  const powersHtml = h.powers&&h.powers.length ? `<div class="powers-list">${h.powers.map(p=>`<div class="power-item"><span class="power-level ${p.level||'basic'}">${(p.level||'basic').toUpperCase()}</span><div><div class="power-name">${p.name}</div>${p.desc?`<div class="power-desc">${p.desc}</div>`:''}</div></div>`).join('')}</div>` : '<p class="hero-dossier-empty">Sin poderes registrados.</p>';
+  const talentsHtml = h.talents&&h.talents.length ? `<div class="talents-grid">${h.talents.map(t=>`<span class="talent-tag">${t}</span>`).join('')}</div>` : '<p class="hero-dossier-empty">Sin talentos registrados.</p>';
+  const drawbacksHtml = h.drawbacks&&h.drawbacks.length ? `<div class="talents-grid">${h.drawbacks.map(d=>`<span class="drawback-tag">${d}</span>`).join('')}</div>` : '<p class="hero-dossier-empty">Sin defectos registrados.</p>';
+  const relsHtml = h.relationships&&h.relationships.length ? `<div class="relationships-list">${h.relationships.map(r=>`<div class="rel-item"><div class="rel-name">${r.name}</div><div class="rel-type">${r.type}</div></div>`).join('')}</div>` : '<p class="hero-dossier-empty">Sin relaciones registradas.</p>';
+  const flagsHtml = h.flags&&h.flags.length ? h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('') : '<p class="hero-dossier-empty">Sin flags activos.</p>';
+
+  return `<section class="hero-gm-dossier gm-only">
+    <div class="hero-dossier-header"><span>ORÁCULO / GM DOSSIER</span><b>Acceso clasificado</b></div>
+    <div class="hero-dossier-grid">
+      ${renderModalInfoTile('Identidad real', h.realName||'No registrada')}
+      ${renderModalInfoTile('Risk Index', `<span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span>`)}
+      ${renderModalInfoTile('Karma', h.karma||0)}
+      ${renderModalInfoTile('Flags', h.flags?.length||0)}
+    </div>
+    ${h.personality?`<div class="hero-dossier-note"><span>Perfil psicológico</span><p>${h.personality}</p></div>`:''}
+    <div class="hero-dossier-block"><div class="card-label">Atributos tácticos</div>${attrsHtml}</div>
+    <div class="hero-dossier-block"><div class="card-label">Poderes registrados</div>${powersHtml}</div>
+    <div class="hero-dossier-two-col">
+      <div class="hero-dossier-block"><div class="card-label">Talentos</div>${talentsHtml}</div>
+      <div class="hero-dossier-block"><div class="card-label">Defectos / Complicaciones</div>${drawbacksHtml}</div>
+    </div>
+    <div class="hero-dossier-block"><div class="card-label">Relaciones clave</div>${relsHtml}</div>
+    <div class="hero-dossier-block"><div class="card-label">Flags ORÁCULO</div>${flagsHtml}</div>
+  </section>`;
+}
+
 function openHeroModal(id){
   const h=heroes.find(h=>h.id===id); if(!h) return;
   const session = currentSession || { type:'public' };
-  const canSeePrivate = canViewPrivateHero(session, h.id);
   const av=avColor(h.alias);
-  const attrs=canSeePrivate?(h.attrs||{}):{};
-  const health=calcHealth(attrs);
-  const resolve=calcResolve(attrs);
-  const hasAttrs=Object.values(attrs).some(v=>v>0);
-
-  // Attrs block
-  const attrsHtml=hasAttrs?`
-    <div class="attrs-grid">
-      ${Object.entries(ATTR_LABELS).map(([key,label])=>{
-        const v=attrs[key]||0;const pct=Math.round((v/12)*100);
-        return `<div class="attr-box">
-          <div class="attr-name">${label.toUpperCase()}</div>
-          <div class="attr-val" style="color:${attrColor(v)}">${v||'—'}</div>
-          <div class="attr-desc">${v?attrDesc(v):''}</div>
-          ${v?`<div class="attr-bar"><div class="attr-bar-fill" style="width:${pct}%;background:${attrColor(v)}"></div></div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="derived-row">
-      <div class="derived-box">
-        <div class="derived-icon">❤️</div>
-        <div><div class="derived-label">HEALTH</div><div class="derived-val" style="color:var(--red)">${health}</div><div class="derived-formula">(Fgt+Agi+Str)÷2</div></div>
-      </div>
-      <div class="derived-box">
-        <div class="derived-icon">🧠</div>
-        <div><div class="derived-label">RESOLVE</div><div class="derived-val" style="color:var(--accent)">${resolve}</div><div class="derived-formula">(Rea+Int+Pre)÷2</div></div>
-      </div>
-    </div>` : '<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Sin atributos registrados.</p>';
-
-  // Powers
-  const powersHtml=h.powers&&h.powers.length?`
-    <div class="powers-list">
-      ${h.powers.map(p=>`<div class="power-item">
-        <span class="power-level ${p.level||'basic'}">${(p.level||'basic').toUpperCase()}</span>
-        <div><div class="power-name">${p.name}</div>${p.desc?`<div class="power-desc">${p.desc}</div>`:''}</div>
-      </div>`).join('')}
-    </div>` : '<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
-
-  // Talents & Drawbacks
-  const talentsHtml=canSeePrivate&&h.talents&&h.talents.length?`<div class="talents-grid">${h.talents.map(t=>`<span class="talent-tag">${t}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
-  const drawbacksHtml=canSeePrivate&&h.drawbacks&&h.drawbacks.length?`<div class="talents-grid">${h.drawbacks.map(d=>`<span class="drawback-tag">${d}</span>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
-
-  // Relationships
-  const relsHtml=canSeePrivate&&h.relationships&&h.relationships.length?`<div class="relationships-list">${h.relationships.map(r=>`<div class="rel-item"><div class="rel-name">${r.name}</div><div class="rel-type">${r.type}</div></div>`).join('')}</div>`:'<p style="font-size:12px;color:var(--muted)">Contenido privado protegido.</p>';
-  
-  // GM-only section
-    const gmSection=session.type==='gm'?`
-    <div class="divider"></div>
-    <div class="card-label" style="color:var(--gm-red)">ORÁCULO — DATOS CLASIFICADOS</div>
-    ${h.realName?`<div style="font-size:13px;margin-bottom:8px"><span style="color:var(--muted);font-size:11px">Identidad real: </span><span style="color:var(--gm-red);font-weight:600">${h.realName}</span></div>`:''}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:12px;color:var(--muted)">Risk Index</span>
-      <span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span>
-    </div>
-    ${h.flags&&h.flags.length?`<div>${h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('')}</div>`:''}
-  `:'';
-
-  const safePublicStatus = getSafeProfileCopy(h.publicStatus, '', session);
-  const safePublicSlogan = getSafeProfileCopy(h.publicSlogan, '', session);
+  const tier = getProfileReputationTier(h);
+  const safePublicStatus = getSafeProfileCopy(h.publicStatus, 'Perfil público activo', session);
+  const safePublicSlogan = getSafeProfileCopy(h.publicSlogan, 'Perfil verificado en HeroIndex.', session);
   const safePublicBio = getSafeProfileCopy(h.publicBio, 'Biografía pública verificada pendiente de edición editorial.', session);
+  const coverStyle = `background:radial-gradient(circle at 18% 18%, ${av.c}55, transparent 34%),linear-gradient(135deg, ${av.bg}, rgba(255,255,255,0.08)),linear-gradient(90deg, rgba(255,214,102,0.18), rgba(192,132,252,0.12));`;
+  const avatar = h.publicAvatar
+    ? `<img src="${h.publicAvatar}" alt="avatar" class="hero-public-avatar" style="object-fit:cover;border-color:${av.c}66">`
+    : `<div class="hero-public-avatar" style="background:${av.bg};color:${av.c};border-color:${av.c}66">${initials(h.alias)}</div>`;
+  const gmDossier = session.type === 'gm' ? renderGMDossier(h) : '';
 
   const content=`
-    <button class="hero-modal-close" onclick="document.getElementById('hero-modal').style.display='none'">✕</button>
-    <div class="hero-modal-header">
-       ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="width:56px;height:56px;object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33;width:56px;height:56px;font-size:18px">${initials(h.alias)}</div>`}
-      <div style="flex:1">
-        <div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--text)">${h.alias}</div>
-        ${h.realName&&session.type==='gm'?`<div style="font-size:12px;color:var(--gm-red)">${h.realName}</div>`:''}
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">${h.corp||'—'} · ${h.country?getFlag(h.country)+' '+h.country:''} ${h.occupation?'· '+h.occupation:''}</div>
-        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
-          ${h.role?`<span class="role-badge">${h.role}</span>`:''}
-        </div>
+    <button class="hero-modal-close hero-public-close" onclick="document.getElementById('hero-modal').style.display='none'">✕</button>
+    <section class="hero-public-profile">
+      <div class="hero-public-cover" style="${coverStyle}">
+        <div class="hero-public-cover-top"><span>#${getHeroGlobalRank(h)||'—'} Global</span><span class="profile-tier ${tier.cls}">${tier.label}</span></div>
+        <div class="hero-public-status">● ${safePublicStatus}</div>
       </div>
-      <div style="text-align:right">
-        <div style="font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
-        <div style="font-size:10px;color:var(--muted);letter-spacing:1px">HEROINDEX</div>
-        ${canSeePrivate?`<div style="font-size:14px;color:var(--green);font-weight:600;margin-top:4px">Karma: ${h.karma}</div>`:''}      
+            <div class="hero-public-body">
+        <div class="hero-public-avatar-wrap">${avatar}<span class="profile-verified-dot">✓</span></div>
+        <div class="hero-public-title-row">
+          <div>
+            <h2>${h.alias}</h2>
+            <p>${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}${h.corp?` · ${getCorpIcon(h.corp)} ${h.corp}`:' · Independiente'}</p>
+          </div>
+          <div class="hero-public-badges">
+            <span class="profile-pill verified">✔ Verificado</span>
+            ${h.role?`<span class="profile-pill role">${h.role}</span>`:''}
+            <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
+          </div>
+        </div>
+        <blockquote class="hero-public-slogan">“${safePublicSlogan}”</blockquote>
+        <p class="hero-public-bio">${safePublicBio}</p>
+        ${renderModalPublicStats(h)}
+        <div class="hero-public-info-grid">
+          ${renderModalInfoTile('Afiliación', h.corp||'Independiente')}
+          ${renderModalInfoTile('Base pública', `${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}`)}
+          ${renderModalInfoTile('Rol mediático', h.role||'No declarado')}
+          ${renderModalInfoTile('Ocupación pública', h.occupation||'Héroe verificado')}
         </div>
     </div>
-
-    ${safePublicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:6px">● ${safePublicStatus}</div>`:''}
-    ${safePublicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${safePublicSlogan}"</div>`:''}
-    ${safePublicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${safePublicBio}</div>`:''}
-    ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
-    
-    <div class="card-label" style="color:var(--accent)">ATRIBUTOS</div>
-    ${attrsHtml}
-
-    <div class="card-label" style="color:var(--accent)">PODERES</div>
-    ${powersHtml}
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
-      <div>
-        <div class="card-label" style="color:var(--accent)">TALENTOS</div>
-        ${talentsHtml}
-      </div>
-      <div>
-        <div class="card-label" style="color:var(--amber)">DEFECTOS</div>
-        ${drawbacksHtml}
-      </div>
-    </div>
-
-    <div class="divider"></div>
-    <div class="card-label" style="color:var(--accent)">RELACIONES CLAVE</div>
-    ${relsHtml}
-
-    ${gmSection}
+</section>
+    ${gmDossier}
   `;
   document.getElementById('hero-modal-content').innerHTML=content;
   document.getElementById('hero-modal').style.display='flex';
