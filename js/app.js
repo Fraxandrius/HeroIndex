@@ -180,10 +180,19 @@ function closeGMModal(e){if(e.target===document.getElementById('gm-modal'))docum
 function renderAll(){renderHome();renderRanking();renderProfiles();}
 
 // ── HOME — SOCIAL MEDIA PLATFORM ────────────────────────────
+function isHomeOracleActive(session=currentSession||{type:'public'}){
+  return session.type==='gm' && gmActive && document.body.classList.contains('gm-active');
+}
+
+function getHomeViewSession(session=currentSession||{type:'public'}){
+  if(isHomeOracleActive(session)) return session;
+  if(session.type==='hero') return session;
+  return {type:'public'};
+}
+
 function renderHome(){
   const sorted=[...heroes].sort((a,b)=>b.score-a.score).map((h,i)=>({...h,deltaTag:i%3===0?'up':(i%4===0?'down':'steady')}));
-  const session=currentSession||{type:'public'};
-
+  const session=getHomeViewSession();
   renderHomeMasthead(sorted, session);
    
   // Alerts
@@ -234,7 +243,7 @@ function renderHome(){
   }
   
   renderHomeStories(session);
-  renderHomeSocialFeed();
+  renderHomeSocialFeed(session);
   renderHomeClips(heroes);
   renderHomeAds();
 }
@@ -316,42 +325,8 @@ function renderFeaturedMedia(n,isGM, heroList=heroes){
     ${isGM?'<div class="featured-oracle gm-only">ORÁCULO: divergencia detectada entre narrativa pública y reporte interno.</div>':''}
   </article>`;
 }
-function renderHomeFeedItem(n){
-  return `<article class="home-feed-item source-${n.source}">
-    <div class="home-feed-meta">
-      <span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||n.source}</span>
-      <span class="news-category ${CAT_CLASSES[n.category]||'cat-comunicado'}">${CAT_LABELS[n.category]||n.category}</span>
-      <span class="news-date">${n.date}</span>
-    </div>
-    <div class="home-feed-headline">${n.headline}</div>
-    ${n.body?`<div class="home-feed-body">${n.body}</div>`:''}
-  </article>`;
-}
 
-function renderHeroSpotlight(){
-  const box=document.getElementById('home-hero-spotlight');
-  if(!box) return;
-  const story=(typeof getHomeFeaturedStory==='function')?getHomeFeaturedStory():null;
-  if(!story){ box.innerHTML=''; return; }
-   const session=currentSession||{type:'public'};
-  const top=[...heroes].sort((a,b)=>b.score-a.score)[0];
-  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
-  const contextChips=[
-    top?`<span>🏆 Nº1: <b>${top.alias}</b></span>`:'',
-    me?`<span>👤 Tu vista: <b>${me.alias}</b></span>`:'<span>🌍 Modo Público Internacional</span>',
-    `<span>📡 Estado: <b>${session.type==='gm'?'GM / ORÁCULO':'Open Civic Feed'}</b></span>`
-  ].filter(Boolean).join('');
-  box.innerHTML=`<div class="hero-spotlight">
-    <div class="hero-spotlight-kicker">${story.label} · HeroIndex International</div>
-    <h2 class="hero-spotlight-title">${story.title}</h2>
-    <p class="hero-spotlight-summary">${story.summary}</p>
-    <div class="hero-context-chips">${contextChips}</div>
-    <div class="hero-spotlight-metrics">${(story.metrics||[]).map(m=>`<div class="spot-metric"><span>${m.label}</span><b>${m.value}</b></div>`).join('')}</div>
-  </div>`;
-}
-
-
-function renderHomeStories(session=currentSession||{type:'public'}){
+function renderHomeStories(session=getHomeViewSession()){
   const row=document.getElementById('home-stories');
   if(!row) return;
     const stories=(typeof getHomeStories==='function'?getHomeStories(heroes):[])
@@ -362,10 +337,9 @@ function renderHomeStories(session=currentSession||{type:'public'}){
   </div>`).join('');
 }
 
-function renderHomeSocialFeed(){
+function renderHomeSocialFeed(session=getHomeViewSession()){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
-  const session=currentSession||{type:'public'};
   loadNews().then(all=>{
     const visibility=getNewsVisibilityByRole(session);
     const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public'));
@@ -386,14 +360,6 @@ function renderSocialPost(p,isGM){
   </article>`;
 }
 
-function renderHomeTrending(){
-  const box=document.getElementById('home-trending');
-  if(!box) return;
-  const topics=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]);
-   const ranked=topics.map((t,i)=>({...t,rank:i+1}));
-  box.innerHTML=`<div class="trending-wrap"><div class="trending-title">TENDENCIAS GLOBALES</div><div class="trending-list">${ranked.map(t=>`<span class="trend-pill"><em>#${t.rank}</em> ${t.tag} <b>${t.pulse}</b></span>`).join('')}</div></div>`;
-}
-
 function renderHomeAds(){
   const adEl=document.getElementById('home-ads');
   if(!adEl) return;
@@ -408,51 +374,6 @@ function renderHomeAds(){
       </div>
     </div>
   </div>`).join('')||'<div class="news-empty">Sin espacios comerciales activos.</div>';
-}
-
-function renderHomeQuickActions(){
-  const box=document.getElementById('home-quick-actions');
-  if(!box) return;
-  const session=currentSession||{type:'public'};
-  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
-  const profileMissing=me && (!cleanPublicText(me.publicSlogan) || !cleanPublicText(me.publicStatus) || !cleanPublicText(me.publicBio));
-  const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
-  const trending=(typeof getHomeTrendingTopics==='function'?getHomeTrendingTopics():[]).slice(0,3);
-  const trendText=trending.length?trending.map(t=>`${t.tag} ${t.pulse}`).join(' · '):'Sin tendencias destacadas';
-  const newsHint=session.type==='gm'
-    ?'Publica comunicados, rumores y reportes clasificados para mover la narrativa pública.'
-    :'Revisa el pulso público y los reportes corporativos más recientes.';
-  const gmCard=session.type==='gm'?`
-    <div class="quick-action">
-      <div class="quick-action-title" style="color:var(--gm-red)">ORÁCULO — CONSOLA GM</div>
-      <div class="quick-action-body">Hay <b>${highRisk}</b> héroe(s) en vigilancia alta/critica. Ajusta score, risk y flags en tiempo real.</div>
-      <button class="btn-primary" onclick="showPage('gm')">Abrir Panel GM →</button>
-    </div>`:'';
-  const heroCard=session.type==='hero'?`
-    <div class="quick-action">
-      <div class="quick-action-title" style="color:var(--accent)">IDENTIDAD PÚBLICA</div>
-      <div class="quick-action-body">${profileMissing?'Tu ficha pública está incompleta. Completa slogan, estado y bio para ganar presencia.':'Tu perfil público está completo y listo para prensa.'}</div>
-      <button class="${profileMissing?'btn-primary':'btn-sec'}" onclick="showPage('miperfil')">${profileMissing?'Completar Mi Perfil →':'Editar Mi Perfil →'}</button>
-    </div>`:'';
-  const publicCard=session.type==='public'?`
-    <div class="quick-action">
-      <div class="quick-action-title" style="color:var(--green)">ACCESO DE HÉROE</div>
-      <div class="quick-action-body">Inicia sesión como héroe para editar tu perfil, revisar tu progreso y acceder a herramientas privadas.</div>
-      <button class="btn-sec" onclick="logout()">Cambiar sesión →</button>
-    </div>`:'';
-  box.innerHTML=`
-    <div class="quick-action">
-      <div class="quick-action-title" style="color:var(--amber)">CENTRAL DE NOTICIAS</div>
-       <div class="quick-action-body">${newsHint}<br><span class="quick-trends">Tendencias: ${trendText}</span></div>
-      <button class="btn-sec" onclick="showPage('noticias')">Abrir Noticias →</button>
-    </div>
-    <div class="quick-action">
-      <div class="quick-action-title" style="color:var(--accent)">CENTRO DE OPERACIONES</div>
-      <div class="quick-action-body">Consulta ranking, vigilancia y perfiles para coordinar respuestas entre corporaciones y equipos.</div>
-      <button class="btn-sec" onclick="showPage('ranking')">Abrir Ranking →</button>
-    </div>
-    ${session.type==='gm'?gmCard:(session.type==='hero'?heroCard:publicCard)}
-  `;
 }
 
 function renderMiniChart(hero){
