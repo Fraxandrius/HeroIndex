@@ -14,7 +14,8 @@ const firebaseConfig = {
 const hasFirebase = typeof firebase !== 'undefined' && firebase?.initializeApp;
 if (hasFirebase) firebase.initializeApp(firebaseConfig);
 const db = hasFirebase ? firebase.database() : null;
-const storage = hasFirebase && firebase.storage ? firebase.storage() : null;
+let storage = null;
+let storageCompatPromise = null;
 
 function readLocal(key, fallback) {
   try {
@@ -26,6 +27,38 @@ function readLocal(key, fallback) {
 }
 function writeLocal(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+
+function getFirebaseStorageInstance() {
+  if (storage) return storage;
+  if (typeof firebase !== 'undefined' && typeof firebase.storage === 'function') {
+    storage = firebase.storage();
+    return storage;
+  }
+  return null;
+}
+
+function loadFirebaseStorageCompat() {
+  if (getFirebaseStorageInstance()) return Promise.resolve(storage);
+  if (storageCompatPromise) return storageCompatPromise;
+  if (typeof document === 'undefined') return Promise.resolve(null);
+  storageCompatPromise = new Promise(resolve => {
+    const existing = document.querySelector('script[data-firebase-storage-compat="true"], script[src*="firebase-storage-compat"]');
+    if (existing && typeof firebase !== 'undefined' && typeof firebase.storage === 'function') {
+      resolve(getFirebaseStorageInstance());
+      return;
+    }
+    const script = existing || document.createElement('script');
+    const done = () => resolve(getFirebaseStorageInstance());
+    script.dataset.firebaseStorageCompat = 'true';
+    script.src = script.src || 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js';
+    script.onload = done;
+    script.onerror = () => resolve(null);
+    setTimeout(done, 3500);
+    if (!existing) document.head.appendChild(script);
+  });
+  return storageCompatPromise;
 }
 
 
@@ -208,10 +241,14 @@ function createNewsComment(newsId, item) {
 
 function uploadContentImage(file, folder='content') {
   if (!file) return Promise.resolve('');
-  if (!storage) return Promise.reject(new Error('Firebase Storage no disponible. Actívalo y carga firebase-storage-compat.'));
-  const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
-  const path = `${folder}/${Date.now()}-${safeName}`;
-  return storage.ref(path).put(file).then(snapshot => snapshot.ref.getDownloadURL());
+  return loadFirebaseStorageCompat().then(activeStorage => {
+    if (!activeStorage) {
+      throw new Error('Firebase Storage no disponible. Verifica que firebase-storage-compat.js cargue en index.html y que Storage esté activado en Firebase Console.');
+    }
+    const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${folder}/${Date.now()}-${safeName}`;
+    return activeStorage.ref(path).put(file).then(snapshot => snapshot.ref.getDownloadURL());
+  });
 }
 
 // Legacy alias kept for older code paths.
