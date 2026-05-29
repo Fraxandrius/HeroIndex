@@ -143,6 +143,21 @@ function cleanPublicText(txt=''){
     .trim();
 }
 
+const SENSITIVE_PUBLIC_COPY_PATTERNS = [
+  /\bvendid[ao]s?\s+como\b/i,
+  /\bconvertid[ao]s?\s+en\b/i,
+  /\bproducto\s+pol[ií]tico\b/i,
+  /\bmaquillad[ao]s?\b/i,
+];
+
+function getSafeProfileCopy(value, fallback='', session=currentSession||{type:'public'}){
+  const clean = cleanPublicText(value || '');
+  if(!clean) return fallback;
+  if(session.type === 'gm') return clean;
+  return SENSITIVE_PUBLIC_COPY_PATTERNS.some(pattern=>pattern.test(clean)) ? fallback : clean;
+}
+
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
@@ -672,6 +687,10 @@ function openHeroModal(id){
     ${h.flags&&h.flags.length?`<div>${h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('')}</div>`:''}
   `:'';
 
+  const safePublicStatus = getSafeProfileCopy(h.publicStatus, '', session);
+  const safePublicSlogan = getSafeProfileCopy(h.publicSlogan, '', session);
+  const safePublicBio = getSafeProfileCopy(h.publicBio, 'Biografía pública verificada pendiente de edición editorial.', session);
+
   const content=`
     <button class="hero-modal-close" onclick="document.getElementById('hero-modal').style.display='none'">✕</button>
     <div class="hero-modal-header">
@@ -692,9 +711,9 @@ function openHeroModal(id){
         </div>
     </div>
 
-    ${h.publicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:6px">● ${h.publicStatus}</div>`:''}
-    ${h.publicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${h.publicSlogan}"</div>`:''}
-    ${h.publicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${h.publicBio}</div>`:''}
+    ${safePublicStatus?`<div style="font-size:11px;color:var(--accent);margin-bottom:6px">● ${safePublicStatus}</div>`:''}
+    ${safePublicSlogan?`<div style="font-size:12px;color:var(--muted2);margin-bottom:6px">"${safePublicSlogan}"</div>`:''}
+    ${safePublicBio?`<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${safePublicBio}</div>`:''}
     ${canSeePrivate&&h.personality?`<div style="font-size:13px;color:var(--muted2);white-space:pre-line;line-height:1.6;margin-bottom:1rem;padding:12px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">${h.personality}</div>`:''}
     
     <div class="card-label" style="color:var(--accent)">ATRIBUTOS</div>
@@ -1033,9 +1052,7 @@ function renderProfilePublicBadges(h, session){
 }
 
 function renderProfilePrivatePreview(h, canSeePrivate){
-  if(!canSeePrivate){
-    return `<div class="profile-private-teaser">Poderes, Health, Resolve y Karma protegidos. Inicia sesión como este héroe o GM para ver datos extendidos.</div>`;
-  }
+  if(!canSeePrivate) return '';
   const attrs = h.attrs || {};
   const health = calcHealth(attrs);
   const resolve = calcResolve(attrs);
@@ -1072,9 +1089,9 @@ function renderHeroProfileCard(h, session){
   const approval = getRankingApproval(h);
   const followers = formatRankingAudience(h);
   const isCurrentHero = session.type === 'hero' && session.heroId === h.id;
-  const publicStatus = cleanPublicText(h.publicStatus) || 'Disponible para cobertura pública';
-  const slogan = cleanPublicText(h.publicSlogan) || 'Perfil verificado en HeroIndex.';
-  const bio = cleanPublicText(h.publicBio) || 'Biografía pública pendiente de actualización.';
+  const publicStatus = getSafeProfileCopy(h.publicStatus, 'Disponible para cobertura pública', session);
+  const slogan = getSafeProfileCopy(h.publicSlogan, 'Perfil verificado en HeroIndex.', session);
+  const bio = getSafeProfileCopy(h.publicBio, 'Biografía pública verificada pendiente de edición editorial.', session);
   const pctS=Math.min(100,Math.round(((Number(h.score)||0)/10000)*100));
   const coverStyle = `background:radial-gradient(circle at 18% 18%, ${av.c}55, transparent 34%),linear-gradient(135deg, ${av.bg}, rgba(255,255,255,0.08)),linear-gradient(90deg, rgba(255,214,102,0.18), rgba(192,132,252,0.12));`;
   return `<article class="profile-card reputation-card ${isCurrentHero?'is-current-hero':''} ${session.type==='gm'?'gm-card':''}" onclick="openHeroModal(${h.id})">
