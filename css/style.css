@@ -2892,3 +2892,68 @@ body:not(.gm-active) .gm-post{
 .cms-status.success { color: var(--green); }
 .cms-status.error { color: var(--red); }
 .media-ad-post { border-color: rgba(255,171,64,0.22); }
+
+/* ── CMS ad upload preview / validation ───────────────────── */
+.cms-required {
+  color: var(--amber);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.cms-ad-preview {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: minmax(160px, 240px) 1fr;
+  gap: 12px;
+  align-items: center;
+  border: 1px dashed rgba(255,214,102,.28);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255,214,102,.045);
+}
+.cms-ad-preview-box {
+  position: relative;
+  min-height: 118px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--muted2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  background: linear-gradient(135deg, rgba(255,214,102,.12), rgba(0,200,255,.08));
+  border: 1px solid rgba(255,255,255,.1);
+}
+.cms-ad-preview-box img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cms-ad-preview-box span {
+  position: relative;
+  z-index: 1;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.38);
+}
+.cms-ad-preview p {
+  margin: 0;
+  color: var(--muted2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.cms-ad-preview.is-ready {
+  border-style: solid;
+  border-color: rgba(16,185,129,.34);
+}
+.cms-ad-preview.has-error {
+  border-style: solid;
+  border-color: rgba(255,77,77,.42);
+}
+.cms-ad-preview.has-error p { color: #ffb4b4; }
+@media (max-width: 760px) {
+  .cms-ad-preview { grid-template-columns: 1fr; }
+}

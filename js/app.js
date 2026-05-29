@@ -205,6 +205,81 @@ function cmsErrorMessage(error){
   return error?.message || 'Error CMS desconocido.';
 }
 
+const CMS_AD_MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const CMS_ALLOWED_AD_IMAGE_TYPES = ['image/jpeg','image/png','image/webp'];
+const CMS_AD_PLACEMENT_HELP = {
+  home:'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.',
+  news:'Noticias inline usa formato 4:3. Evita texto pequeño porque aparece entre posts.',
+  sidebar:'Sidebar rail se mostrará en espacios laterales/compactos; por ahora también se lista en Patrocinado hasta Phase Ads-2.'
+};
+
+function formatBytes(bytes=0){
+  if(bytes < 1024) return `${bytes} B`;
+  if(bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
+  return `${(bytes/(1024*1024)).toFixed(1)} MB`;
+}
+
+function getCMSAdPlacement(){
+  return document.getElementById('cms-ad-placement')?.value || 'home';
+}
+
+function updateCMSAdPlacementHelp(message){
+  const help=document.getElementById('cms-ad-placement-help');
+  if(!help) return;
+  const placement=getCMSAdPlacement();
+  help.textContent=message || CMS_AD_PLACEMENT_HELP[placement] || CMS_AD_PLACEMENT_HELP.home;
+}
+
+function setCMSAdBusy(isBusy){
+  const btn=document.getElementById('cms-ad-submit');
+  if(!btn) return;
+  btn.disabled=!!isBusy;
+  btn.textContent=isBusy?'Publicando anuncio...':'Crear anuncio →';
+}
+
+function validateCMSAdImage(file){
+  if(!file) return { ok:false, message:'Los anuncios visuales necesitan una imagen. Selecciona un JPG, PNG o WEBP de máximo 2 MB.' };
+  if(!CMS_ALLOWED_AD_IMAGE_TYPES.includes(file.type)) {
+    return { ok:false, message:'Formato no permitido. Usa JPG, PNG o WEBP.' };
+  }
+  if(file.size > CMS_AD_MAX_IMAGE_BYTES) {
+    return { ok:false, message:`Imagen demasiado pesada (${formatBytes(file.size)}). Máximo permitido: ${formatBytes(CMS_AD_MAX_IMAGE_BYTES)}.` };
+  }
+  return { ok:true, message:`Imagen lista: ${file.name} · ${formatBytes(file.size)}.` };
+}
+
+function previewCMSAdImage(input){
+  const file=input?.files?.[0] || null;
+  const preview=document.getElementById('cms-ad-preview');
+  const box=preview?.querySelector('.cms-ad-preview-box');
+  if(!preview || !box) return;
+  preview.classList.remove('is-ready','has-error');
+  box.innerHTML='<span>Preview del anuncio</span>';
+  const validation=validateCMSAdImage(file);
+  if(!validation.ok){
+    preview.classList.add('has-error');
+    updateCMSAdPlacementHelp(validation.message);
+    if(file) {
+      input.value='';
+      cmsSetStatus(validation.message,'error');
+    }
+    return;
+  }
+  const url=URL.createObjectURL(file);
+  box.innerHTML=`<img src="${url}" alt="Preview anuncio" onload="URL.revokeObjectURL('${url}')"><span>${getCMSAdPlacement().toUpperCase()}</span>`;
+  preview.classList.add('is-ready');
+  updateCMSAdPlacementHelp(`${validation.message} ${CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || ''}`);
+  cmsSetStatus(validation.message,'success');
+}
+
+function clearCMSAdPreview(){
+  const preview=document.getElementById('cms-ad-preview');
+  const box=preview?.querySelector('.cms-ad-preview-box');
+  if(preview) preview.classList.remove('is-ready','has-error');
+  if(box) box.innerHTML='<span>Preview del anuncio</span>';
+  updateCMSAdPlacementHelp();
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
@@ -1580,17 +1655,28 @@ function createCMSAd(){
   const brand=cleanPublicText(document.getElementById('cms-ad-brand')?.value||'');
   const headline=cleanPublicText(document.getElementById('cms-ad-headline')?.value||'');
   if(!brand || !headline) return toast('Marca y titular son obligatorios');
-  const file=document.getElementById('cms-ad-image')?.files?.[0]||null;
+  const fileInput=document.getElementById('cms-ad-image');
+  const file=fileInput?.files?.[0]||null;
+  const validation=validateCMSAdImage(file);
+  if(!validation.ok){
+    cmsSetStatus(validation.message,'error');
+    toast(validation.message);
+    previewCMSAdImage(fileInput);
+    return;
+  }
   const payload={
     brand, headline,
     body:cleanPublicText(document.getElementById('cms-ad-body')?.value||''),
-    placement:document.getElementById('cms-ad-placement')?.value||'home',
-    active:!!document.getElementById('cms-ad-active')?.checked
+    placement:getCMSAdPlacement(),
+    active:!!document.getElementById('cms-ad-active')?.checked,
+    imageRequired:true
   };
-  cmsSetStatus(file?'Uploading image...':'Saving ad to database path: /ads','working');
+  setCMSAdBusy(true);
+  cmsSetStatus('Uploading image...','working');
   uploadContentImage(file,'ads')
     .then(imageUrl=>{
-      if(imageUrl) cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+      if(!imageUrl) throw new Error('La imagen del anuncio no devolvió URL de descarga. Intenta subirla otra vez.');
+      cmsSetStatus('Image URL obtained: '+imageUrl,'working');
       return createAdContent({...payload,imageUrl});
     })
     .then(created=>{
@@ -1598,7 +1684,8 @@ function createCMSAd(){
       if(created.placement==='news') renderNewsFeed();
       renderHome();
       ['cms-ad-brand','cms-ad-headline','cms-ad-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-      const img=document.getElementById('cms-ad-image'); if(img) img.value='';
+      if(fileInput) fileInput.value='';
+      clearCMSAdPreview();
       cmsSetStatus(`Ad saved: ${created.headline}. Placement: ${created.placement}.`,'success');
       toast('Anuncio creado');
     })
@@ -1607,7 +1694,8 @@ function createCMSAd(){
       const msg=cmsErrorMessage(e);
       cmsSetStatus(msg,'error');
       toast(msg);
-    });
+    })
+    .finally(()=>setCMSAdBusy(false));
 }
 
 function createCMSComment(){

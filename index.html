@@ -402,13 +402,16 @@
               <div class="cms-section-title">Crear anuncio</div>
               <div class="gm-form">
                 <div class="fg"><label>Marca</label><input type="text" id="cms-ad-brand" placeholder="VOLT Energy"></div>
-                <div class="fg"><label>Placement</label><select id="cms-ad-placement"><option value="home">Home</option><option value="news">Noticias</option><option value="sidebar">Sidebar</option></select></div>
-                <div class="fg full"><label>Titular</label><input type="text" id="cms-ad-headline" placeholder="Energía para héroes de alto rendimiento"></div>
+                <div class="fg"><label>Placement</label><select id="cms-ad-placement" onchange="updateCMSAdPlacementHelp()"><option value="home">Home sponsor</option><option value="news">Noticias inline</option><option value="sidebar">Sidebar rail</option></select></div>
                 <div class="fg full"><label>Texto</label><textarea id="cms-ad-body" placeholder="Copy publicitario..."></textarea></div>
-                <div class="fg full"><label>Imagen anuncio</label><input type="file" id="cms-ad-image" accept="image/png,image/jpeg,image/webp,gif"></div>
+                  <div class="fg full"><label>Imagen anuncio <span class="cms-required">obligatoria · máx. 2 MB</span></label><input type="file" id="cms-ad-image" accept="image/png,image/jpeg,image/webp" onchange="previewCMSAdImage(this)"></div>
+                <div class="cms-ad-preview full" id="cms-ad-preview">
+                  <div class="cms-ad-preview-box"><span>Preview del anuncio</span></div>
+                  <p id="cms-ad-placement-help">Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.</p>
+                </div>
                 <label class="cms-check full"><input type="checkbox" id="cms-ad-active" checked> Activo</label>
               </div>
-              <button class="btn-primary" onclick="createCMSAd()">Crear anuncio →</button>
+              <button class="btn-primary" id="cms-ad-submit" onclick="createCMSAd()">Crear anuncio →</button>
             </div>
 
             <div class="divider"></div>
