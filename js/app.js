@@ -1322,30 +1322,76 @@ function deleteNews(id){
 const CAT_CLASSES={comunicado:'cat-comunicado',operacion:'cat-operacion',cobertura:'cat-cobertura',rumor:'cat-rumor',clasificado:'cat-clasificado'};
 const CAT_LABELS={comunicado:'Comunicado',operacion:'Operación',cobertura:'Cobertura mediática',rumor:'Rumor',clasificado:'CLASIFICADO'};
 const SOURCE_LABELS={heroindex:'HEROINDEX INTL.',corp:'CORPORACIÓN',oracle:'ORÁCULO'};
+const MEDIA_SOURCE_PROFILES={
+  heroindex:{avatar:'HI',name:'HeroIndex Official',handle:'@heroindex',badge:'Verificado',kind:'official'},
+  corp:{avatar:'CN',name:'Corporate Newsroom',handle:'@corpwire',badge:'Comunicado',kind:'promoted'},
+  oracle:{avatar:'OR',name:'ORÁCULO',handle:'classified://oracle',badge:'GM only',kind:'oracle'},
+};
+
+function getNewsEngagement(n){
+  const seed = Number(n.id || 0) || cleanPublicText(n.headline).length * 997;
+  const base = Math.max(12000, (seed % 180000) + cleanPublicText(n.headline).length * 620);
+  return {
+    likes: typeof homeCompact === 'function' ? homeCompact(base, '24K') : String(base),
+    comments: typeof homeCompact === 'function' ? homeCompact(Math.round(base/18), '1.3K') : String(Math.round(base/18)),
+    shares: typeof homeCompact === 'function' ? homeCompact(Math.round(base/9), '2.6K') : String(Math.round(base/9)),
+  };
+}
+
+function getNewsHashtags(n){
+  const tags=['#HeroIndex'];
+  if(n.source==='corp') tags.push('#OfficialDrop');
+  if(n.category==='cobertura') tags.push('#EnVivo');
+  if(n.category==='operacion') tags.push('#AlertaPublica');
+  if(n.category==='rumor') tags.push('#FanFeed');
+  if(n.corp) tags.push(typeof homeTag==='function'?homeTag(n.corp):`#${String(n.corp).replace(/\W/g,'')}`);
+  return tags.slice(0,4);
+}
 
 function renderNewsItem(n, showDelete=false){
   const session = currentSession || { type:'public' };
-  const deleteBtn=showDelete&&session.type==='gm'?`<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px;margin-top:4px">✕ eliminar</button>`:'';
-  return `<div class="news-item source-${n.source}">
-    <div class="news-meta">
-      <span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||n.source.toUpperCase()}</span>
+  const profile = MEDIA_SOURCE_PROFILES[n.source] || MEDIA_SOURCE_PROFILES.heroindex;
+  const engagement = getNewsEngagement(n);
+  const hashtags = getNewsHashtags(n);
+  const sourceClass = n.source || 'heroindex';
+  const safeHeadline = n.source==='oracle' ? cleanPublicText(n.headline) : getSafeProfileCopy(n.headline, 'Actualización pública HeroIndex.', session);
+  const safeBody = n.source==='oracle' ? cleanPublicText(n.body||'') : getSafeProfileCopy(n.body||'', '', session);
+  const deleteBtn=showDelete&&session.type==='gm'?`<button class="media-delete-btn" onclick="deleteNews(${n.id})">✕ eliminar</button>`:'';
+  const mediaTitle = n.category==='cobertura' ? 'HeroIndex Live' : n.category==='operacion' ? 'Public Safety Clip' : n.source==='corp' ? 'Sponsored Media' : 'Feed Update';
+  return `<article class="media-post source-${sourceClass} ${n.source==='oracle'?'gm-only oracle-post':''}">
+    <div class="media-post-head">
+      <div class="media-avatar ${sourceClass}">${profile.avatar}</div>
+      <div class="media-source-block">
+        <div><strong>${profile.name}</strong><span class="media-badge ${profile.kind}">${profile.badge}</span></div>
+        <p>${profile.handle} · ${n.date||today()}</p>
+      </div>
       <span class="news-category ${CAT_CLASSES[n.category]||'cat-comunicado'}">${CAT_LABELS[n.category]||n.category}</span>
-      ${n.corp?`<span class="news-corp-tag">${getCorpIcon(n.corp)} ${n.corp}</span>`:''}
-      <span class="news-date">${n.date}</span>
     </div>
-    <div class="news-headline">${n.headline}</div>
-    ${n.body?`<div class="news-body">${n.body}</div>`:''}
-    ${deleteBtn}
-  </div>`;
+     <div class="media-copy">
+      <h2>${safeHeadline}</h2>
+      ${safeBody?`<p>${safeBody}</p>`:''}
+    </div>
+    <div class="media-thumb ${sourceClass}">
+      <span>▶</span>
+      <div><b>${mediaTitle}</b><small>${n.corp?`${getCorpIcon(n.corp)} ${n.corp}`:'HeroIndex Media Network'}</small></div>
+    </div>
+    <div class="media-tags">${hashtags.map(t=>`<span>${t}</span>`).join('')}</div>
+    <div class="media-actions">
+      <span>♥ ${engagement.likes}</span>
+      <span>💬 ${engagement.comments}</span>
+      <span>↗ ${engagement.shares}</span>
+      ${deleteBtn}
+    </div>
+  </article>`;
 }
 
 function renderNewsFeed(){
   const session = currentSession || { type:'public' };
   const feed=document.getElementById('news-feed');
   if(!feed) return;
-  feed.innerHTML='<div class="news-empty" style="color:var(--muted)">Cargando...</div>';
+  feed.innerHTML='<div class="news-empty media-empty">Cargando feed...</div>';
   loadNews().then(all=>{
-     const visible = getNewsVisibilityByRole(session);
+    const visible = getNewsVisibilityByRole(session);
     const base = all.map(normalizeNewsItem).filter(n=>visible.includes(n.visibility));
     let filtered=base;
     if(newsTab==='heroindex') filtered=base.filter(n=>n.source==='heroindex');
@@ -1354,7 +1400,7 @@ function renderNewsFeed(){
     else filtered=base;
     feed.innerHTML=filtered.length
       ?filtered.map(n=>renderNewsItem(n,true)).join('')
-      :'<div class="news-empty">Sin noticias en esta categoría.</div>';
+       :'<div class="news-empty media-empty">Sin publicaciones en esta categoría.</div>';
   });
 }
 
