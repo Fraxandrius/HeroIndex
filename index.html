@@ -372,6 +372,59 @@
             </div>
           </div>
 
+          <!-- CONTENT MANAGER -->
+          <div class="card content-manager-card" style="border-color:rgba(255,214,102,0.24)">
+            <div class="card-label" style="color:var(--amber)">CONTENT MANAGER — FIREBASE</div>
+            <p class="cms-help">Publica contenido compartido para todos los jugadores. TODO: en producción esto requiere Firebase Auth y reglas de seguridad reales.</p>
+
+            <div class="cms-section">
+              <div class="cms-section-title">Crear noticia / media post</div>
+              <div class="gm-form">
+                <div class="fg full"><label>Título</label><input type="text" id="cms-news-title" placeholder="Nuevo clip de rescate domina el feed..."></div>
+                <div class="fg"><label>Fuente</label><select id="cms-news-source"><option value="heroindex">HeroIndex</option><option value="corp">Corporación</option><option value="oracle">ORÁCULO</option></select></div>
+                <div class="fg"><label>Categoría</label><select id="cms-news-category"><option value="comunicado">Comunicado</option><option value="operacion">Operación</option><option value="cobertura">Cobertura</option><option value="rumor">Rumor</option><option value="clasificado">Clasificado</option></select></div>
+                <div class="fg full"><label>Imagen noticia</label><input type="file" id="cms-news-image" accept="image/png,image/jpeg,image/webp,gif"></div>
+                <div class="fg full"><label>Versión pública</label><textarea id="cms-news-public" placeholder="Texto visible para público y jugadores..."></textarea></div>
+                <div class="fg full"><label>Versión corporativa</label><textarea id="cms-news-corp" placeholder="Ángulo corporativo opcional..."></textarea></div>
+                <div class="fg full"><label>Versión ORÁCULO (GM only)</label><textarea id="cms-news-oracle" placeholder="Capa clasificada solo para GM..."></textarea></div>
+                <div class="fg"><label>Views</label><input type="number" id="cms-news-views" value="24000"></div>
+                <div class="fg"><label>Likes</label><input type="number" id="cms-news-likes" value="8600"></div>
+                <div class="fg"><label>Shares</label><input type="number" id="cms-news-shares" value="2100"></div>
+                <div class="fg"><label>Tags</label><input type="text" id="cms-news-tags" placeholder="HeroIndex, EnVivo, Aurora"></div>
+                <label class="cms-check full"><input type="checkbox" id="cms-news-published" checked> Publicado</label>
+              </div>
+              <button class="btn-primary" onclick="createCMSNews()">Publicar noticia →</button>
+            </div>
+
+            <div class="divider"></div>
+            <div class="cms-section">
+              <div class="cms-section-title">Crear anuncio</div>
+              <div class="gm-form">
+                <div class="fg"><label>Marca</label><input type="text" id="cms-ad-brand" placeholder="VOLT Energy"></div>
+                <div class="fg"><label>Placement</label><select id="cms-ad-placement"><option value="home">Home</option><option value="news">Noticias</option><option value="sidebar">Sidebar</option></select></div>
+                <div class="fg full"><label>Titular</label><input type="text" id="cms-ad-headline" placeholder="Energía para héroes de alto rendimiento"></div>
+                <div class="fg full"><label>Texto</label><textarea id="cms-ad-body" placeholder="Copy publicitario..."></textarea></div>
+                <div class="fg full"><label>Imagen anuncio</label><input type="file" id="cms-ad-image" accept="image/png,image/jpeg,image/webp,gif"></div>
+                <label class="cms-check full"><input type="checkbox" id="cms-ad-active" checked> Activo</label>
+              </div>
+              <button class="btn-primary" onclick="createCMSAd()">Crear anuncio →</button>
+            </div>
+
+            <div class="divider"></div>
+            <div class="cms-section">
+              <div class="cms-section-title">Agregar comentario falso</div>
+              <div class="gm-form">
+                <div class="fg full"><label>Noticia</label><select id="cms-comment-news"><option value="">Cargando noticias...</option></select></div>
+                <div class="fg"><label>Tipo autor</label><select id="cms-comment-author-type"><option value="anonymous">Anónimo</option><option value="npcHero">NPC Hero</option><option value="corporation">Corporación</option></select></div>
+                <div class="fg"><label>Autor</label><input type="text" id="cms-comment-author" placeholder="Fan anónimo"></div>
+                <div class="fg"><label>Hero slug opcional</label><input type="text" id="cms-comment-hero-slug" placeholder="condor"></div>
+                <div class="fg"><label>Likes</label><input type="number" id="cms-comment-likes" value="120"></div>
+                <div class="fg full"><label>Comentario</label><textarea id="cms-comment-body" placeholder="Esto se verá como comentario público..."></textarea></div>
+              </div>
+              <button class="btn-primary" onclick="createCMSComment()">Agregar comentario →</button>
+            </div>
+          </div>
+
           <!-- MANUAL FORM -->
           <div class="card">
             <div class="card-label">REGISTRAR HÉROE MANUALMENTE</div>
@@ -529,6 +582,7 @@
 <!-- Firebase compat (no ES modules needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <!-- App -->
 <script src="js/data.js"></script>
 <script src="js/auth.js"></script>

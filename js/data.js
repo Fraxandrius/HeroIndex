@@ -14,6 +14,8 @@ const firebaseConfig = {
 const hasFirebase = typeof firebase !== 'undefined' && firebase?.initializeApp;
 if (hasFirebase) firebase.initializeApp(firebaseConfig);
 const db = hasFirebase ? firebase.database() : null;
+let storage = null;
+let storageCompatPromise = null;
 
 function readLocal(key, fallback) {
   try {
@@ -25,6 +27,38 @@ function readLocal(key, fallback) {
 }
 function writeLocal(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+
+function getFirebaseStorageInstance() {
+  if (storage) return storage;
+  if (typeof firebase !== 'undefined' && typeof firebase.storage === 'function') {
+    storage = firebase.storage();
+    return storage;
+  }
+  return null;
+}
+
+function loadFirebaseStorageCompat() {
+  if (getFirebaseStorageInstance()) return Promise.resolve(storage);
+  if (storageCompatPromise) return storageCompatPromise;
+  if (typeof document === 'undefined') return Promise.resolve(null);
+  storageCompatPromise = new Promise(resolve => {
+    const existing = document.querySelector('script[data-firebase-storage-compat="true"], script[src*="firebase-storage-compat"]');
+    if (existing && typeof firebase !== 'undefined' && typeof firebase.storage === 'function') {
+      resolve(getFirebaseStorageInstance());
+      return;
+    }
+    const script = existing || document.createElement('script');
+    const done = () => resolve(getFirebaseStorageInstance());
+    script.dataset.firebaseStorageCompat = 'true';
+    script.src = script.src || 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js';
+    script.onload = done;
+    script.onerror = () => resolve(null);
+    setTimeout(done, 3500);
+    if (!existing) document.head.appendChild(script);
+  });
+  return storageCompatPromise;
 }
 
 
@@ -72,39 +106,160 @@ function onHeroesChange(callback) {
   });
 }
 
-// ── NEWS ─────────────────────────────────────────────────────
+// ── SHARED CONTENT HELPERS ───────────────────────────────────
+// TODO: Production security requires Firebase Auth plus Realtime Database and Storage security rules.
+function normalizeDbList(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data.filter(Boolean);
+  return Object.entries(data).map(([id, value]) => ({ id, ...(value || {}) }));
+}
+
+function normalizeCmsNews(n={}) {
+  const source = n.source || 'heroindex';
+  const publicBody = n.publicVersion || n.body || '';
+  return {
+    ...n,
+    id: n.id || Date.now(),
+    title: n.title || n.headline || 'Actualización HeroIndex',
+    headline: n.headline || n.title || 'Actualización HeroIndex',
+    body: publicBody,
+    publicVersion: publicBody,
+    corporateVersion: n.corporateVersion || '',
+    oracleVersion: n.oracleVersion || '',
+    source,
+    category: n.category || 'comunicado',
+    imageUrl: n.imageUrl || '',
+    views: Number(n.views || 0),
+    likes: Number(n.likes || 0),
+    shares: Number(n.shares || 0),
+    commentsCount: Number(n.commentsCount || 0),
+    tags: Array.isArray(n.tags) ? n.tags : String(n.tags || '').split(',').map(t=>t.trim()).filter(Boolean),
+    published: n.published !== false,
+    createdAt: n.createdAt || n.date || new Date().toISOString(),
+    date: n.date || (n.createdAt ? new Date(n.createdAt).toLocaleDateString('es-CL') : new Date().toLocaleDateString('es-CL')),
+    visibility: n.visibility || (source === 'oracle' ? 'gm' : 'public')
+  };
+}
+
 function loadNews() {
-  if (!db) {
-    const localNews = readLocal('heroindex-news', null);
-    return Promise.resolve(Array.isArray(localNews) && localNews.length ? localNews : getDefaultNews());
-  }
+  if (!db) return Promise.resolve(getDefaultNews().map(normalizeCmsNews));
   return db.ref('news').once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      return Array.isArray(data) ? data : Object.values(data);
-    }
-    const defaults = getDefaultNews();
-    return saveNews(defaults).then(() => defaults);
+    if (snapshot.exists()) return normalizeDbList(snapshot.val()).map(normalizeCmsNews);
+    return getDefaultNews().map(normalizeCmsNews);
   }).catch(e => {
-    console.error('Firebase read error:', e);
-    return getDefaultNews();
+    console.error('Firebase news read error:', e);
+    return getDefaultNews().map(normalizeCmsNews);
   });
 }
 
 function saveNews(news) {
- if (!db) { writeLocal('heroindex-news', news); return Promise.resolve(); }
-  return db.ref('news').set(news).catch(e => console.error('Firebase write error:', e));
+  if (!db) { console.warn('Firebase unavailable: shared news was not saved.'); return Promise.resolve(); }
+  const payload = {};
+  (news || []).forEach(item => {
+    const normalized = normalizeCmsNews(item);
+    payload[normalized.id] = normalized;
+  });
+  return db.ref('news').set(payload).catch(e => console.error('Firebase news write error:', e));
+}
+
+function createNewsContent(item) {
+  if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para contenido compartido.'));
+  const ref = db.ref('news').push();
+  const payload = normalizeCmsNews({ ...item, id: ref.key, createdAt: new Date().toISOString() });
+  return ref.set(payload).then(() => payload);
+}
+
+function deleteNewsContent(id) {
+  if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible.'));
+  return db.ref(`news/${id}`).remove();
 }
 
 function onNewsChange(callback) {
-  if (!db) { callback(readLocal('heroindex-news', getDefaultNews())); return; }
-  db.ref('news').on('value', snapshot => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      callback(Array.isArray(data) ? data : Object.values(data));
-    }
+   if (!db) { callback(getDefaultNews().map(normalizeCmsNews)); return; }
+  db.ref('news').on('value', snapshot => callback(normalizeDbList(snapshot.val()).map(normalizeCmsNews)));
+}
+
+function normalizeCmsAd(ad={}) {
+  return {
+    ...ad,
+    id: ad.id || Date.now(),
+    brand: ad.brand || ad.sponsor || 'HeroIndex Partner',
+    headline: ad.headline || ad.title || 'Campaña pública HeroIndex',
+    body: ad.body || ad.cta || '',
+    imageUrl: ad.imageUrl || ad.image || '',
+    placement: ad.placement || 'home',
+    active: ad.active !== false,
+    createdAt: ad.createdAt || new Date().toISOString()
+  };
+}
+
+function loadAds() {
+  if (!db) return Promise.resolve([]);
+  return db.ref('ads').once('value').then(snapshot => normalizeDbList(snapshot.val()).map(normalizeCmsAd)).catch(e => {
+    console.error('Firebase ads read error:', e);
+    return [];
   });
 }
+
+function createAdContent(item) {
+  if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para anuncios compartidos.'));
+  const ref = db.ref('ads').push();
+  const payload = normalizeCmsAd({ ...item, id: ref.key, createdAt: new Date().toISOString() });
+  return ref.set(payload).then(() => payload);
+}
+
+function normalizeCmsComment(c={}) {
+  return {
+    ...c,
+    id: c.id || Date.now(),
+    authorType: c.authorType || 'anonymous',
+    authorName: c.authorName || 'Usuario anónimo',
+    authorHeroSlug: c.authorHeroSlug || '',
+    body: c.body || '',
+    likes: Number(c.likes || 0),
+    createdAt: c.createdAt || new Date().toISOString()
+  };
+}
+
+function loadComments(newsId) {
+  if (!db || !newsId) return Promise.resolve([]);
+  return db.ref(`comments/${newsId}`).once('value').then(snapshot => normalizeDbList(snapshot.val()).map(normalizeCmsComment)).catch(e => {
+    console.error('Firebase comments read error:', e);
+    return [];
+  });
+}
+
+function createNewsComment(newsId, item) {
+  if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para comentarios compartidos.'));
+  if (!newsId) return Promise.reject(new Error('Selecciona una noticia.'));
+  const ref = db.ref(`comments/${newsId}`).push();
+  const payload = normalizeCmsComment({ ...item, id: ref.key, createdAt: new Date().toISOString() });
+  return ref.set(payload)
+    .then(() => db.ref(`news/${newsId}/commentsCount`).transaction(v => (Number(v) || 0) + 1))
+    .then(() => payload);
+}
+
+function uploadContentImage(file, folder='content') {
+  if (!file) return Promise.resolve('');
+  return loadFirebaseStorageCompat().then(activeStorage => {
+    if (!activeStorage) {
+      throw new Error('Firebase Storage no disponible. Verifica que firebase-storage-compat.js cargue en index.html y que Storage esté activado en Firebase Console.');
+    }
+    const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${folder}/${Date.now()}-${safeName}`;
+    return activeStorage.ref(path).put(file)
+      .then(snapshot => snapshot.ref.getDownloadURL())
+      .catch(error => {
+        if (error?.code === 'storage/unauthorized') {
+          throw new Error('Firebase Storage rechazó la subida (storage/unauthorized). Revisa las Storage Rules para permitir escritura en las carpetas news/ y ads/ durante el prototipo.');
+        }
+        throw error;
+      });
+  });
+}
+
+// Legacy alias kept for older code paths.
+function saveNewsLegacy(news) { return saveNews(news); }
 
 // ── DEFAULT HEROES ───────────────────────────────────────────
 function getDefaultHeroes() {
