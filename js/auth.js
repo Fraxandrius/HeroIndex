@@ -58,7 +58,7 @@ function applySession() {
   // Hide nav items based on role
   if (currentSession.type !== 'gm') {
     document.querySelectorAll('[data-page="gm"]').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('[data-page="karma"],[data-page="misiones"]')
+    document.querySelectorAll('[data-page="karma"],[data-page="misiones"]')
       .forEach(el => el.style.display = 'none');
   }
   if (currentSession.type !== 'hero') {
@@ -66,22 +66,26 @@ function applySession() {
   }
 }
 function updateSessionBadge(label, color) {
-  const topbarRight = document.querySelector('.topbar-right');
-  if (!topbarRight) return;
-  const existing = topbarRight.querySelector('.session-badge');
-  if (existing) existing.remove();
+  const safeLabel = label || 'Invitado';
+  const sessionColor = color || 'var(--text)';
+  const desk = document.getElementById('session-label-desktop');
+  const mobile = document.getElementById('session-label-mobile');
+  if (desk) {
+    desk.textContent = safeLabel;
+    desk.style.color = sessionColor;
+  }
+  if (mobile) {
+    mobile.textContent = safeLabel;
+    mobile.style.color = sessionColor;
+  }
 
-  const badge = document.createElement('div');
-  badge.className = 'session-badge';
-  badge.style.cursor = 'pointer';
-  badge.title = 'Cerrar sesión';
-  badge.onclick = logout;
-  badge.innerHTML = `<span style="color:${color||'var(--muted2)'};">${label}</span>`;
-  topbarRight.insertBefore(badge, topbarRight.firstChild);
+  
+function switchProfile() {
+  logout(false);
 }
 
-function logout() {
-  if (!confirm('¿Cerrar sesión?')) return;
+function logout(confirmFirst = true) {
+  if (confirmFirst && !confirm('¿Cerrar sesión?')) return;
   sessionStorage.removeItem('heroindex-session');
   currentSession = null;
   location.reload();

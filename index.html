@@ -16,7 +16,7 @@
   <aside class="sidebar desktop-only">
     <div class="sidebar-logo">
       <div class="logo-icon"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><ellipse cx="22" cy="22" rx="8" ry="20" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><circle cx="22" cy="22" r="4" fill="#00c8ff"/><circle cx="22" cy="4" r="2" fill="#00c8ff" opacity="0.8"/><circle cx="40" cy="22" r="2" fill="#00c8ff" opacity="0.5"/></svg></div>
-      <div><div class="logo-text">HERO<span class="logo-accent">INDEX</span></div><div class="logo-sub">Panel GM</div></div>
+     <div><div class="logo-text">HERO<span class="logo-accent">INDEX</span></div><div class="logo-sub">Social Hub</div></div>
     </div>
     <nav class="sidebar-nav">
       <button class="snav active" data-page="inicio"   onclick="showPage('inicio',this)"><span class="snav-icon">⌂</span> Inicio</button>
@@ -34,6 +34,13 @@
         <label class="toggle"><input type="checkbox" id="gm-toggle-desk" checked onchange="toggleGM('desk')"><span class="toggle-track"></span></label>
         <span class="toggle-label">Modo GM</span>
       </div>
+        <div class="session-switch" id="session-switch-desktop">
+        <div>
+          <div class="session-switch-label">Sesión actual</div>
+          <div class="session-switch-name" id="session-label-desktop">Invitado</div>
+        </div>
+        <button type="button" onclick="switchProfile()">Cambiar perfil</button>
+      </div>
       <div class="sidebar-version">v2.0 · Ciudad Sin Crimen</div>
     </div>
   </aside>
@@ -44,10 +51,15 @@
       <div class="logo-icon-sm"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#00c8ff" stroke-width="1.2"/><ellipse cx="22" cy="22" rx="20" ry="8" stroke="#00c8ff" stroke-width="0.8" opacity="0.5"/><circle cx="22" cy="22" r="4" fill="#00c8ff"/></svg></div>
       <span class="logo-text-sm">HERO<span class="logo-accent">INDEX</span></span>
     </div>
-    <button class="notif-btn" onclick="toggleGMModal()">
-      <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 1 6 6v2l1.5 3h-15L4 10V8a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M8 15a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
-      <span class="notif-dot show" id="gm-dot"></span>
-    </button>
+    <div class="topbar-right">
+      <button class="mobile-session-btn" type="button" id="session-switch-mobile" onclick="switchProfile()">
+        <span id="session-label-mobile">Invitado</span>
+      </button>
+      <button class="notif-btn" onclick="toggleGMModal()">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 1 6 6v2l1.5 3h-15L4 10V8a6 6 0 0 1 6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M8 15a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span class="notif-dot show" id="gm-dot"></span>
+      </button>
+    </div>
   </header>
 
   <main class="main-content">
