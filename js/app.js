@@ -1376,6 +1376,8 @@ function parseCSVText(text=''){
 
 function parseCSVRow(row){
   if(!row.alias) return null;
+  const typeRaw=String(row.type||'NPC').trim().toUpperCase();
+  const riskRaw=String(row.risk||'low').trim().toLowerCase();
   const attrs={
     fighting:parseInt(row.fighting)||0,agility:parseInt(row.agility)||0,
     strength:parseInt(row.strength)||0,reason:parseInt(row.reason)||0,
@@ -1399,10 +1401,10 @@ function parseCSVRow(row){
   return{
     id:Date.now()+Math.random(),
     alias:row.alias,realName:row.realName||'',corp:row.corp||'',country:row.country||'',
-    type:row.type==='PC'?'PC':'NPC',
+    type:typeRaw==='PC'?'PC':'NPC',
     role:row.role||'',
-    score:Math.max(0,Math.min(10000,parseInt(row.score)||1000)),
-    karma:0,risk:['low','med','high','critical'].includes(row.risk)?row.risk:'low',
+    score:Math.max(0,Math.min(10000,parseInt(String(row.score||'').replace(/[^0-9-]/g,''))||1000)),
+    karma:0,risk:['low','med','high','critical'].includes(riskRaw)?riskRaw:'low',
     occupation:row.occupation||'',
     attrs,powers,talents,drawbacks,relationships,
     personality:(row.personality||'').replace(/\\n/g,'\n'),
