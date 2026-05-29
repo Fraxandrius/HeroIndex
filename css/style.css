@@ -1750,3 +1750,12 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
 }
 .public-alerts-panel .home-section-kicker{color:#bfdbfe;}
 .public-alerts-panel .home-section-kicker::before{background:linear-gradient(135deg,#38bdf8,#22c55e);}
+
+/* --- Phase 4: defensive ORÁCULO visibility hardening --- */
+body:not(.gm-active) .masthead-oracle,
+body:not(.gm-active) .featured-oracle,
+body:not(.gm-active) .social-censored,
+body:not(.gm-active) .story-oracle,
+body:not(.gm-active) .gm-post{
+  display:none !important;
+}
