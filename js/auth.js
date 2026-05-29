@@ -78,7 +78,7 @@ function updateSessionBadge(label, color) {
     mobile.textContent = safeLabel;
     mobile.style.color = sessionColor;
   }
-
+}
   
 function switchProfile() {
   logout(false);
