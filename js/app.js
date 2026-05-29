@@ -229,13 +229,13 @@ function renderHome(){
       const visibility=getNewsVisibilityByRole(session);
       const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public'));
       const top=news[0];
-      featured.innerHTML=top?renderFeaturedMedia(top, session.type==='gm'):'<div class="news-empty">Sin cobertura destacada.</div>';
+      featured.innerHTML=top?renderFeaturedMedia(top, session.type==='gm', heroes):'<div class="news-empty">Sin cobertura destacada.</div>';
     });
   }
   
   renderHomeStories(session);
   renderHomeSocialFeed();
-  renderHomeClips();
+  renderHomeClips(heroes);
   renderHomeAds();
 }
 
@@ -305,8 +305,8 @@ function getScoreMove(deltaTag='steady'){
   return {icon:'◆',label:'Estable',cls:'steady'};
 }
 
-function renderFeaturedMedia(n,isGM){
-  const tags=(typeof getFeaturedHashtags==='function'?getFeaturedHashtags(n):['#HeroIndex','#Live']);
+function renderFeaturedMedia(n,isGM, heroList=heroes){
+  const tags=(typeof getFeaturedHashtags==='function'?getFeaturedHashtags(n, heroList):['#HeroIndex','#Live']);
   return `<article class="featured-media source-${n.source}">
     <div class="featured-badge-row"><span class="news-source ${n.source}">${SOURCE_LABELS[n.source]||'HeroIndex'}</span><span class="social-tag">${CAT_LABELS[n.category]||n.category}</span><span class="news-date">${n.date}</span></div>
     <h2 class="featured-title">${n.headline}</h2>
@@ -362,14 +362,17 @@ function renderHomeStories(session=currentSession||{type:'public'}){
   </div>`).join('');
 }
 
-
 function renderHomeSocialFeed(){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
   const session=currentSession||{type:'public'};
-  const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts():[])
-    .filter(p=>!p.gmOnly || session.type==='gm');
-  feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
+  loadNews().then(all=>{
+    const visibility=getNewsVisibilityByRole(session);
+    const news=all.map(normalizeNewsItem).filter(n=>visibility.includes(n.visibility||'public'));
+    const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts({heroes,news,session}):[])
+      .filter(p=>!p.gmOnly || session.type==='gm');
+    feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
+  });
 }
 
 function renderSocialPost(p,isGM){
@@ -1541,9 +1544,9 @@ loadHeroes().then(h=>{
 }
 initLogin();
 
-function renderHomeClips(){
+function renderHomeClips(heroList=heroes){
   const rail=document.getElementById('home-clips');
   if(!rail) return;
-  const clips=(typeof getHomeClips==='function'?getHomeClips():[]);
+  const clips=(typeof getHomeClips==='function'?getHomeClips(heroList):[]);
   rail.innerHTML=clips.map(c=>`<div class="clip-card"><div class="clip-thumb" style="background:${c.bg}"><span>▶</span></div><div class="clip-title">${c.title}</div><div class="clip-meta">${c.meta}</div></div>`).join('');
 }
