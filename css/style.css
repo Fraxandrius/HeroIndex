@@ -1442,3 +1442,102 @@ body:not(.gm-active) .gm-post{
 .home-ranking-card { padding: 0; overflow: hidden; }
 .hr-name { flex: 1; font-weight: 500; font-size: 13px; }
 .public-alerts .alert-item{background:linear-gradient(130deg,#1f2937,#0f172a);border-color:rgba(255,255,255,.1)}
+
+/* --- Phase 5B: responsive Home polish --- */
+.home-stories,
+.clips-rail {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+.story-item,
+.clip-card { scroll-snap-align: start; }
+.home-stories::-webkit-scrollbar,
+.clips-rail::-webkit-scrollbar { height: 6px; }
+.home-stories::-webkit-scrollbar-thumb,
+.clips-rail::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 999px; }
+.social-meta,
+.featured-badge-row { min-width: 0; }
+.social-meta strong {
+  min-width: 0;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.featured-title,
+.social-body,
+.hero-trend-info,
+.clip-title,
+.ad-title { overflow-wrap: anywhere; }
+@media (hover:none) {
+  .home-section-panel:hover { transform: none; box-shadow: 0 18px 42px rgba(2,8,23,.2); }
+  .home-section-link,
+  .session-switch button,
+  .mobile-session-btn { min-height: 34px; }
+}
+@media (max-width:760px) {
+  .home-shell { gap: 12px; }
+  .home-section-panel { border-radius: 20px; padding: 15px; }
+  .featured-panel { padding: 0; }
+  .featured-media { border-radius: 20px; padding: 18px; }
+  .featured-title { font-size: 20px; }
+  .featured-placeholder { padding: 18px; }
+  .home-ads { grid-template-columns: 1fr; }
+  .hero-trend-body { align-items: flex-start; }
+  .hero-trend-score { min-width: 72px; }
+  .clip-card { min-width: 168px; }
+}
+@media (max-width:620px) {
+  .topbar { padding: 0 0.85rem; }
+  .logo-text-sm { font-size: 14px; letter-spacing: 2px; }
+  .logo-icon-sm { width: 28px; height: 28px; }
+  .topbar-right { gap: 6px; }
+  .mobile-session-btn { max-width: 92px; padding-inline: 8px; }
+  .home-masthead { margin-bottom: 12px; }
+  .masthead-copy h1 { font-size: clamp(27px, 9vw, 34px); }
+  .masthead-copy p { font-size: 14px; line-height: 1.6; }
+  .masthead-media-card { min-height: 230px; }
+  .masthead-oracle {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: flex-end;
+    margin-bottom: 42px;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .masthead-chip-row span { font-size: 10px; }
+  .home-section-head { align-items: flex-start; }
+  .home-section-kicker { font-size: 9px; letter-spacing: 1.2px; }
+  .social-meta { gap: 6px; }
+  .social-meta strong { max-width: 130px; }
+  .social-actions { gap: 8px; font-size: 10px; }
+  .alert-item { align-items: flex-start; }
+  .alert-time { min-width: 58px; }
+}
+@media (max-width:420px) {
+  .topbar-left { min-width: 0; }
+  .logo-text-sm { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-session-btn { max-width: 78px; font-size: 10px; }
+  .notif-btn { width: 34px; height: 34px; }
+  .home-masthead { padding: 17px; border-radius: 20px; }
+  .masthead-media-card { padding: 15px; border-radius: 18px; }
+  .masthead-hero-name { font-size: 27px; }
+  .home-section-panel { padding: 13px; border-radius: 18px; }
+  .stories-panel { padding: 12px 13px 10px; }
+  .story-item { min-width: 62px; }
+  .story-ring { width: 52px; height: 52px; }
+  .story-name { font-size: 10px; }
+  .featured-media { padding: 15px; }
+  .featured-placeholder small { font-size: 11px; }
+  .hero-trend-body { flex-wrap: wrap; }
+  .hero-trend-score { width: 100%; align-items: flex-start; text-align: left; padding-left: 44px; }
+  .clip-card { min-width: 150px; }
+  .clip-thumb { height: 82px; }
+  .alert-item { gap: 9px; padding: 0.75rem; }
+  .alert-icon { width: 36px; height: 36px; }
+  .alert-time { width: 100%; text-align: left; padding-left: 45px; }
+}
