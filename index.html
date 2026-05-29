@@ -185,40 +185,40 @@
 
     <!-- RANKING -->
     <section class="page" id="page-ranking">
-      <div class="page-header"><h1 class="page-title">RANKING</h1><p class="page-sub">Global · Nacional · Corporativo · actualizado por sesión.</p></div>
-
-      <!-- Scope tabs -->
-      <div class="ranking-tabs">
-        <button class="rtab active" onclick="setRankingScope('global',this)">🌐 GLOBAL</button>
-        <button class="rtab" onclick="setRankingScope('pais',this)">🏴 NACIONAL</button>
-        <button class="rtab" onclick="setRankingScope('corp',this)">🏢 CORPORATIVO</button>
+       <div class="ranking-hero-strip">
+        <div>
+          <span class="ranking-kicker">HeroIndex SportsDesk</span>
+          <h1 class="page-title">GLOBAL RANKING</h1>
+          <p class="page-sub">Power rankings públicos con cobertura nacional, corporativa y señales ORÁCULO solo para GM.</p>
+        </div>
+        <div class="ranking-live-pill"><span></span> Live board</div>
       </div>
 
-      <!-- Filter row (hidden in global) -->
-      <div id="ranking-filter-row" class="ranking-filters" style="display:none">
-        <span class="filter-label" id="filter-label">FILTRAR:</span>
-        <div id="filter-chips" class="filter-group"></div>
-      </div>
+      <div class="ranking-hub" aria-label="Ranking global de héroes">
+        <!-- Scope tabs -->
+        <div class="ranking-tabs">
+          <button class="rtab active" onclick="setRankingScope('global',this)">🌐 GLOBAL</button>
+          <button class="rtab" onclick="setRankingScope('pais',this)">🏴 NACIONAL</button>
+          <button class="rtab" onclick="setRankingScope('corp',this)">🏢 CORPORATIVO</button>
+        </div>
 
-      <!-- Scope header -->
-      <div class="ranking-scope-header">
-        <span class="scope-title" id="scope-title">TODOS LOS HÉROES</span>
-        <span class="scope-count" id="scope-count"></span>
-      </div>
+       <!-- Filter row (hidden in global) -->
+        <div id="ranking-filter-row" class="ranking-filters" style="display:none">
+          <span class="filter-label" id="filter-label">FILTRAR:</span>
+          <div id="filter-chips" class="filter-group"></div>
+        </div>
 
-      <!-- Top 3 -->
-      <div id="top3-area" class="top3"></div>
+        <!-- Scope header -->
+        <div class="ranking-scope-header">
+          <span class="scope-title" id="scope-title">TODOS LOS HÉROES</span>
+          <span class="scope-count" id="scope-count"></span>
+        </div>
 
-      <!-- Table -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="ranking-table">
-          <thead><tr>
-            <th>#</th><th>Héroe</th><th>Score</th><th id="rth-karma">Karma</th>
-            <th id="rth-scope">País</th>
-            <th>Rol</th><th>Tipo</th><th id="rth-risk" class="gm-col">Risk</th>
-          </tr></thead>
-          <tbody id="ranking-body"></tbody>
-        </table>
+        <!-- Top 3 -->
+        <div id="top3-area" class="top3 ranking-podium"></div>
+
+        <!-- Ranking cards -->
+        <div id="ranking-list" class="ranking-list"></div>
       </div>
     </section>
 

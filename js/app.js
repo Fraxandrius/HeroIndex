@@ -256,7 +256,6 @@ function renderHome(){
   renderHomeAds();
 }
 
-
 function renderHomeRosterEmpty(session){
   const cta=session.type==='gm'
     ? '<button class="home-empty-cta" onclick="showPage(\'gm\')">Registrar primer héroe →</button>'
@@ -486,6 +485,99 @@ function setRankingFilter(val){
   renderRanking();
 }
 
+function getRankingMove(h, index=0){
+  const log = Array.isArray(h.scoreLog) ? h.scoreLog : [];
+  const last = log.length > 1 ? Number(log[log.length-1].delta || 0) : 0;
+  if(last > 0) return { icon:'▲', label:`+${last}`, cls:'up' };
+  if(last < 0) return { icon:'▼', label:`${last}`, cls:'down' };
+  if(index < 3) return { icon:'▲', label:'Top tier', cls:'up' };
+  return { icon:'◆', label:'Estable', cls:'steady' };
+}
+
+function getRankingApproval(h){
+  return Math.max(52, Math.min(98, Math.round((Number(h.score)||0)/120)));
+}
+
+function formatRankingAudience(h){
+  const base = Math.max(18000, Math.round((Number(h.score)||0) * 96));
+  if(typeof homeCompact === 'function') return homeCompact(base, '18K');
+  if(base >= 1000000) return `${(base/1000000).toFixed(1)}M`;
+  if(base >= 1000) return `${Math.round(base/1000)}K`;
+  return String(base);
+}
+
+function getRankingScopeMeta(h){
+  if(rankingScope === 'corp'){
+    const corp = h.corp || 'Independiente';
+    return { label:`${getCorpIcon(corp)} ${corp}`, color:getCorpColor(corp) };
+  }
+  const country = h.country || 'Independiente';
+  return { label:`${getFlag(country)} ${country}`, color:'var(--text)' };
+}
+
+function renderRankingPodiumCard(h, index, session, showKarma){
+  const medals = ['gold','silver','bronze'];
+  const scope = getRankingScopeMeta(h);
+  const move = getRankingMove(h, index);
+  const approval = getRankingApproval(h);
+  const isCurrentHero = session.type === 'hero' && session.heroId === h.id;
+  return `<article class="top-card ${medals[index]} ${isCurrentHero?'is-current-hero':''}" onclick="openHeroModal(${h.id})">
+    <div class="top-card-bg"></div>
+    <div class="top-pos">${['🥇','🥈','🥉'][index]}</div>
+    <div class="top-rank-label">#${index+1} Power Rank</div>
+    ${makeHeroAv(h,'md')}
+    <div class="top-name">${h.alias}</div>
+    <div class="top-corp" style="color:${scope.color}">${scope.label}</div>
+    <div class="rank-move ${move.cls}"><span>${move.icon}</span>${move.label}</div>
+    <div class="top-score" style="color:${scoreColor(h.score)}">${(h.score||0).toLocaleString('es-CL')}</div>
+    <div class="top-metrics"><span>${approval}% approval</span><span>${formatRankingAudience(h)} fans</span></div>
+    ${showKarma?`<div class="top-karma">Karma: ${h.karma||0}</div>`:''}
+  </article>`;
+}
+
+function renderRankingCard(h, index, session, showKarma, showRisk){
+  const move = getRankingMove(h, index);
+  const pct = Math.min(100, Math.round(((Number(h.score)||0)/10000)*100));
+  const scope = getRankingScopeMeta(h);
+  const canSeePrivate = canViewPrivateHero(session, h.id);
+  const health = canSeePrivate ? calcHealth(h.attrs||{}) : '—';
+  const resolve = canSeePrivate ? calcResolve(h.attrs||{}) : '—';
+  const approval = getRankingApproval(h);
+  const isCurrentHero = session.type === 'hero' && session.heroId === h.id;
+  const roleBadge = h.role ? `<span class="role-badge">${h.role}</span>` : '';
+  const gmMeta = showKarma || showRisk ? `<div class="ranking-gm-strip gm-only">
+    ${showKarma?`<span>Karma <b>${h.karma||0}</b></span>`:''}
+    ${showRisk?`<span>Risk <b class="${riskClass(h.risk)}">${riskLabel(h.risk)}</b></span>`:''}
+    ${showRisk&&h.flags?.length?`<span>Flags <b>${h.flags.length}</b></span>`:''}
+  </div>` : '';
+
+  return `<article class="ranking-card ${index<3?'elite':''} ${isCurrentHero?'is-current-hero':''}" onclick="openHeroModal(${h.id})">
+    <div class="ranking-position">
+      <span class="ranking-number">#${index+1}</span>
+      <span class="rank-move ${move.cls}"><span>${move.icon}</span>${move.label}</span>
+    </div>
+    <div class="ranking-card-main">
+      ${makeHeroAv(h,'md')}
+      <div class="ranking-identity">
+        <div class="ranking-name-row"><h3>${h.alias}</h3>${isCurrentHero?'<span class="current-hero-pill">Tu perfil</span>':''}</div>
+        <div class="ranking-meta" style="color:${scope.color}">${scope.label}${h.corp&&rankingScope!=='corp'?` · ${getCorpIcon(h.corp)} ${h.corp}`:''}</div>
+        <div class="ranking-badges">${roleBadge}<span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></div>
+      </div>
+    </div>
+    <div class="ranking-card-score">
+      <div class="ranking-score-row"><span>Score</span><strong style="color:${scoreColor(h.score)}">${(h.score||0).toLocaleString('es-CL')}</strong></div>
+      <div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${scoreColor(h.score)}"></div></div>
+    </div>
+    <div class="ranking-card-stats">
+      <span><b>${approval}%</b> aprobación</span>
+      <span><b>${formatRankingAudience(h)}</b> seguidores</span>
+      <span><b>${health}</b> Health</span>
+      <span><b>${resolve}</b> Resolve</span>
+    </div>
+    ${gmMeta}
+  </article>`;
+}
+
 function renderRanking(){
   const session = currentSession || { type:'public' };
   const showKarma = session.type==='gm';
@@ -496,9 +588,7 @@ function renderRanking(){
   if(riskHeader) riskHeader.style.display=showRisk?'table-cell':'none';
   renderFilterChips();
   const sorted = getFilteredHeroes();
-  const medals = ['gold','silver','bronze'];
 
-  // Scope header
   const scopeTitleEl = document.getElementById('scope-title');
   const scopeCountEl = document.getElementById('scope-count');
   if(scopeTitleEl){
@@ -508,51 +598,16 @@ function renderRanking(){
   }
   if(scopeCountEl) scopeCountEl.textContent = sorted.length + ' héroe(s)';
 
-  // Top 3
   const t3=document.getElementById('top3-area');
-  if(t3) t3.innerHTML=sorted.slice(0,3).map((h,i)=>{
-    const scopeDetail = rankingScope==='pais'
-      ? `<div style="font-size:10px;color:var(--muted)">${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}</div>`
-      : rankingScope==='corp'
-      ? `<div style="font-size:10px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>`
-      : `<div class="top-corp">${h.corp||'—'}</div>`;
-    return `<div class="top-card ${medals[i]}">
-      <div class="top-pos">${['🥇','🥈','🥉'][i]}</div>
-      ${makeHeroAv(h)}
-      <div class="top-name">${h.alias}</div>
-      ${scopeDetail}
-      <div class="top-score" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</div>
-       ${showKarma?`<div class="top-karma">Karma: ${h.karma}</div>`:''}
-    </div>`;
-  }).join('');
+   if(t3) t3.innerHTML=sorted.length
+    ? sorted.slice(0,3).map((h,i)=>renderRankingPodiumCard(h,i,session,showKarma)).join('')
+    : `<div class="ranking-empty">Sin héroes suficientes para destacar podium.</div>`;
 
-  // Table
-  const tb=document.getElementById('ranking-body');
-  if(tb) tb.innerHTML=sorted.map((h,i)=>{
-    const last=h.scoreLog&&h.scoreLog.length>1?h.scoreLog[h.scoreLog.length-1].delta:0;
-    const chg=last>0?`<span style="font-size:10px;color:var(--green);margin-left:4px">▲${last}</span>`:last<0?`<span style="font-size:10px;color:var(--red);margin-left:4px">▼${Math.abs(last)}</span>`:'';
-    const pct=Math.round((h.score/10000)*100);
-    const roleBadge=h.role?`<span class="role-badge" style="font-size:9px;padding:3px 8px">${h.role}</span>`:'—';
-    const scopeCell = rankingScope==='corp'
-      ? `<td><span style="font-size:12px;color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</span></td>`
-      : `<td><span style="font-size:12px">${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}</span></td>`;
-     const canSeePrivate = canViewPrivateHero(session, h.id);
-    const health = canSeePrivate ? calcHealth(h.attrs||{}) : '—';
-    const resolve = canSeePrivate ? calcResolve(h.attrs||{}) : '—';
-    const statsMini = (health!=='—'||resolve!=='—') ? `<div class="mini-stat-row"><span class="mini-stat">❤️${health}</span><span class="mini-stat">🧠${resolve}</span></div>` : '';
-    return `<tr style="cursor:pointer" onclick="openHeroModal(${h.id})">
-      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${i+1}</td>
-      <td><div style="display:flex;align-items:center;gap:8px">${makeHeroAv(h)}<div><div style="font-weight:600;font-size:13px">${h.alias}${chg}</div>${statsMini}</div></div></td>
-      <td><div class="sbar-wrap"><div class="sbar"><div class="sbar-fill" style="width:${pct}%;background:${scoreColor(h.score)}"></div></div><span class="sval" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div></td>
-      <td style="display:${showKarma?'table-cell':'none'}"><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">${h.karma}</span></td>
-      ${scopeCell}
-      <td>${roleBadge}</td>
-      <td><span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></td>
-      <td class="gm-col" style="display:${showRisk?'table-cell':'none'}"><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></td>
-    </tr>`;
-  }).join('')||`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Sin héroes en esta categoría</td></tr>`;
-}
-
+  const list=document.getElementById('ranking-list');
+  if(list) list.innerHTML=sorted.length
+    ? sorted.map((h,i)=>renderRankingCard(h,i,session,showKarma,showRisk)).join('')
+    : `<div class="ranking-empty">Sin héroes en esta categoría. Importa o crea héroes desde el panel GM para poblar el ranking.</div>`;
+  }
 // ── HERO DETAIL MODAL ────────────────────────────────────────
 function openHeroModal(id){
   const h=heroes.find(h=>h.id===id); if(!h) return;
