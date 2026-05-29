@@ -237,39 +237,117 @@ function getHomeFeaturedStory() {
   };
 }
 
+function getHomeRankedHeroes(heroes=[]) {
+  return [...heroes]
+    .filter(h => h && h.alias)
+    .sort((a,b)=>(b.score||0)-(a.score||0));
+}
+
+function homeCompact(value, fallback='12K') {
+  const n = Number(value || 0);
+  if (!n) return fallback;
+  if (n >= 1000000) return `${(n/1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${Math.round(n/1000)}K`;
+  return String(n);
+}
+
+function homeTag(value, fallback='HeroIndex') {
+  const raw = String(value || fallback)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9]/g,'')
+    .slice(0,28);
+  return `#${raw || fallback}`;
+}
+
 function getHomeStories(heroes=[]) {
-  const top = [...heroes].sort((a,b)=>b.score-a.score).slice(0,5).map(h=>(
-    { name:h.alias, initials:h.alias.slice(0,2).toUpperCase(), avatar:h.publicAvatar||'' }
+  const top = getHomeRankedHeroes(heroes).slice(0,6).map(h=>(
+    { name:h.alias, initials:h.alias.slice(0,2).toUpperCase(), avatar:h.publicAvatar||'', heroId:h.id }
   ));
   return [
     ...top,
     { name:'FanFeed', initials:'FF' },
-    { name:'VOLT', initials:'VO' },
+    { name:'Marcas', initials:'AD' },
     { name:'Alertas', initials:'AL' },
     { name:'ORÁCULO', initials:'OR', oracle:true }
   ];
 }
 
-function getFeaturedHashtags() {
-  return ['#HeroIndexLive','#GoldenAge','#RescateGlobal','#HeroesDelDia'];
+function getFeaturedHashtags(item={}, heroes=[]) {
+  const ranked = getHomeRankedHeroes(heroes);
+  const matchedHero = ranked.find(h => String(item.headline||'').toLowerCase().includes(String(h.alias||'').toLowerCase())) || ranked[0];
+  return [
+    '#HeroIndexLive',
+    item.category ? homeTag(item.category) : '#GoldenAge',
+    matchedHero ? homeTag(matchedHero.alias) : '#HeroesDelDia',
+    item.corp ? homeTag(item.corp) : '#FanFeed'
+  ].slice(0,4);
 }
 
-function getHomeSocialPosts() {
+function getHomeSocialPosts({heroes=[], news=[], session={type:'public'}}={}) {
+  const ranked = getHomeRankedHeroes(heroes);
+  const top = ranked[0] || null;
+  const second = ranked[1] || null;
+  const leadNews = news[0] || {};
+  const topAlias = top?.alias || 'los héroes verificados';
+  const secondAlias = second?.alias || 'la nueva generación heroica';
+  const topCorp = top?.corp || leadNews.corp || 'HeroIndex Partners';
+  const approval = top ? Math.max(54, Math.min(98, Math.round((top.score||0)/120))) : 87;
+  const likesBase = top ? Math.max(18000, (top.score||0)*18) : 48000;
+  const newsBody = leadNews.headline
+    ? `${leadNews.headline}. ${leadNews.body || 'La cobertura pública sigue en desarrollo dentro de HeroIndex.'}`
+    : `${topAlias} lidera la conversación pública mientras HeroIndex prepara nuevas fichas para héroes emergentes.`;
+
   return [
-    { source:'heroindex', sourceLabel:'HeroIndex Official', avatar:'HI', badge:'Verificado', badgeType:'verified', tone:'official', date:'Hoy · 08:30', body:'Cóndor y Viento Sur lideraron corredor humanitario con récord de respuesta en la costa central. Las transmisiones ciudadanas superaron 4.8M vistas en 2 horas.', hashtags:['#HeroIndexLive','#Condor','#Rescate'], engagement:{likes:'148K',comments:'12K',shares:'31K'} },
-    { source:'public', sourceLabel:'FanFeed', avatar:'FF', badge:'Tendencia', badgeType:'trend', tone:'public', date:'Hoy · 09:10', body:'“Violet Lightbeam apareció en plena tormenta y convirtió el caos en show.” Miles de fans comparten clips desde Puerto Norte.', hashtags:['#FanFeed','#VioletLightbeam','#GoldenAge'], engagement:{likes:'92K',comments:'8.1K',shares:'19K'} },
-    { source:'corp', sourceLabel:'Corporate Newsroom', avatar:'CN', badge:'Newsroom', badgeType:'corp', tone:'corp', date:'Hoy · 09:42', body:'Aurora Academy abre 240 becas para entrenamiento metahumano con alianzas universitarias y certificación HeroIndex.', hashtags:['#AuroraAcademy','#FutureHeroes','#Publicidad'], engagement:{likes:'38K',comments:'2.4K',shares:'6.8K'} },
-    { source:'sponsor', sourceLabel:'Sponsor · VOLT Energy', avatar:'VE', badge:'Promoted', badgeType:'promo', tone:'sponsor', date:'Hoy · 10:05', body:'Nueva red de recarga instantánea para exotrajes: menos tiempo en taller, más héroes en acción.', hashtags:['#VOLT','#HeroTech','#Ad'], engagement:{likes:'27K',comments:'1.2K',shares:'3.1K'} },
-    { source:'alert', sourceLabel:'Civil Alert', avatar:'CA', badge:'Alerta Pública', badgeType:'alert', tone:'public', date:'Hoy · 10:22', body:'Municipio de Valparaíso solicita apoyo para evacuación preventiva por humo industrial. Seguimiento abierto para ciudadanos.', hashtags:['#CivilAlert','#Valparaiso','#Seguridad'], engagement:{likes:'12K',comments:'4.3K',shares:'9.4K'}, oracleNote:'El origen del incidente coincide con activo encubierto en prueba.' }
+       {
+      source:'heroindex', sourceLabel:'HeroIndex Official', avatar:'HI', badge:'Verificado', badgeType:'verified', tone:'official', date:leadNews.date || 'Hoy · 08:30',
+      body:newsBody,
+      hashtags:['#HeroIndexLive', top ? homeTag(top.alias) : '#RankingGlobal', leadNews.category ? homeTag(leadNews.category) : '#GoldenAge'],
+      engagement:{likes:homeCompact(likesBase,'48K'),comments:homeCompact(Math.round(likesBase/14),'7.2K'),shares:homeCompact(Math.round(likesBase/7),'12K')}
+    },
+    {
+      source:'public', sourceLabel:'FanFeed', avatar:'FF', badge:'Tendencia', badgeType:'trend', tone:'public', date:'Hoy · 09:10',
+      body:`Fans empujan a ${secondAlias} al centro del feed con clips, edits y reacciones en vivo. Cada nuevo héroe agregado aparecerá automáticamente en esta conversación.`,
+      hashtags:['#FanFeed', second ? homeTag(second.alias) : '#NuevosHeroes', '#GoldenAge'],
+      engagement:{likes:homeCompact(second ? (second.score||0)*15 : 92000,'92K'),comments:homeCompact(second ? (second.score||0) : 8100,'8.1K'),shares:homeCompact(second ? Math.round((second.score||0)*2.4) : 19000,'19K')}
+    },
+    {
+      source:'corp', sourceLabel:'Corporate Newsroom', avatar:'CN', badge:'Newsroom', badgeType:'corp', tone:'corp', date:'Hoy · 09:42',
+      body:`${topCorp} presenta una agenda de reputación pública centrada en seguridad, formación y presencia mediática heroica.`,
+      hashtags:[homeTag(topCorp), '#FutureHeroes', '#Newsroom'],
+      engagement:{likes:'38K',comments:'2.4K',shares:'6.8K'}
+    },
+    {
+      source:'sponsor', sourceLabel:'Sponsor · VOLT Energy', avatar:'VE', badge:'Promoted', badgeType:'promo', tone:'sponsor', date:'Hoy · 10:05',
+      body:'Nueva red de recarga instantánea para exotrajes: menos tiempo en taller, más héroes en acción.',
+      hashtags:['#VOLT','#HeroTech','#Ad'], engagement:{likes:'27K',comments:'1.2K',shares:'3.1K'}
+    },
+    {
+      source:'alert', sourceLabel:'Civil Alert', avatar:'CA', badge:'Alerta Pública', badgeType:'alert', tone:'public', date:'Hoy · 10:22',
+      body:`Alerta ciudadana activa: equipos locales solicitan apoyo y visibilidad pública. Aprobación estimada de respuesta heroica: ${approval}%.`,
+      hashtags:['#CivilAlert', top ? homeTag(top.country || top.corp || top.alias) : '#Seguridad', '#Respuesta'],
+      engagement:{likes:'12K',comments:'4.3K',shares:'9.4K'},
+      oracleNote: session.type==='gm' ? 'El origen del incidente coincide con activo encubierto en prueba.' : ''
+    }
   ];
 }
 
-function getHomeClips(){
-  return [
-    {title:'Cóndor: 14 días en la cima',meta:'HeroIndex Sports · 8:21',bg:'linear-gradient(135deg,#2f1f65,#0ea5e9)'},
-    {title:'Violet Lightbeam: speedster emergente',meta:'FanFeed Studio · 6:10',bg:'linear-gradient(135deg,#9d174d,#7c3aed)'},
+function getHomeClips(heroes=[]){
+  const ranked = getHomeRankedHeroes(heroes);
+  const palette = [
+    'linear-gradient(135deg,#2f1f65,#0ea5e9)',
+    'linear-gradient(135deg,#9d174d,#7c3aed)',
+    'linear-gradient(135deg,#0f766e,#2563eb)'
+  ];
+  const heroClips = ranked.slice(0,3).map((h,i)=>({
+    title: i===0 ? `${h.alias}: ${Math.max(7, Math.min(30, Math.round((h.score||0)/700)))} días en la cima` : `${h.alias}: ascenso viral`,
+    meta: `${h.corp || 'HeroIndex'} · ${i===0?'8:21':'6:10'}`,
+    bg: palette[i]
+  }));
+  const fallbackClips = [
     {title:'Top 5 rescates de la semana',meta:'HeroIndex Recap · 11:02',bg:'linear-gradient(135deg,#0f766e,#2563eb)'},
-    {title:'Aurora Academy: clase abierta',meta:'Corporate Live · 4:44',bg:'linear-gradient(135deg,#78350f,#f59e0b)'}
-  ];
+    {title:'Nuevos héroes: perfiles que debes seguir',meta:'FanFeed Studio · 5:40',bg:'linear-gradient(135deg,#9d174d,#7c3aed)'},
+    {title:'Aurora Academy: clase abierta',meta:'Corporate Live · 4:44',bg:'linear-gradient(135deg,#78350f,#f59e0b)'},
+    {title:'Cómo funciona el ranking público',meta:'HeroIndex Explains · 3:18',bg:'linear-gradient(135deg,#1e3a8a,#06b6d4)'}
+ ];
+  return [...heroClips, ...fallbackClips].slice(0,4);
 }
-
