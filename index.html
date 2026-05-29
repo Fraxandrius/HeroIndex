@@ -278,9 +278,13 @@
 
     <!-- NOTICIAS -->
     <section class="page" id="page-noticias">
-      <div class="page-header">
-        <h1 class="page-title">NOTICIAS</h1>
-        <p class="page-sub">Feed público · comunicados corporativos · archivos ORÁCULO clasificados.</p>
+      <div class="news-hero-strip">
+        <div>
+          <span class="news-kicker">HeroIndex Media Network</span>
+          <h1 class="page-title">MEDIA FEED</h1>
+          <p class="page-sub">Cobertura pública, clips virales, comunicados oficiales y conversación fan en tiempo real.</p>
+        </div>
+        <div class="news-live-pill"><span></span> En vivo</div>
       </div>
 
       <!-- Composer GM only -->
@@ -328,15 +332,17 @@
         </div>
       </div>
 
-     <!-- News tabs -->
-      <div class="news-tabs">
+    <div class="news-shell">
+        <!-- News tabs -->
+        <div class="news-tabs media-tabs">
         <button class="ntab active" onclick="setNewsTab('all',this)">TODAS</button>
         <button class="ntab" onclick="setNewsTab('heroindex',this)">🌐 HEROINDEX</button>
         <button class="ntab corp-tab" onclick="setNewsTab('corp',this)">🏢 CORPORACIONES</button>
         <button class="ntab oracle-tab gm-only" onclick="setNewsTab('oracle',this)">👁 ORÁCULO</button>
-      </div>
+         </div>
 
-      <div id="news-feed" class="news-feed"></div>
+       <div id="news-feed" class="news-feed media-feed"></div>
+      </div>
     </section>
 
     <!-- GM -->
