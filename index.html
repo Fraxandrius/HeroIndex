@@ -224,13 +224,27 @@
 
     <!-- PERFILES -->
     <section class="page" id="page-perfil">
-      <div class="page-header"><h1 class="page-title">PERFILES</h1><p class="page-sub">Consulta perfiles públicos de héroes verificados por HeroIndex.</p></div>
-       <div class="card" style="margin-bottom:12px">
-        <div class="card-label">BUSCADOR DE HÉROES</div>
-        <input type="text" id="profile-search" placeholder="Buscar por alias, corporación o rol..." oninput="renderProfiles()">
+         <div class="profiles-hero-strip">
+        <div>
+          <span class="profiles-kicker">HeroIndex Reputation Network</span>
+          <h1 class="page-title">PERFILES VERIFICADOS</h1>
+          <p class="page-sub">Fichas públicas, reputación social y presencia de marca para héroes, agencias y fans.</p>
+        </div>
+        <div class="profiles-stats-row" aria-label="Resumen de perfiles">
+          <div><b id="profile-total">0</b><span>perfiles</span></div>
+          <div><b id="profile-corp-count">0</b><span>corps</span></div>
+          <div><b id="profile-verified-count">0</b><span>verificados</span></div>
+        </div>
       </div>
-      <div id="profiles-grid" class="profiles-grid"></div>
-    </section>
+      <div class="profile-search-panel">
+        <div>
+          <div class="card-label">DIRECTORIO PÚBLICO</div>
+          <p>Busca héroes por alias, corporación, rol o país. Los datos ORÁCULO siguen protegidos por sesión GM.</p>
+        </div>
+        <input type="text" id="profile-search" placeholder="Buscar héroes, agencias, causas, regiones..." oninput="renderProfiles()">
+      </div>
+      <div id="profiles-grid" class="profiles-grid reputation-grid"></div>
+        </section>
 
     <section class="page" id="page-miperfil">
       <div class="page-header"><h1 class="page-title">MI PERFIL PÚBLICO</h1><p class="page-sub">Edita cómo te ve el público en HeroIndex.</p></div>

@@ -16,6 +16,7 @@ let profileSearch = '';
 let myProfileDraft = null;
 
 
+
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
   fighting:'Fighting', agility:'Agility', strength:'Strength',
@@ -1010,57 +1011,119 @@ function resetMissionForm(){
 }
 
 // ── PROFILES ─────────────────────────────────────────────────
+function getHeroGlobalRank(hero){
+  return [...heroes].sort((a,b)=>(b.score||0)-(a.score||0)).findIndex(h=>h.id===hero.id)+1;
+}
+
+function getProfileReputationTier(h){
+  const score = Number(h.score) || 0;
+  if(score >= 9000) return { label:'Icono global', cls:'legend' };
+  if(score >= 7000) return { label:'Top contender', cls:'elite' };
+  if(score >= 4500) return { label:'Fan favorite', cls:'rising' };
+  return { label:'Emergente', cls:'emerging' };
+}
+
+function renderProfilePublicBadges(h, session){
+  const badges = ['<span class="profile-pill verified">✔ Verificado</span>'];
+  if(h.corp) badges.push(`<span class="profile-pill corp">${getCorpIcon(h.corp)} ${h.corp}</span>`);
+  else badges.push('<span class="profile-pill indie">Independiente</span>');
+  if(h.role) badges.push(`<span class="profile-pill role">${h.role}</span>`);
+  if(session.type === 'gm') badges.push('<span class="profile-pill oracle gm-only">ORÁCULO</span>');
+  return badges.join('');
+}
+
+function renderProfilePrivatePreview(h, canSeePrivate){
+  if(!canSeePrivate){
+    return `<div class="profile-private-teaser">Poderes, Health, Resolve y Karma protegidos. Inicia sesión como este héroe o GM para ver datos extendidos.</div>`;
+  }
+  const attrs = h.attrs || {};
+  const health = calcHealth(attrs);
+  const resolve = calcResolve(attrs);
+  const miniAttrs = Object.entries(ATTR_LABELS).map(([key,label])=>{
+    const v=attrs[key]||0;
+    return `<div class="mini-attr"><div class="mini-attr-name">${label.slice(0,3).toUpperCase()}</div><div class="mini-attr-val" style="color:${v?attrColor(v):'var(--muted)'}">${v||'—'}</div></div>`;
+  }).join('');
+  const powers = h.powers&&h.powers.length
+    ? h.powers.slice(0,3).map(p=>`<span class="power-level ${p.level||'basic'}">${p.name}</span>`).join('') + (h.powers.length>3?`<span class="profile-more">+${h.powers.length-3} más</span>`:'')
+    : '<span class="profile-more">Sin poderes registrados</span>';
+  return `<div class="profile-private-preview">
+    <div class="mini-attrs">${miniAttrs}</div>
+    <div class="profile-derived-mini"><span>❤️ <b>${health}</b> Health</span><span>🧠 <b>${resolve}</b> Resolve</span></div>
+    <div class="profile-power-strip">${powers}</div>
+  </div>`;
+}
+
+function renderProfileGMPanel(h, session){
+  if(session.type !== 'gm') return '';
+  const flags = h.flags&&h.flags.length ? h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('') : '<div class="profile-more">Sin flags ORÁCULO activos</div>';
+  return `<div class="profile-gm-panel gm-only">
+    <div class="flags-title">ORÁCULO — DOSSIER</div>
+    <div class="profile-gm-row"><span>Identidad real</span><b>${h.realName||'No registrada'}</b></div>
+    <div class="profile-gm-row"><span>Risk Index</span><b class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</b></div>
+    ${flags}
+  </div>`;
+}
+
+function renderHeroProfileCard(h, session){
+  const av=avColor(h.alias);
+  const canSeePrivate = canViewPrivateHero(session, h.id);
+  const rank = getHeroGlobalRank(h);
+  const tier = getProfileReputationTier(h);
+  const approval = getRankingApproval(h);
+  const followers = formatRankingAudience(h);
+  const isCurrentHero = session.type === 'hero' && session.heroId === h.id;
+  const publicStatus = cleanPublicText(h.publicStatus) || 'Disponible para cobertura pública';
+  const slogan = cleanPublicText(h.publicSlogan) || 'Perfil verificado en HeroIndex.';
+  const bio = cleanPublicText(h.publicBio) || 'Biografía pública pendiente de actualización.';
+  const pctS=Math.min(100,Math.round(((Number(h.score)||0)/10000)*100));
+  const coverStyle = `background:radial-gradient(circle at 18% 18%, ${av.c}55, transparent 34%),linear-gradient(135deg, ${av.bg}, rgba(255,255,255,0.08)),linear-gradient(90deg, rgba(255,214,102,0.18), rgba(192,132,252,0.12));`;
+  return `<article class="profile-card reputation-card ${isCurrentHero?'is-current-hero':''} ${session.type==='gm'?'gm-card':''}" onclick="openHeroModal(${h.id})">
+    <div class="profile-cover" style="${coverStyle}">
+      <div class="profile-cover-top"><span class="profile-rank">#${rank||'—'} Global</span><span class="profile-tier ${tier.cls}">${tier.label}</span></div>
+      <div class="profile-live-status">● ${publicStatus}</div>
+    </div>
+    <div class="profile-content">
+      <div class="profile-avatar-stack">
+        ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md profile-avatar-img" style="object-fit:cover;border:2px solid ${av.c}66">`:`<div class="av-md profile-avatar-img" style="background:${av.bg};color:${av.c};border:2px solid ${av.c}66">${initials(h.alias)}</div>`}
+        <span class="profile-verified-dot">✓</span>
+      </div>
+      <div class="profile-name-row"><h3>${h.alias}</h3>${isCurrentHero?'<span class="current-hero-pill">Tu perfil</span>':''}</div>
+      <div class="profile-corp-line">${getFlag(h.country||'Independiente')} ${h.country||'Independiente'}${h.corp?` · ${getCorpIcon(h.corp)} ${h.corp}`:' · Independiente'}</div>
+      <div class="profile-pill-row">${renderProfilePublicBadges(h, session)}<span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span></div>
+      <blockquote class="profile-slogan">“${slogan}”</blockquote>
+      <p class="profile-bio">${bio}</p>
+      <div class="profile-reputation-stats">
+        <div><b style="color:${scoreColor(h.score)}">${(h.score||0).toLocaleString('es-CL')}</b><span>Score</span></div>
+        <div><b>${approval}%</b><span>Aprobación</span></div>
+        <div><b>${followers}</b><span>Seguidores</span></div>
+      </div>
+      <div class="dbar-row profile-score-bar"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div></div>
+      ${renderProfilePrivatePreview(h, canSeePrivate)}
+      ${renderProfileGMPanel(h, session)}
+      <div class="profile-card-footer"><span>Ver ficha pública completa</span><b>→</b></div>
+    </div>
+  </article>`;
+}
+
 function renderProfiles(){
-  const session = currentSession || { type:'public' };
-  const sorted=[...heroes].sort((a,b)=>b.score-a.score);
+  const sorted=[...heroes].sort((a,b)=>(b.score||0)-(a.score||0));
+  const qEl=document.getElementById('profile-search');
 const qEl=document.getElementById('profile-search');
   profileSearch=(qEl?.value||'').trim().toLowerCase();
   const filtered=sorted.filter(h=>{
     if(!profileSearch) return true;
-    return [h.alias,h.corp,h.role].filter(Boolean).join(' ').toLowerCase().includes(profileSearch);
+ return [h.alias,h.corp,h.role,h.country,h.publicStatus,h.publicSlogan].filter(Boolean).join(' ').toLowerCase().includes(profileSearch);
   });
+  const totalEl=document.getElementById('profile-total');
+  const corpEl=document.getElementById('profile-corp-count');
+  const verifiedEl=document.getElementById('profile-verified-count');
+  if(totalEl) totalEl.textContent = filtered.length;
+  if(corpEl) corpEl.textContent = new Set(sorted.map(h=>h.corp).filter(Boolean)).size;
+  if(verifiedEl) verifiedEl.textContent = sorted.filter(h=>h.alias).length;
   const pg=document.getElementById('profiles-grid'); if(!pg) return;
-   pg.innerHTML=filtered.map(h=>{
-    const av=avColor(h.alias);
-    const canSeePrivate = canViewPrivateHero(session, h.id);
-    const attrs=canSeePrivate?(h.attrs||{}):{};
-    const health=calcHealth(attrs);
-    const resolve=calcResolve(attrs);
-    const hasAttrs=Object.values(attrs).some(v=>v>0);
-    const miniAttrs=hasAttrs?`<div class="mini-attrs">${Object.entries(ATTR_LABELS).map(([key,label])=>{const v=attrs[key]||0;return `<div class="mini-attr"><div class="mini-attr-name">${label.slice(0,3).toUpperCase()}</div><div class="mini-attr-val" style="color:${v?attrColor(v):'var(--muted)'}">${v||'—'}</div></div>`;}).join('')}</div>
-    <div style="display:flex;gap:8px;margin-bottom:8px;font-size:12px">
-      <span>❤️ <strong style="color:var(--red)">${health}</strong></span>
-      <span>🧠 <strong style="color:var(--accent)">${resolve}</strong></span>
-    </div>`:'';
-     const powersSnippet=canSeePrivate&&h.powers&&h.powers.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${h.powers.slice(0,3).map(p=>`<span class="power-level ${p.level||'basic'}" style="font-size:9px">${p.name}</span>`).join('')}${h.powers.length>3?`<span style="font-size:11px;color:var(--muted)">+${h.powers.length-3} más</span>`:''}</div>`:'';
-    const flags=session.type==='gm'&&h.flags&&h.flags.length?`<div class="gm-flag" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="flags-title">ORÁCULO — FLAGS</div>${h.flags.map(f=>`<div class="flag-item">${f}</div>`).join('')}</div>`:'';
-    const real=session.type==='gm'&&h.realName?`<div class="profile-real gm-flag">Identidad: ${h.realName}</div>`:'';
-    const risk=session.type==='gm'?`<div class="gm-flag" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--muted)">Risk Index</span><span class="badge ${riskClass(h.risk)}">${riskLabel(h.risk)}</span></div>`:'';
-    const klog=canSeePrivate&&h.karmaLog&&h.karmaLog.length?h.karmaLog.slice(-3).reverse().map(l=>`<div class="klog-row"><span>Sesión ${l.session} · ${l.date}</span><span style="color:${l.delta>=0?'var(--green)':'var(--red)'};font-family:'DM Mono',monospace">${l.delta>=0?'+':''}${l.delta}</span></div>`).join(''):'<span style="font-size:11px;color:var(--muted)">Perfil público protegido</span>';
-    const pctS=Math.round((h.score/10000)*100),pctK=Math.min(100,h.karma*5);
-    return `<div class="profile-card ${gmActive?'gm-card':''}" style="cursor:pointer" onclick="openHeroModal(${h.id})">
-      <div class="profile-header">
-        ${h.publicAvatar?`<img src="${h.publicAvatar}" alt="avatar" class="av-md" style="object-fit:cover;border:1px solid ${av.c}33">`:`<div class="av-md" style="background:${av.bg};color:${av.c};border:1px solid ${av.c}33">${initials(h.alias)}</div>`}
-        <div><div class="profile-name">${h.alias}</div>${real}<div class="profile-corp">${h.corp||'—'}${h.country?' · '+getFlag(h.country)+' '+h.country:''}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-          <span class="badge ${h.type==='PC'?'badge-pc':'badge-npc'}">${h.type}</span>
-          ${h.role?`<span class="role-badge" style="font-size:9px;padding:3px 8px">${h.role}</span>`:''}
-        </div></div>
-      </div>
-      ${powersSnippet}
-      ${hasAttrs?miniAttrs:''}
-      ${cleanPublicText(h.publicStatus)?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px">● ${cleanPublicText(h.publicStatus)}</div>`:''}
-      ${cleanPublicText(h.publicSlogan)?`<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">"${cleanPublicText(h.publicSlogan)}"</div>`:''}
-      ${cleanPublicText(h.publicBio)?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${cleanPublicText(h.publicBio)}</div>`:''}
-      <div class="dbar-row"><span class="dbar-label">SCORE</span><div class="dbar"><div class="dbar-fill" style="width:${pctS}%;background:${scoreColor(h.score)}"></div></div><span class="dbar-val" style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</span></div>
-      ${canSeePrivate?`<div class="dbar-row"><span class="dbar-label">KARMA</span><div class="dbar"><div class="dbar-fill" style="width:${pctK}%;background:var(--green)"></div></div><span class="dbar-val" style="color:var(--green)">${h.karma}</span></div>`:''}
-      ${risk}
-      <div class="divider"></div>
-      <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${canSeePrivate?'KARMA — ÚLTIMAS SESIONES':'VISTA PÚBLICA'}</div>
-      ${klog}${flags}
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Clic para ver ficha completa →</div>
-    </div>`;
-  }).join('')||'<p style="color:var(--muted)">Sin héroes registrados.</p>';
+   pg.innerHTML=filtered.length
+    ? filtered.map(h=>renderHeroProfileCard(h, session)).join('')
+    : '<div class="profile-empty-state">Sin héroes para esta búsqueda. Prueba por alias, corporación, rol o país.</div>';
 }
 
 function renderMyProfile(){
