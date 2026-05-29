@@ -247,7 +247,14 @@ function uploadContentImage(file, folder='content') {
     }
     const safeName = String(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `${folder}/${Date.now()}-${safeName}`;
-    return activeStorage.ref(path).put(file).then(snapshot => snapshot.ref.getDownloadURL());
+    return activeStorage.ref(path).put(file)
+      .then(snapshot => snapshot.ref.getDownloadURL())
+      .catch(error => {
+        if (error?.code === 'storage/unauthorized') {
+          throw new Error('Firebase Storage rechazó la subida (storage/unauthorized). Revisa las Storage Rules para permitir escritura en las carpetas news/ y ads/ durante el prototipo.');
+        }
+        throw error;
+      });
   });
 }
 
