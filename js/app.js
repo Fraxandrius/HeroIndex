@@ -1106,9 +1106,9 @@ function renderHeroProfileCard(h, session){
 }
 
 function renderProfiles(){
-  const sorted=[...heroes].sort((a,b)=>(b.score||0)-(a.score||0));
+   const session = currentSession || { type:'public' };
+    const sorted=[...heroes].sort((a,b)=>(b.score||0)-(a.score||0));
   const qEl=document.getElementById('profile-search');
-const qEl=document.getElementById('profile-search');
   profileSearch=(qEl?.value||'').trim().toLowerCase();
   const filtered=sorted.filter(h=>{
     if(!profileSearch) return true;
