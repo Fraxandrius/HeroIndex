@@ -1310,7 +1310,7 @@ function rowsToCSV(rows){
 function downloadCSVFile(filename, rows){
   const blob=new Blob([rowsToCSV(rows)],{type:'text/csv;charset=utf-8'});
   const u=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=u;a.download=filename;a.click();URL.revokeObjectURL(u);}
+  a.href=u;a.download=filename;a.click();URL.revokeObjectURL(u);
 }
 
 function downloadTemplate(){
