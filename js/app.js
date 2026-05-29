@@ -179,101 +179,13 @@ function closeGMModal(e){if(e.target===document.getElementById('gm-modal'))docum
 // ── RENDER ALL ───────────────────────────────────────────────
 function renderAll(){renderHome();renderRanking();renderProfiles();}
 
-// ── HOME — CORPORATE DASHBOARD ───────────────────────────────
+// ── HOME — SOCIAL MEDIA PLATFORM ────────────────────────────
 function renderHome(){
   const sorted=[...heroes].sort((a,b)=>b.score-a.score).map((h,i)=>({...h,deltaTag:i%3===0?'up':(i%4===0?'down':'steady')}));
   const session=currentSession||{type:'public'};
 
-  // Metrics row
-  const totalH=heroes.length;
-  const pcs=heroes.filter(h=>h.type==='PC');
-  const isGM=session.type==='gm';
-  const riskCounts={low:0,med:0,high:0,critical:0};
-  heroes.forEach(h=>{ if(riskCounts[h.risk]!==undefined) riskCounts[h.risk]++; });
-  const avgScore=totalH?Math.round(heroes.reduce((s,h)=>s+h.score,0)/totalH):0;
-  const metrics=isGM?[
-    {label:'REGISTRADOS',val:totalH,color:'var(--accent)'},
-    {label:'ACTIVOS PC',val:pcs.length,color:'var(--green)'},
-    {label:'NPC',val:heroes.filter(h=>h.type==='NPC').length,color:'var(--muted2)'},
-    {label:'RIESGO ALTO+',val:riskCounts.high+riskCounts.critical,color:'var(--red)'},
-    {label:'SCORE MEDIO',val:avgScore.toLocaleString('es-CL'),color:'var(--amber)'},
-    {label:'KARMA TOTAL',val:pcs.reduce((s,h)=>s+h.karma,0),color:'#c084fc'},
-   ]:[
-    {label:'HÉROES VERIFICADOS',val:totalH,color:'var(--accent)'},
-    {label:'EQUIPOS ACTIVOS',val:Math.max(1,Math.ceil(pcs.length/2)),color:'var(--green)'},
-    {label:'CORPORACIONES',val:new Set(heroes.map(h=>h.corp||'Independiente')).size,color:'var(--muted2)'},
-    {label:'SCORE MEDIO',val:avgScore.toLocaleString('es-CL'),color:'var(--amber)'},
-    {label:'MISIONES EN COBERTURA',val:3,color:'#60a5fa'},
-    {label:'SEÑAL GLOBAL',val:'ESTABLE',color:'#00e676'},
-  ];
-  const mr=document.getElementById('metrics-row');
-  if(mr) mr.innerHTML=metrics.map(m=>`
-    <div class="metric-card">
-      <div class="metric-label-sm">${m.label}</div>
-      <div class="metric-number" style="color:${m.color}">${m.val}</div>
-    </div>`).join('');
-
-    const layerEl=document.getElementById('layer-indicator');
-  if(layerEl){
-    const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
-    const layer=session.type==='gm'?'ORÁCULO / GM VIEW':(session.type==='hero'?'HERO PERSONAL VIEW':'PUBLIC VIEW');
-    const sub=session.type==='hero'&&me?`Operador: ${me.alias}`:(session.type==='gm'?'Acceso clasificado activo':'Cobertura pública internacional');
-     const badges=[
-      '<span class="layer-pill">PUBLIC VIEW</span>',
-      session.type==='hero'?'<span class="layer-pill hero">HERO VIEW</span>':'',
-      session.type==='gm'?'<span class="layer-pill gm">ORÁCULO / GM</span>':''
-    ].filter(Boolean).join('');
-    layerEl.innerHTML=`${badges}<span class="layer-sub">${sub}</span>`;
-  }
-
-  const ops=document.getElementById('home-ops-strip');
-  if(ops){
-    const topHero=sorted[0];
-    const critical=heroes.filter(h=>h.risk==='critical').length;
-    const riskShare=totalH?Math.round(((riskCounts.high+riskCounts.critical)/totalH)*100):0;
-    ops.innerHTML=isGM?`
-      <div class="ops-pill">🏆 Top de hoy: <b>${topHero?topHero.alias:'Sin datos'}</b>${topHero?` · ${topHero.score.toLocaleString('es-CL')}`:''}</div>
-      <div class="ops-pill">⚠️ Riesgo alto+ en red: <b>${riskShare}%</b> (${riskCounts.high+riskCounts.critical}/${totalH||0})</div>
-         <div class="ops-pill">🛑 Riesgo crítico activo: <b>${critical}</b> ${critical===1?'héroe':'héroes'}</div>`:`
-      <div class="ops-pill">🏆 Héroe destacado: <b>${topHero?topHero.alias:'Sin datos'}</b></div>
-      <div class="ops-pill">🌐 Cobertura ciudadana: <b>Alta</b> en capitales regionales</div>
-      <div class="ops-pill">🛰️ Estado de red: <b>Monitoreo continuo</b> 24/7</div>`;
-  }
-
-  // Surveillance (high/critical risk)
-  const survEl=document.getElementById('surveillance-list');
-  const survTitle=document.getElementById('home-surveillance-title');
-  if(survTitle) survTitle.textContent=isGM?'VIGILANCIA ACTIVA — ORÁCULO':'SEGUIMIENTO OPERATIVO — RED PÚBLICA';
-  if(survEl){
-     const watched=isGM
-      ?heroes.filter(h=>h.risk==='high'||h.risk==='critical').sort((a,b)=>b.score-a.score).slice(0,5)
-      :sorted.slice(0,5);
-    survEl.innerHTML=watched.length?watched.map(h=>`
-      <div class="surv-item">
-        ${makeAv(h.alias)}
-        <div class="surv-info">
-          <div class="surv-name">${h.alias}</div>
-          <div class="surv-reason">${h.corp||'Independiente'}${isGM&&h.flags&&h.flags.length?' · '+h.flags[0]:' · Seguimiento estándar'}</div>
-        </div>
-       <div class="surv-risk"><span class="badge ${isGM?riskClass(h.risk):'badge-low'}">${isGM?riskLabel(h.risk):'Visible'}</span></div>
-      </div>`).join('')
-    :'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Sin actividad destacada</div>';
-  }
-
-  // Corp breakdown
-  const cbEl=document.getElementById('corp-breakdown');
-  if(cbEl){
-    const corpMap={};
-    heroes.forEach(h=>{const c=h.corp||'Independiente';corpMap[c]=(corpMap[c]||0)+1;});
-    const maxVal=Math.max(...Object.values(corpMap),1);
-    cbEl.innerHTML=Object.entries(corpMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([corp,count])=>`
-      <div class="corp-row">
-        <span class="corp-name-sm" style="color:${getCorpColor(corp)}">${getCorpIcon(corp)} ${corp}</span>
-        <div class="corp-bar-wrap"><div class="corp-bar-fill" style="width:${Math.round((count/maxVal)*100)}%;background:${getCorpColor(corp)}"></div></div>
-        <span class="corp-count">${count}</span>
-      </div>`).join('')||'<div style="color:var(--muted);font-size:12px">Sin datos</div>';
-  }
-
+  renderHomeMasthead(sorted, session);
+   
   // Alerts
   const ALERTS=[
     {icon:'🔥',name:'INCENDIO INDUSTRIAL',level:'high',levelLabel:'ALTO',loc:'San Bernardo, Chile',time:'00:24:15'},
@@ -310,7 +222,7 @@ function renderHome(){
       </div>`;
     }).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
 
-    // Home headline media
+      // Home headline media
   const featured=document.getElementById('featured-media');
   if(featured){
     loadNews().then(all=>{
@@ -321,10 +233,62 @@ function renderHome(){
     });
   }
   
-    renderHomeStories();
+  renderHomeStories(session);
   renderHomeSocialFeed();
-    renderHomeClips();
+  renderHomeClips();
   renderHomeAds();
+}
+
+function renderHomeMasthead(sorted, session){
+  const masthead=document.getElementById('home-masthead');
+  if(!masthead) return;
+
+  const topHero=sorted[0];
+  const me=session.type==='hero'?heroes.find(h=>h.id===session.heroId):null;
+  const totalH=heroes.length;
+  const corps=new Set(heroes.map(h=>h.corp||'Independiente')).size;
+  const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
+  const title=session.type==='hero'&&me
+    ? `${me.alias}, tu reputación pública está en vivo`
+    : (session.type==='gm'
+      ? 'ORÁCULO observa la narrativa debajo del espectáculo'
+      : 'La era dorada se transmite en vivo');
+  const body=session.type==='hero'&&me
+    ? 'Gestiona cómo fans, prensa, corporaciones y gobiernos leen cada rescate, clip y titular asociado a tu nombre.'
+    : (session.type==='gm'
+      ? 'La portada pública permanece aspiracional; esta franja privada revela divergencias, riesgos y control narrativo para dirección de juego.'
+      : 'HeroIndex reúne ranking, clips, perfiles y cobertura ciudadana para seguir a los héroes que sostienen el presente.' );
+  const topName=topHero?topHero.alias:'Sin héroes';
+  const oracleRibbon=session.type==='gm'?`
+    <div class="masthead-oracle gm-only">
+      <span>ORÁCULO / GM</span>
+      <b>${highRisk}</b> activos en riesgo alto+
+    </div>`:'';
+  const heroChip=me?`<span>👤 Tu perfil: <b>${me.alias}</b></span>`:`<span>🌍 Feed público global</span>`;
+
+  masthead.innerHTML=`
+    <div class="masthead-copy">
+      <div class="masthead-kicker">HeroIndex Live · Celebridad heroica · Ranking global</div>
+      <h1>${title}</h1>
+      <p>${body}</p>
+      <div class="masthead-actions">
+        <button class="btn-primary" onclick="showPage('ranking')">Ver ranking global →</button>
+        <button class="btn-sec" onclick="showPage('noticias')">Abrir noticias</button>
+      </div>
+    </div>
+    <aside class="masthead-media-card">
+      ${oracleRibbon}
+      <div class="masthead-live-pill">● En vivo ahora</div>
+      <div class="masthead-hero-label">Héroe destacado</div>
+      <div class="masthead-hero-name">${topName}</div>
+      <div class="masthead-hero-sub">${topHero?(getCorpIcon(topHero.corp||'')+' '+(topHero.corp||'Independiente')):'Esperando registros'}</div>
+      <div class="masthead-chip-row">
+        <span>🏆 #1 hoy</span>
+        ${heroChip}
+        <span>🏢 ${corps} corporaciones</span>
+        <span>✅ ${totalH} verificados</span>
+      </div>
+    </aside>`;
 }
 
 function getHeroPublicBadges(h){
@@ -386,10 +350,12 @@ function renderHeroSpotlight(){
   </div>`;
 }
 
-function renderHomeStories(){
+
+function renderHomeStories(session=currentSession||{type:'public'}){
   const row=document.getElementById('home-stories');
   if(!row) return;
-  const stories=(typeof getHomeStories==='function'?getHomeStories(heroes):[]);
+    const stories=(typeof getHomeStories==='function'?getHomeStories(heroes):[])
+    .filter(st=>!st.oracle || session.type==='gm');
   row.innerHTML=stories.map(st=>`<div class="story-item ${st.oracle?'story-oracle':''}">
     <div class="story-ring">${st.avatar?`<img src="${st.avatar}" alt="${st.name}">`:`<span>${st.initials||initials(st.name)}</span>`}</div>
     <div class="story-name">${st.name}</div>
