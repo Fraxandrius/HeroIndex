@@ -2879,3 +2879,16 @@ body:not(.gm-active) .gm-post{
 .featured-placeholder::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.58)); pointer-events:none; }
 .featured-placeholder span,
 .featured-placeholder small { position: relative; z-index: 1; }
+
+/* ── CMS publish status ───────────────────────────────────── */
+.cms-status {
+  min-height: 18px;
+  margin-top: 2px;
+  color: var(--muted2);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.cms-status.working { color: var(--accent); }
+.cms-status.success { color: var(--green); }
+.cms-status.error { color: var(--red); }
+.media-ad-post { border-color: rgba(255,171,64,0.22); }
