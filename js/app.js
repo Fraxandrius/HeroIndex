@@ -15,6 +15,7 @@ let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
 let myProfileDraft = null;
 
+
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
   fighting:'Fighting', agility:'Agility', strength:'Strength',
@@ -215,21 +216,28 @@ function renderHome(){
 
   // Top heroes
   const hr=document.getElementById('home-ranking');
-   if(hr) hr.innerHTML=sorted.slice(0,6).map((h,i)=>{
-      const move=getScoreMove(h.deltaTag);
-      return `<div class="hero-trend-card ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" onclick="openHeroModal(${h.id})">
-        <div class="hero-trend-head"><span class="hero-trend-pos">#${i+1}</span><span class="hero-trend-move ${move.cls}">${move.icon} ${move.label}</span></div>
-        <div class="hero-trend-body">
-          ${makeHeroAv(h,'md')}
-          <div class="hero-trend-info">
-            <div class="hr-name">${h.alias}</div>
-            <div class="hero-trend-sub" style="color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
-            <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+  if(hr){
+    if(!sorted.length){
+      hr.innerHTML=renderHomeRosterEmpty(session);
+    }else{
+      const cards=sorted.slice(0,6).map((h,i)=>{
+        const move=getScoreMove(h.deltaTag);
+        return `<div class="hero-trend-card ${session.type==='hero'&&session.heroId===h.id?'is-me':''}" onclick="openHeroModal(${h.id})">
+          <div class="hero-trend-head"><span class="hero-trend-pos">#${i+1}</span><span class="hero-trend-move ${move.cls}">${move.icon} ${move.label}</span></div>
+          <div class="hero-trend-body">
+            ${makeHeroAv(h,'md')}
+            <div class="hero-trend-info">
+              <div class="hr-name">${h.alias}</div>
+              <div class="hero-trend-sub" style="color:${getCorpColor(h.corp)}">${getCorpIcon(h.corp||'')} ${h.corp||'Independiente'}</div>
+              <div class="hr-badges">${getHeroPublicBadges(h)}</div>
+            </div>
+            <div class="hero-trend-score"><b style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</b><span>${Math.max(52,Math.min(98,Math.round(h.score/120)))}% aprobación</span></div>
           </div>
-          <div class="hero-trend-score"><b style="color:${scoreColor(h.score)}">${h.score.toLocaleString('es-CL')}</b><span>${Math.max(52,Math.min(98,Math.round(h.score/120)))}% aprobación</span></div>
-        </div>
-      </div>`;
-    }).join('')||'<div style="padding:1rem;text-align:center;color:var(--muted);font-size:13px">Sin héroes</div>';
+          </div>`;
+      }).join('');
+      hr.innerHTML=cards+renderHomeRosterNote(sorted.length, session);
+    }
+  }
 
       // Home headline media
   const featured=document.getElementById('featured-media');
@@ -248,6 +256,28 @@ function renderHome(){
   renderHomeAds();
 }
 
+
+function renderHomeRosterEmpty(session){
+  const cta=session.type==='gm'
+    ? '<button class="home-empty-cta" onclick="showPage(\'gm\')">Registrar primer héroe →</button>'
+    : '<button class="home-empty-cta" onclick="showPage(\'perfil\')">Ver perfiles públicos →</button>';
+  return `<div class="home-empty-state">
+    <div class="home-empty-icon">✨</div>
+    <div class="home-empty-title">El ranking todavía está por estrenarse</div>
+    <div class="home-empty-body">HeroIndex ya puede funcionar como portada pública, pero necesita héroes registrados para llenar historias, clips y rankings con celebridades reales del universo.</div>
+    ${cta}
+  </div>`;
+}
+
+function renderHomeRosterNote(count, session){
+  if(count>=3) return '';
+  const copy=count===1
+    ? 'Solo hay un héroe registrado: el feed usará más piezas editoriales hasta que agregues rivales, aliados y nuevas corporaciones.'
+    : 'Hay dos héroes registrados: el feed ya puede comparar tendencias, pero ganará variedad cuando agregues más perfiles.';
+  const cta=session.type==='gm'?'<button onclick="showPage(\'gm\')">Agregar héroes</button>':'';
+  return `<div class="home-roster-note"><span>${copy}</span>${cta}</div>`;
+}
+
 function renderHomeMasthead(sorted, session){
   const masthead=document.getElementById('home-masthead');
   if(!masthead) return;
@@ -257,17 +287,21 @@ function renderHomeMasthead(sorted, session){
   const totalH=heroes.length;
   const corps=new Set(heroes.map(h=>h.corp||'Independiente')).size;
   const highRisk=heroes.filter(h=>h.risk==='high'||h.risk==='critical').length;
-  const title=session.type==='hero'&&me
-    ? `${me.alias}, tu reputación pública está en vivo`
-    : (session.type==='gm'
-      ? 'ORÁCULO observa la narrativa debajo del espectáculo'
-      : 'La era dorada se transmite en vivo');
-  const body=session.type==='hero'&&me
-    ? 'Gestiona cómo fans, prensa, corporaciones y gobiernos leen cada rescate, clip y titular asociado a tu nombre.'
-    : (session.type==='gm'
-      ? 'La portada pública permanece aspiracional; esta franja privada revela divergencias, riesgos y control narrativo para dirección de juego.'
-      : 'HeroIndex reúne ranking, clips, perfiles y cobertura ciudadana para seguir a los héroes que sostienen el presente.' );
-  const topName=topHero?topHero.alias:'Sin héroes';
+   const title=!totalH
+    ? 'La portada está lista para el primer héroe'
+    : (session.type==='hero'&&me
+      ? `${me.alias}, tu reputación pública está en vivo`
+      : (session.type==='gm'
+        ? 'ORÁCULO observa la narrativa debajo del espectáculo'
+        : 'La era dorada se transmite en vivo'));
+  const body=!totalH
+    ? 'Cuando registres héroes, HeroIndex llenará automáticamente historias, rankings, clips y conversación social con sus datos públicos.'
+    : (session.type==='hero'&&me
+      ? 'Gestiona cómo fans, prensa, corporaciones y gobiernos leen cada rescate, clip y titular asociado a tu nombre.'
+      : (session.type==='gm'
+        ? 'La portada pública permanece aspiracional; esta franja privada revela divergencias, riesgos y control narrativo para dirección de juego.'
+        : 'HeroIndex reúne ranking, clips, perfiles y cobertura ciudadana para seguir a los héroes que sostienen el presente.' ));
+  const topName=topHero?topHero.alias:'Roster en preparación';
   const oracleRibbon=session.type==='gm'?`
     <div class="masthead-oracle gm-only">
       <span>ORÁCULO / GM</span>
@@ -290,9 +324,9 @@ function renderHomeMasthead(sorted, session){
       <div class="masthead-live-pill">● En vivo ahora</div>
       <div class="masthead-hero-label">Héroe destacado</div>
       <div class="masthead-hero-name">${topName}</div>
-      <div class="masthead-hero-sub">${topHero?(getCorpIcon(topHero.corp||'')+' '+(topHero.corp||'Independiente')):'Esperando registros'}</div>
+      <div class="masthead-hero-sub">${topHero?(getCorpIcon(topHero.corp||'')+' '+(topHero.corp||'Independiente')):'Agrega héroes desde el Panel GM para activar la cartelera'}</div>
       <div class="masthead-chip-row">
-        <span>🏆 #1 hoy</span>
+        <span>${topHero?'🏆 #1 hoy':'🆕 Nuevo universo'}</span>
         ${heroChip}
         <span>🏢 ${corps} corporaciones</span>
         <span>✅ ${totalH} verificados</span>

@@ -263,8 +263,15 @@ function getHomeStories(heroes=[]) {
   const top = getHomeRankedHeroes(heroes).slice(0,6).map(h=>(
     { name:h.alias, initials:h.alias.slice(0,2).toUpperCase(), avatar:h.publicAvatar||'', heroId:h.id }
   ));
+ const onboarding = top.length ? [] : [
+    { name:'Nuevo', initials:'N+' },
+    { name:'Ranking', initials:'#1' }
+  ];
+  const lowRoster = top.length > 0 && top.length < 3 ? [{ name:'Scouting', initials:'SC' }] : [];
   return [
     ...top,
+        ...onboarding,
+    ...lowRoster,
     { name:'FanFeed', initials:'FF' },
     { name:'Marcas', initials:'AD' },
     { name:'Alertas', initials:'AL' },

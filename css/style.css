@@ -1541,3 +1541,64 @@ body:not(.gm-active) .gm-post{
   .alert-icon { width: 36px; height: 36px; }
   .alert-time { width: 100%; text-align: left; padding-left: 45px; }
 }
+
+/* --- Phase 5C: empty and low-roster states --- */
+.home-empty-state,
+.home-roster-note {
+  border: 1px dashed rgba(255,255,255,.18);
+  background: rgba(255,255,255,.045);
+  border-radius: 18px;
+}
+.home-empty-state {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 28px 18px;
+  color: #dbeafe;
+}
+.home-empty-icon { font-size: 30px; }
+.home-empty-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+}
+.home-empty-body {
+  max-width: 460px;
+  color: var(--muted2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.home-empty-cta,
+.home-roster-note button {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg,#7c3aed,#ec4899);
+  color: #fff;
+  padding: 8px 12px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.home-roster-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--muted2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.home-roster-note button {
+  flex-shrink: 0;
+  margin-top: 0;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.12);
+}
+@media (max-width:520px){
+  .home-empty-state { padding: 22px 14px; }
+  .home-roster-note { align-items: flex-start; flex-direction: column; }
+}
