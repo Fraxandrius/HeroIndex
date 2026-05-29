@@ -124,3 +124,151 @@ La app no tiene servidor ni base de datos. Todo corre en el navegador. No hay in
 3. Crear cuenta en vercel.com con GitHub ✓
 4. Importar el repositorio en Vercel ✓
 5. Copiar la URL y compartir ✓
+
+---
+
+## FIREBASE — CONTENIDO COMPARTIDO Y CMS GM
+
+HeroIndex ahora puede leer contenido compartido desde **Firebase Realtime Database** y subir imágenes a **Firebase Storage**. Esto permite que el GM publique noticias, anuncios y comentarios falsos sin editar código, y que todos los jugadores vean los mismos cambios.
+
+### 1. Activar Realtime Database
+
+1. Entra a https://console.firebase.google.com
+2. Abre el proyecto usado por HeroIndex.
+3. Ve a **Build → Realtime Database**.
+4. Crea la base de datos si aún no existe.
+5. Usa la región recomendada por Firebase.
+6. Para pruebas puedes iniciar en modo test, pero revisa la advertencia de seguridad más abajo.
+
+HeroIndex usa estas rutas:
+
+```txt
+news/{newsId}
+ads/{adId}
+comments/{newsId}/{commentId}
+heroes
+config/gmPasswordHash
+```
+
+### 2. Activar Firebase Storage
+
+1. En Firebase Console, ve a **Build → Storage**.
+2. Haz clic en **Get started** / **Comenzar**.
+3. Elige una ubicación de Storage.
+4. Confirma la creación del bucket.
+
+Las imágenes subidas desde el Content Manager se guardan en carpetas como:
+
+```txt
+news/{timestamp-fileName}
+ads/{timestamp-fileName}
+```
+
+La URL pública descargable se guarda luego en Realtime Database como `imageUrl`.
+
+### 3. Estructura de noticias
+
+Cada noticia se guarda en:
+
+```txt
+news/{newsId}
+```
+
+Campos esperados:
+
+```txt
+title
+source
+category
+imageUrl
+publicVersion
+corporateVersion
+oracleVersion
+views
+likes
+shares
+commentsCount
+tags
+published
+createdAt
+```
+
+Notas:
+
+- `publicVersion` aparece para público y jugadores.
+- `corporateVersion` puede usarse como copy corporativo cuando corresponda.
+- `oracleVersion` solo debe mostrarse cuando la sesión GM está activa.
+- `published: false` oculta la noticia del feed público.
+
+### 4. Estructura de anuncios
+
+Cada anuncio se guarda en:
+
+```txt
+ads/{adId}
+```
+
+Campos esperados:
+
+```txt
+brand
+headline
+body
+imageUrl
+placement
+active
+createdAt
+```
+
+Notas:
+
+- `placement: home` aparece en los espacios publicitarios del Home.
+- `active: false` oculta el anuncio.
+- Si no hay anuncios activos, HeroIndex usa los anuncios fallback definidos en el código.
+
+### 5. Estructura de comentarios falsos
+
+Cada comentario se guarda en:
+
+```txt
+comments/{newsId}/{commentId}
+```
+
+Campos esperados:
+
+```txt
+authorType: anonymous | npcHero | corporation
+authorName
+authorHeroSlug
+body
+likes
+createdAt
+```
+
+Los comentarios se muestran como preview bajo los posts del Media Feed.
+
+### 6. Uso del Content Manager
+
+1. Entra como GM.
+2. Abre **Panel GM**.
+3. Busca la sección **Content Manager — Firebase**.
+4. Desde ahí puedes:
+   - crear noticias/media posts,
+   - subir imágenes de noticias,
+   - crear anuncios,
+   - subir imágenes de anuncios,
+   - agregar comentarios falsos a una noticia publicada.
+5. Al publicar, los datos se guardan en Firebase y los jugadores los ven al recargar o cuando la app detecta cambios.
+
+### 7. Advertencia de seguridad importante
+
+La UI actual usa el modo GM existente como bloqueo visual y narrativo. Esto sirve para la mesa y para prototipar, pero **no es autenticación segura de producción**.
+
+Antes de publicar una campaña con datos sensibles reales debes configurar:
+
+- **Firebase Authentication** para identificar usuarios/GM reales.
+- **Realtime Database Rules** para limitar escritura de `news`, `ads` y `comments` solo a GM autenticados.
+- **Storage Rules** para limitar subida de imágenes solo a GM autenticados.
+- Reglas de lectura separadas si vas a guardar contenido verdaderamente secreto.
+
+No guardes secretos reales en `oracleVersion`, `flags`, identidades o comentarios si las reglas de Firebase permiten lectura pública.
