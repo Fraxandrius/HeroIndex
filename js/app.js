@@ -174,6 +174,37 @@ function getSafeProfileCopy(value, fallback='', session=currentSession||{type:'p
   return SENSITIVE_PUBLIC_COPY_PATTERNS.some(pattern=>pattern.test(clean)) ? fallback : clean;
 }
 
+
+function setNewsTabState(tab='all'){
+  newsTab = tab;
+  document.querySelectorAll('#page-noticias .ntab').forEach(btn=>btn.classList.remove('active'));
+  const buttons = [...document.querySelectorAll('#page-noticias .ntab')];
+  const target = buttons.find(btn => {
+    const text = btn.textContent.toLowerCase();
+    if(tab === 'all') return text.includes('todas');
+    if(tab === 'heroindex') return text.includes('heroindex');
+    if(tab === 'corp') return text.includes('corporaciones');
+    if(tab === 'oracle') return text.includes('oráculo');
+    return false;
+  });
+  if(target) target.classList.add('active');
+}
+
+function cmsSetStatus(message='', tone='info'){
+  const el=document.getElementById('cms-status');
+  if(el){
+    el.textContent=message;
+    el.className=`cms-status ${tone}`;
+  }
+  if(message) console.info('[CMS]', message);
+}
+
+function cmsErrorMessage(error){
+  if(error?.code === 'PERMISSION_DENIED') return 'Realtime Database bloqueó la escritura. Revisa Database Rules para news/ads/comments.';
+  if(error?.code === 'storage/unauthorized') return 'Storage bloqueó la subida. Revisa Storage Rules para news/ads.';
+  return error?.message || 'Error CMS desconocido.';
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
@@ -450,7 +481,7 @@ function renderHomeAds(){
   };
   if(typeof loadAds==='function'){
     loadAds().then(ads=>{
-      const active=ads.filter(ad=>ad.active!==false && (!ad.placement || ad.placement==='home'));
+      const active=ads.filter(ad=>ad.active!==false && (!ad.placement || ['home','sidebar'].includes(ad.placement)));
       renderSlots(active.length ? active : fallbackSlots);
     }).catch(()=>renderSlots(fallbackSlots));
   } else renderSlots(fallbackSlots);
@@ -1324,16 +1355,25 @@ function publishNews(){
   const category=document.getElementById('news-category')?.value||'comunicado';
   const corp=newsSource==='corp'?(document.getElementById('news-corp-select')?.value||''):'';
   if(!headline){toast('El titular es obligatorio');return;}
+  cmsSetStatus('Saving news to database path: /news','working');
   createNewsContent({
     title:headline, source:newsSource, category, publicVersion:body||'', corp,
     published:true, visibility: newsSource==='oracle'?'gm':'public', date:today()
-  }).then(()=>{
+  }).then(created=>{
+    console.info('[CMS] News saved:', created);
+    setNewsTabState('all');
     clearNewsForm();
     renderNewsFeed();
     renderHome();
     refreshCMSNewsOptions();
+    cmsSetStatus('News saved: '+(created.title||created.headline)+'. Publicado en Media Feed → Todas.','success');
     toast('Noticia publicada');
-  }).catch(e=>toast(e.message||'No se pudo publicar'));
+    }).catch(e=>{
+    console.error('[CMS] Publish media feed news error:', e);
+    const msg=cmsErrorMessage(e);
+    cmsSetStatus(msg,'error');
+    toast(msg);
+  });
 }
 
 function clearNewsForm(){
@@ -1430,27 +1470,50 @@ function renderNewsComments(comments=[]){
   return `<div class="media-comments">${comments.slice(0,3).map(c=>`<div class="media-comment"><b>${cleanPublicText(c.authorName||'Anónimo')}</b><span>${cleanPublicText(c.body||'')}</span><em>♥ ${Number(c.likes||0)}</em></div>`).join('')}</div>`;
 }
 
+function renderNewsAdPost(ad){
+  const image=ad.imageUrl||'';
+  return `<article class="media-post source-corp media-ad-post">
+    <div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(ad.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · ${ad.placement||'news'}</p></div></div>
+    <div class="media-copy"><h2>${cleanPublicText(ad.headline)}</h2>${ad.body?`<p>${cleanPublicText(ad.body)}</p>`:''}</div>
+    <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(ad.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(ad.brand)}</b><small>HeroIndex Partner</small></div></div>
+  </article>`;
+}
+
 function renderNewsFeed(){
   const session = currentSession || { type:'public' };
+  const viewSession = session.type==='gm' && gmActive ? session : (session.type==='hero' ? session : { type:'public' });
   const feed=document.getElementById('news-feed');
   if(!feed) return;
   feed.innerHTML='<div class="news-empty media-empty">Cargando feed...</div>';
   loadNews().then(all=>{
-    const visible = getNewsVisibilityByRole(session);
-     const base = all.map(normalizeNewsItem).filter(n=>n.published!==false && visible.includes(n.visibility));
+    const visible = getNewsVisibilityByRole(viewSession);
+    const base = all.map(normalizeNewsItem).filter(n=>n.published!==false && visible.includes(n.visibility||'public'));
     let filtered=base;
     if(newsTab==='heroindex') filtered=base.filter(n=>n.source==='heroindex');
     else if(newsTab==='corp')  filtered=base.filter(n=>n.source==='corp');
     else if(newsTab==='oracle') filtered=base.filter(n=>n.source==='oracle');
     else filtered=base;
+    console.info('[CMS] Rendering news count:', filtered.length, { tab:newsTab, session:viewSession.type, gmActive });
     if(!filtered.length){
-      feed.innerHTML='<div class="news-empty media-empty">Sin publicaciones en esta categoría.</div>';
+       feed.innerHTML=`<div class="news-empty media-empty">Sin publicaciones en esta categoría.<br><small>Tab: ${newsTab} · Sesión visible: ${viewSession.type}. Revisa published/source/visibility en Firebase.</small></div>`;
       return;
     }
-    Promise.all(filtered.map(n=>typeof loadComments==='function'?loadComments(n.id):Promise.resolve([]))).then(commentLists=>{
-      feed.innerHTML=filtered.map((n,i)=>renderNewsItem(n,true,commentLists[i]||[])).join('');
+     const commentsPromise=Promise.all(filtered.map(n=>typeof loadComments==='function'?loadComments(n.id):Promise.resolve([])));
+    const adsPromise=typeof loadAds==='function'?loadAds().catch(error=>{ console.error('[CMS] Ads load error:', error); return []; }):Promise.resolve([]);
+    Promise.all([commentsPromise, adsPromise]).then(([commentLists, ads])=>{
+      const newsAds=ads.filter(ad=>ad.active!==false && ad.placement==='news');
+      const posts=filtered.map((n,i)=>renderNewsItem(n,true,commentLists[i]||[]));
+      const adPosts=newsAds.map(renderNewsAdPost);
+      const combined=adPosts.length ? [posts[0], ...adPosts, ...posts.slice(1)] : posts;
+      feed.innerHTML=combined.join('');
+    }).catch(error=>{
+      console.error('[CMS] Rendering news error:', error);
+      feed.innerHTML='<div class="news-empty media-empty">No se pudo renderizar el feed. Revisa la consola para detalles.</div>';
     });
-  });
+  }).catch(error=>{
+    console.error('[CMS] News load/render error:', error);
+    feed.innerHTML='<div class="news-empty media-empty">No se pudo cargar el feed desde Firebase.</div>';
+    });
 }
 
 
@@ -1471,9 +1534,10 @@ function createCMSNews(){
   const title=cleanPublicText(document.getElementById('cms-news-title')?.value||'');
   if(!title) return toast('El título de noticia es obligatorio');
   const file=document.getElementById('cms-news-image')?.files?.[0]||null;
+  const source=document.getElementById('cms-news-source')?.value||'heroindex';
   const payload={
     title,
-    source:document.getElementById('cms-news-source')?.value||'heroindex',
+    source,
     category:document.getElementById('cms-news-category')?.value||'comunicado',
     publicVersion:cleanPublicText(document.getElementById('cms-news-public')?.value||''),
     corporateVersion:cleanPublicText(document.getElementById('cms-news-corp')?.value||''),
@@ -1483,14 +1547,31 @@ function createCMSNews(){
     shares:Number(document.getElementById('cms-news-shares')?.value||0),
     tags:String(document.getElementById('cms-news-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
     published:!!document.getElementById('cms-news-published')?.checked,
-    visibility:(document.getElementById('cms-news-source')?.value==='oracle')?'gm':'public',
+    visibility:source==='oracle'?'gm':'public',
     date:today()
   };
-  uploadContentImage(file,'news').then(imageUrl=>createNewsContent({...payload,imageUrl})).then(()=>{
-    ['cms-news-title','cms-news-public','cms-news-corp','cms-news-oracle','cms-news-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    const img=document.getElementById('cms-news-image'); if(img) img.value='';
-    renderNewsFeed();renderHome();refreshCMSNewsOptions();toast('Contenido publicado');
-  }).catch(e=>toast(e.message||'No se pudo crear noticia'));
+  cmsSetStatus(file?'Uploading image...':'Saving news to database path: /news','working');
+  uploadContentImage(file,'news')
+    .then(imageUrl=>{
+      if(imageUrl) cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+      return createNewsContent({...payload,imageUrl});
+    })
+    .then(created=>{
+      console.info('[CMS] News saved:', created);
+      setNewsTabState('all');
+      renderNewsFeed();renderHome();refreshCMSNewsOptions();
+      ['cms-news-title','cms-news-public','cms-news-corp','cms-news-oracle','cms-news-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const img=document.getElementById('cms-news-image'); if(img) img.value='';
+      const visibilityNote=created.visibility==='gm'?' Publicado como ORÁCULO: visible solo en GM.':' Publicado en Media Feed → Todas.';
+      cmsSetStatus('News saved: '+(created.title||created.headline)+'.'+visibilityNote,'success');
+      toast('Contenido publicado');
+    })
+    .catch(e=>{
+      console.error('[CMS] Publish news error:', e);
+      const msg=cmsErrorMessage(e);
+      cmsSetStatus(msg,'error');
+      toast(msg);
+    });
 }
 
 function createCMSAd(){
@@ -1506,11 +1587,27 @@ function createCMSAd(){
     placement:document.getElementById('cms-ad-placement')?.value||'home',
     active:!!document.getElementById('cms-ad-active')?.checked
   };
-  uploadContentImage(file,'ads').then(imageUrl=>createAdContent({...payload,imageUrl})).then(()=>{
-    ['cms-ad-brand','cms-ad-headline','cms-ad-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    const img=document.getElementById('cms-ad-image'); if(img) img.value='';
-    renderHome();toast('Anuncio creado');
-  }).catch(e=>toast(e.message||'No se pudo crear anuncio'));
+  cmsSetStatus(file?'Uploading image...':'Saving ad to database path: /ads','working');
+  uploadContentImage(file,'ads')
+    .then(imageUrl=>{
+      if(imageUrl) cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+      return createAdContent({...payload,imageUrl});
+    })
+    .then(created=>{
+      console.info('[CMS] Ad saved:', created);
+      if(created.placement==='news') renderNewsFeed();
+      renderHome();
+      ['cms-ad-brand','cms-ad-headline','cms-ad-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const img=document.getElementById('cms-ad-image'); if(img) img.value='';
+      cmsSetStatus(`Ad saved: ${created.headline}. Placement: ${created.placement}.`,'success');
+      toast('Anuncio creado');
+    })
+    .catch(e=>{
+      console.error('[CMS] Publish ad error:', e);
+      const msg=cmsErrorMessage(e);
+      cmsSetStatus(msg,'error');
+      toast(msg);
+    });
 }
 
 function createCMSComment(){
@@ -1526,10 +1623,11 @@ function createCMSComment(){
     body,
     likes:Number(document.getElementById('cms-comment-likes')?.value||0)
   };
+  cmsSetStatus('Saving comment to database path: /comments/'+newsId,'working');
   createNewsComment(newsId,payload).then(()=>{
     ['cms-comment-body','cms-comment-hero-slug'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    renderNewsFeed();toast('Comentario agregado');
-  }).catch(e=>toast(e.message||'No se pudo crear comentario'));
+    renderNewsFeed();cmsSetStatus('Comentario agregado a la noticia seleccionada.','success');toast('Comentario agregado');
+  }).catch(e=>{const msg=cmsErrorMessage(e);cmsSetStatus(msg,'error');toast(msg);});
 }
 
 

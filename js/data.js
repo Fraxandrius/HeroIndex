@@ -114,6 +114,14 @@ function normalizeDbList(data) {
   return Object.entries(data).map(([id, value]) => ({ id, ...(value || {}) }));
 }
 
+function sortContentNewestFirst(items=[]) {
+  return [...items].sort((a,b)=>{
+    const aTime = Date.parse(a.createdAt || a.date || 0) || Number(a.id || 0) || 0;
+    const bTime = Date.parse(b.createdAt || b.date || 0) || Number(b.id || 0) || 0;
+    return bTime - aTime;
+  });
+}
+
 function normalizeCmsNews(n={}) {
   const source = n.source || 'heroindex';
   const publicBody = n.publicVersion || n.body || '';
@@ -142,13 +150,19 @@ function normalizeCmsNews(n={}) {
 }
 
 function loadNews() {
-  if (!db) return Promise.resolve(getDefaultNews().map(normalizeCmsNews));
+  if (!db) {
+    const fallback = sortContentNewestFirst(getDefaultNews().map(normalizeCmsNews));
+    console.info('[CMS] Loaded news count:', fallback.length, '(fallback)');
+    return Promise.resolve(fallback);
+  }
   return db.ref('news').once('value').then(snapshot => {
-    if (snapshot.exists()) return normalizeDbList(snapshot.val()).map(normalizeCmsNews);
-    return getDefaultNews().map(normalizeCmsNews);
+     const rows = snapshot.exists() ? normalizeDbList(snapshot.val()).map(normalizeCmsNews) : getDefaultNews().map(normalizeCmsNews);
+    const sorted = sortContentNewestFirst(rows);
+    console.info('[CMS] Loaded news count:', sorted.length, 'from /news');
+    return sorted;
   }).catch(e => {
     console.error('Firebase news read error:', e);
-    return getDefaultNews().map(normalizeCmsNews);
+    return sortContentNewestFirst(getDefaultNews().map(normalizeCmsNews));
   });
 }
 
@@ -166,7 +180,11 @@ function createNewsContent(item) {
   if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para contenido compartido.'));
   const ref = db.ref('news').push();
   const payload = normalizeCmsNews({ ...item, id: ref.key, createdAt: new Date().toISOString() });
-  return ref.set(payload).then(() => payload);
+  console.info('[CMS] Saving news to database path:', `news/${ref.key}`);
+  return ref.set(payload).then(() => {
+    console.info('[CMS] News saved:', payload);
+    return payload;
+  });
 }
 
 function deleteNewsContent(id) {
@@ -175,8 +193,12 @@ function deleteNewsContent(id) {
 }
 
 function onNewsChange(callback) {
-   if (!db) { callback(getDefaultNews().map(normalizeCmsNews)); return; }
-  db.ref('news').on('value', snapshot => callback(normalizeDbList(snapshot.val()).map(normalizeCmsNews)));
+   if (!db) { callback(sortContentNewestFirst(getDefaultNews().map(normalizeCmsNews))); return; }
+  db.ref('news').on('value', snapshot => {
+    const rows = sortContentNewestFirst(normalizeDbList(snapshot.val()).map(normalizeCmsNews));
+    console.info('[CMS] Loaded news count:', rows.length, 'from /news listener');
+    callback(rows);
+  });
 }
 
 function normalizeCmsAd(ad={}) {
@@ -195,7 +217,11 @@ function normalizeCmsAd(ad={}) {
 
 function loadAds() {
   if (!db) return Promise.resolve([]);
-  return db.ref('ads').once('value').then(snapshot => normalizeDbList(snapshot.val()).map(normalizeCmsAd)).catch(e => {
+   return db.ref('ads').once('value').then(snapshot => {
+    const rows = sortContentNewestFirst(normalizeDbList(snapshot.val()).map(normalizeCmsAd));
+    console.info('[CMS] Loaded ads count:', rows.length, 'from /ads');
+    return rows;
+  }).catch(e => {
     console.error('Firebase ads read error:', e);
     return [];
   });
@@ -205,7 +231,11 @@ function createAdContent(item) {
   if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para anuncios compartidos.'));
   const ref = db.ref('ads').push();
   const payload = normalizeCmsAd({ ...item, id: ref.key, createdAt: new Date().toISOString() });
-  return ref.set(payload).then(() => payload);
+ console.info('[CMS] Saving ad to database path:', `ads/${ref.key}`);
+  return ref.set(payload).then(() => {
+    console.info('[CMS] Ad saved:', payload);
+    return payload;
+  });
 }
 
 function normalizeCmsComment(c={}) {
@@ -241,6 +271,7 @@ function createNewsComment(newsId, item) {
 
 function uploadContentImage(file, folder='content') {
   if (!file) return Promise.resolve('');
+  console.info('[CMS] Uploading image...', { folder, name:file.name, size:file.size });
   return loadFirebaseStorageCompat().then(activeStorage => {
     if (!activeStorage) {
       throw new Error('Firebase Storage no disponible. Verifica que firebase-storage-compat.js cargue en index.html y que Storage esté activado en Firebase Console.');
@@ -249,6 +280,10 @@ function uploadContentImage(file, folder='content') {
     const path = `${folder}/${Date.now()}-${safeName}`;
     return activeStorage.ref(path).put(file)
       .then(snapshot => snapshot.ref.getDownloadURL())
+      .then(url => {
+        console.info('[CMS] Image URL obtained:', url);
+        return url;
+      })
       .catch(error => {
         if (error?.code === 'storage/unauthorized') {
           throw new Error('Firebase Storage rechazó la subida (storage/unauthorized). Revisa las Storage Rules para permitir escritura en las carpetas news/ y ads/ durante el prototipo.');

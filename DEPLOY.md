@@ -166,6 +166,18 @@ ads/{timestamp-fileName}
 
 La URL pública descargable se guarda luego en Realtime Database como `imageUrl`.
 
+### Flujo de publicación y render
+
+El pipeline del CMS debe mantenerse en estas rutas exactas:
+
+- Noticias: el GM guarda metadatos en `/news/{newsId}` y las páginas públicas leen desde `/news`.
+- Anuncios: el GM guarda metadatos en `/ads/{adId}` y Home/Media Feed leen desde `/ads`.
+- Comentarios: el GM guarda comentarios en `/comments/{newsId}/{commentId}` y cada card de noticia lee desde `/comments/{newsId}`.
+- Imágenes: si existe archivo, primero se sube a Storage (`news/` o `ads/`), luego se obtiene `getDownloadURL()` y esa URL se persiste en `imageUrl`. Si no existe archivo, `imageUrl` queda vacío y el front usa el placeholder visual.
+
+Para diagnosticar publicaciones, abre la consola del navegador y busca logs con prefijo `[CMS]`, por ejemplo `Uploading image...`, `Image URL obtained:`, `Saving news to database path:`, `News saved:`, `Loaded news count:` y `Rendering news count:`.
+
+
 ### 3. Estructura de noticias
 
 Cada noticia se guarda en:
