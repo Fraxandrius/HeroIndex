@@ -2262,3 +2262,265 @@ body:not(.gm-active) .gm-post{
   }
   .profile-cover-top { align-items: flex-start; flex-direction: column; }
 }
+
+/* ── HERO MODAL — PUBLIC PROFILE / GM DOSSIER ─────────────── */
+.hero-modal {
+  width: min(980px, 100%);
+  padding: 0;
+  overflow: hidden;
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.022)), var(--surface);
+}
+.hero-public-close {
+  z-index: 3;
+  top: 14px;
+  right: 14px;
+  color: #fff;
+  background: rgba(5,8,18,0.42);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(10px);
+}
+.hero-public-profile {
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+}
+.hero-public-cover {
+  min-height: 230px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.hero-public-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.5)),
+    linear-gradient(90deg, rgba(255,255,255,0.12), transparent 48%);
+  pointer-events: none;
+}
+.hero-public-cover-top,
+.hero-public-status {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.hero-public-cover-top span,
+.hero-public-status {
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(5,8,18,0.44);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  backdrop-filter: blur(12px);
+}
+.hero-public-status {
+  color: var(--green);
+}
+.hero-public-body {
+  position: relative;
+  padding: 0 clamp(1rem, 3vw, 1.5rem) clamp(1rem, 3vw, 1.5rem);
+}
+.hero-public-avatar-wrap {
+  width: fit-content;
+  margin-top: -44px;
+  position: relative;
+}
+.hero-public-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.35);
+  display: grid;
+  place-items: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  box-shadow: 0 18px 46px rgba(0,0,0,0.38);
+}
+.hero-public-avatar-wrap .profile-verified-dot {
+  width: 25px;
+  height: 25px;
+  right: 2px;
+  bottom: 4px;
+}
+.hero-public-title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+.hero-public-title-row h2 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 36px);
+  letter-spacing: -0.035em;
+}
+.hero-public-title-row p {
+  margin: 5px 0 0;
+  color: var(--muted2);
+  font-size: 13px;
+}
+.hero-public-badges {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 45%;
+}
+.hero-public-slogan {
+  margin: 18px 0 8px;
+  padding-left: 12px;
+  border-left: 3px solid rgba(255,214,102,0.78);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.45;
+}
+.hero-public-bio {
+  margin: 0;
+  color: var(--muted2);
+  font-size: 13px;
+  line-height: 1.65;
+  max-width: 74ch;
+}
+.hero-public-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.hero-public-stats div,
+.hero-info-tile {
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255,255,255,0.065);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.hero-public-stats b,
+.hero-info-tile b {
+  display: block;
+  font-family: 'Orbitron', sans-serif;
+  color: var(--text);
+  font-size: 16px;
+}
+.hero-public-stats span,
+.hero-info-tile span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.55px;
+}
+.hero-public-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+}
+.hero-info-tile b {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.hero-gm-dossier {
+  margin: 0 clamp(1rem, 3vw, 1.5rem) clamp(1rem, 3vw, 1.5rem);
+  border-radius: 24px;
+  border: 1px solid rgba(255,68,68,0.3);
+  background:
+    linear-gradient(180deg, rgba(255,68,68,0.12), rgba(255,68,68,0.045)),
+    repeating-linear-gradient(135deg, rgba(255,68,68,0.07) 0 1px, transparent 1px 10px);
+  padding: 1rem;
+}
+.hero-dossier-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  color: var(--gm-red);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.hero-dossier-header b {
+  color: #fff;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(255,68,68,0.16);
+  border: 1px solid rgba(255,68,68,0.28);
+  font-size: 9px;
+}
+.hero-dossier-grid,
+.hero-dossier-two-col {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.hero-dossier-two-col {
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+.hero-dossier-block {
+  margin-top: 12px;
+}
+.hero-dossier-block .card-label,
+.hero-dossier-note span {
+  color: var(--gm-red);
+}
+.hero-dossier-note {
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,68,68,0.18);
+  color: var(--muted2);
+}
+.hero-dossier-note p {
+  margin: 6px 0 0;
+  white-space: pre-line;
+  line-height: 1.55;
+  font-size: 12px;
+}
+.hero-dossier-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .hero-public-title-row {
+    flex-direction: column;
+  }
+  .hero-public-badges {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+  .hero-public-stats,
+  .hero-public-info-grid,
+  .hero-dossier-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+@media (max-width: 520px) {
+  .hero-modal-overlay { padding: 0.5rem; }
+  .hero-public-cover { min-height: 190px; }
+  .hero-public-stats,
+  .hero-public-info-grid,
+  .hero-dossier-grid,
+  .hero-dossier-two-col {
+    grid-template-columns: 1fr;
+  }
+  .hero-public-cover-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
