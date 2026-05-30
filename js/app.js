@@ -287,16 +287,37 @@ function getCMSPreviewNodes(kind='ad'){
   return {preview, box, help};
 }
 
-function renderCMSImagePreview(file, kind='ad', message=''){
-  const config=getCMSImageConfig(kind);
-  const {preview, box, help}=getCMSPreviewNodes(kind);
+const cmsCroppedFiles = {};
+let cmsCropState = null;
+
+function getCMSImageKey(kind='ad', placement=''){
+  return kind==='slot' ? `slot-${placement||'home'}` : kind;
+}
+
+function getCMSImageAspect(kind='ad', placement=''){
+  if(kind==='news') return 16/9;
+  const target = placement || getCMSAdPlacement();
+  if(target==='news') return 4/3;
+  if(target==='sidebar') return 9/16;
+  return 16/9;
+}
+
+function getCMSImageLabel(kind='ad', placement=''){
+  if(kind==='news') return 'MEDIA 16:9';
+  const target = placement || getCMSAdPlacement();
+  return target==='sidebar' ? 'SIDEBAR 9:16' : target==='news' ? 'NEWS 4:3' : 'HOME 16:9';
+}
+
+function renderCMSImagePreview(file, kind='ad', message='', placement=''){
+  const config=getCMSImageConfig(kind==='slot'?'ad':kind);
+  const {preview, box, help}=getCMSPreviewNodes(kind==='slot'?'ad':kind);
   if(!preview || !box) return;
   preview.classList.remove('is-ready','has-error');
   box.innerHTML=`<span>${config.boxText}</span>`;
-  if(help) help.textContent=message || (kind==='ad' ? CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] : config.help);
+  if(help) help.textContent=message || (kind!=='news' ? CMS_AD_PLACEMENT_HELP[placement || getCMSAdPlacement()] : config.help);
   if(!file) return;
   const url=URL.createObjectURL(file);
-  const label=kind==='ad' ? getCMSAdPlacement().toUpperCase() : 'MEDIA 16:9';
+   const label=getCMSImageLabel(kind, placement);
   box.innerHTML=`<img src="${url}" alt="Preview ${kind}" onload="URL.revokeObjectURL('${url}')"><span>${label}</span>`;
   preview.classList.add('is-ready');
 }
@@ -305,6 +326,8 @@ function previewCMSImage(input, kind='ad'){
   const file=input?.files?.[0] || null;
   const validation=validateCMSImage(file, kind);
   const {preview, help}=getCMSPreviewNodes(kind);
+  const key=getCMSImageKey(kind);
+  cmsCroppedFiles[key]=null;
   if(preview) preview.classList.remove('is-ready','has-error');
   if(!validation.ok){
     const {box}=getCMSPreviewNodes(kind);
@@ -316,8 +339,26 @@ function previewCMSImage(input, kind='ad'){
     cmsSetStatus(validation.message,'error');
     return validation;
   }
-  renderCMSImagePreview(file, kind, `${validation.message} ${kind==='ad' ? (CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || '') : getCMSImageConfig(kind).help}`);
-  if(file) cmsSetStatus(validation.message,'success');
+  if(validation.empty){
+    renderCMSImagePreview(null, kind, validation.message);
+    return validation;
+  }
+  openCMSCropper({
+    file,
+    kind,
+    placement:kind==='ad'?getCMSAdPlacement():'news',
+    key,
+    onComplete:cropped=>{
+      cmsCroppedFiles[key]=cropped;
+      renderCMSImagePreview(cropped, kind, `Recorte listo: ${cropped.name} · ${formatBytes(cropped.size)}. ${kind==='ad' ? (CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || '') : getCMSImageConfig(kind).help}`);
+      cmsSetStatus(`Recorte listo: ${formatBytes(cropped.size)}`,'success');
+    },
+    onCancel:()=>{
+      if(input) input.value='';
+      renderCMSImagePreview(null, kind);
+      cmsSetStatus('Recorte cancelado. Selecciona otra imagen para publicar.','error');
+    }
+  });
   return validation;
 }
 
@@ -327,15 +368,116 @@ function validateCMSAdImage(file){ return validateCMSImage(file,'ad'); }
 function validateCMSNewsImage(file){ return validateCMSImage(file,'news'); }
 
 function clearCMSImagePreview(kind='ad'){
+  cmsCroppedFiles[getCMSImageKey(kind)] = null;
   renderCMSImagePreview(null, kind);
 }
 
 function clearCMSAdPreview(){ clearCMSImagePreview('ad'); }
 function clearCMSNewsPreview(){ clearCMSImagePreview('news'); }
 
+function getCMSUploadFile(kind='ad', input=null){
+  return cmsCroppedFiles[getCMSImageKey(kind)] || input?.files?.[0] || null;
+}
+
 function getCMSFieldValue(id){
   const el=document.getElementById(id) || document.querySelector(`[name="${id}"]`);
   return String(el?.value ?? '').replace(/\u00a0/g,' ').trim();
+}
+
+function openCMSCropper({file, kind='ad', placement='', key='', onComplete=null, onCancel=null}={}){
+  if(!file) return;
+  const modal=document.getElementById('image-crop-modal');
+  const title=document.getElementById('crop-modal-title');
+  const sub=document.getElementById('crop-modal-sub');
+  const zoom=document.getElementById('crop-zoom');
+  const x=document.getElementById('crop-x');
+  const y=document.getElementById('crop-y');
+  if(!modal || !zoom || !x || !y) {
+    if(onComplete) onComplete(file);
+    return;
+  }
+  const img=new Image();
+  const url=URL.createObjectURL(file);
+  const aspect=getCMSImageAspect(kind, placement);
+  const label=getCMSImageLabel(kind, placement);
+  cmsCropState={file, kind, placement, key, onComplete, onCancel, img, url, aspect};
+  zoom.value='1'; x.value='0'; y.value='0';
+  if(title) title.textContent=`AJUSTAR IMAGEN · ${label}`;
+  if(sub) sub.textContent='Usa zoom y desplazamiento para que logos, rostros y texto importante queden dentro del encuadre.';
+  img.onload=()=>{
+    URL.revokeObjectURL(url);
+    modal.style.display='flex';
+    renderCMSCropCanvas();
+  };
+  img.onerror=()=>{
+    cmsCropState=null;
+    cmsSetStatus('No se pudo leer la imagen seleccionada.','error');
+    if(onCancel) onCancel();
+  };
+  img.src=url;
+}
+
+function getCMSCropOutputSize(aspect){
+  if(aspect < 1) return {width:720, height:1280};
+  if(aspect < 1.5) return {width:1200, height:900};
+  return {width:1280, height:720};
+}
+
+function renderCMSCropCanvas(){
+  if(!cmsCropState) return;
+  const canvas=document.getElementById('crop-canvas');
+  if(!canvas) return;
+  const {img, aspect}=cmsCropState;
+  const output=getCMSCropOutputSize(aspect);
+  canvas.width=output.width;
+  canvas.height=output.height;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#08111f';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  const zoom=Number(document.getElementById('crop-zoom')?.value||1);
+  const xRange=Number(document.getElementById('crop-x')?.value||0)/100;
+  const yRange=Number(document.getElementById('crop-y')?.value||0)/100;
+  const scale=Math.max(canvas.width/img.width, canvas.height/img.height)*zoom;
+  const drawW=img.width*scale;
+  const drawH=img.height*scale;
+  const maxX=Math.max(0,(drawW-canvas.width)/2);
+  const maxY=Math.max(0,(drawH-canvas.height)/2);
+  const dx=(canvas.width-drawW)/2 + xRange*maxX;
+  const dy=(canvas.height-drawH)/2 + yRange*maxY;
+  ctx.drawImage(img,dx,dy,drawW,drawH);
+  ctx.strokeStyle='rgba(255,255,255,.85)';
+  ctx.lineWidth=Math.max(6, canvas.width/220);
+  ctx.strokeRect(ctx.lineWidth/2,ctx.lineWidth/2,canvas.width-ctx.lineWidth,canvas.height-ctx.lineWidth);
+}
+
+function closeCMSCropModal(event){
+  if(event && event.target!==document.getElementById('image-crop-modal')) return;
+  cancelCMSCrop();
+}
+
+function cancelCMSCrop(){
+  const state=cmsCropState;
+  cmsCropState=null;
+  const modal=document.getElementById('image-crop-modal');
+  if(modal) modal.style.display='none';
+  if(state?.onCancel) state.onCancel();
+}
+
+function confirmCMSCrop(){
+  if(!cmsCropState) return;
+  renderCMSCropCanvas();
+  const canvas=document.getElementById('crop-canvas');
+  const state=cmsCropState;
+  canvas.toBlob(blob=>{
+    if(!blob){ cmsSetStatus('No se pudo generar el recorte.','error'); return; }
+    const safeName=String(state.file.name||'upload').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9._-]/g,'_');
+    const cropped=new File([blob], `${safeName}-${state.kind}-${state.placement||'media'}-crop.jpg`, {type:'image/jpeg'});
+    cmsCropState=null;
+    const modal=document.getElementById('image-crop-modal');
+    if(modal) modal.style.display='none';
+    if(state.onComplete) state.onComplete(cropped);
+  }, 'image/jpeg', 0.84);
 }
 
 function buildSlotAdPayload(placement='home', imageUrl=''){
@@ -368,30 +510,41 @@ function handleAdSlotUpload(placement='home'){
       toast(validation.message);
       return;
     }
-    cmsSetStatus(`Uploading image... ${placement} slot`,'working');
-    uploadContentImage(file,'ads')
-      .then(imageUrl=>{
-        if(!imageUrl) throw new Error('La imagen del slot no devolvió URL de descarga.');
-        cmsSetStatus('Image URL obtained: '+imageUrl,'working');
-        const payload=buildSlotAdPayload(placement,imageUrl);
-        if(typeof createAdSlotContent==='function') return createAdSlotContent(placement,payload);
-        return createAdContent(payload);
-      })
-      .then(created=>{
-        console.info('[CMS] Slot ad saved:', created);
-        renderHome();
-        if(placement==='news') renderNewsFeed();
-        cmsSetStatus(`Slot ${placement} actualizado con imagen publicitaria.`,'success');
-        toast('Slot publicitario actualizado');
-      })
-      .catch(e=>{
-        console.error('[CMS] Slot upload error:', e);
-        const msg=cmsErrorMessage(e);
-        cmsSetStatus(msg,'error');
-        toast(msg);
-      });
+    openCMSCropper({
+      file,
+      kind:'slot',
+      placement,
+      key:getCMSImageKey('slot',placement),
+      onComplete:cropped=>uploadAdSlotImage(placement,cropped),
+      onCancel:()=>cmsSetStatus('Recorte cancelado. El slot no fue modificado.','error')
+    });
   };
   input.click();
+}
+
+function uploadAdSlotImage(placement='home', file){
+  cmsSetStatus(`Uploading image... ${placement} slot`,'working');
+  uploadContentImage(file,'ads')
+    .then(imageUrl=>{
+      if(!imageUrl) throw new Error('La imagen del slot no devolvió URL de descarga.');
+      cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+      const payload=buildSlotAdPayload(placement,imageUrl);
+      if(typeof createAdSlotContent==='function') return createAdSlotContent(placement,payload);
+      return createAdContent(payload);
+    })
+    .then(created=>{
+      console.info('[CMS] Slot ad saved:', created);
+      renderHome();
+      if(placement==='news') renderNewsFeed();
+      cmsSetStatus(`Slot ${placement} actualizado con imagen publicitaria recortada.`,'success');
+      toast('Slot publicitario actualizado');
+    })
+    .catch(e=>{
+      console.error('[CMS] Slot upload error:', e);
+      const msg=cmsErrorMessage(e);
+      cmsSetStatus(msg,'error');
+      toast(msg);
+    });
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -1755,7 +1908,7 @@ function createCMSNews(){
   const title=cleanPublicText(document.getElementById('cms-news-title')?.value||'');
   if(!title) return toast('El título de noticia es obligatorio');
  const fileInput=document.getElementById('cms-news-image');
-  const file=fileInput?.files?.[0]||null;
+  const file=getCMSUploadFile('news', fileInput);
   const validation=validateCMSNewsImage(file);
   if(!validation.ok){
     cmsSetStatus(validation.message,'error');
@@ -1819,7 +1972,7 @@ function createCMSAd(){
     return;
   }
   const fileInput=document.getElementById('cms-ad-image');
-  const file=fileInput?.files?.[0]||null;
+  const file=getCMSUploadFile('ad', fileInput);
   const validation=validateCMSAdImage(file);
   if(!validation.ok){
     cmsSetStatus(validation.message,'error');
