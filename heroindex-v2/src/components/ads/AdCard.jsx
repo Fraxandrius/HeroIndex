@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 
 function AdImageFallback({ ad }) {
   return (
-    <div className="ad-card__image-fallback" aria-hidden="true">
-      <strong>{ad.brand ?? 'Sponsored'}</strong>
+    <div className="broadcast-card__image-fallback" aria-hidden="true">
+      <strong>{ad.brand ?? 'Broadcast'}</strong>
       <span>{ad.headline ?? ad.slotId}</span>
     </div>
   )
@@ -25,23 +25,23 @@ function AdCard({ ad }) {
   ].filter((spec) => Boolean(spec.value))
 
   return (
-     <article className="ad-card" data-ad-slot={ad.slotId} aria-label={label}>
-      <div className="ad-card__media" aria-label="Ad creative">
+    <article className="broadcast-card" data-broadcast-slot={ad.slotId} aria-label={label}>
+      <div className="broadcast-card__media" aria-label="Broadcast creative">
         {shouldRenderImage ? (
           <img src={ad.imageUrl} alt="" onError={() => setHasImageError(true)} />
         ) : (
           <AdImageFallback ad={ad} />
         )}
       </div>
-      <div className="ad-card__content">
-        <div className="ad-card__eyebrow">
-          <span>{ad.brand ?? 'Sponsored'}</span>
+      <div className="broadcast-card__content">
+        <div className="broadcast-card__eyebrow">
+          <span>{ad.brand ?? 'Broadcast'}</span>
           <small>{label}</small>
         </div>
         <h3>{ad.headline ?? label}</h3>
         <p>{ad.body ?? ''}</p>
         {specs.length > 0 ? (
-           <dl className="ad-card__meta" aria-label="Ad creative specs">
+          <dl className="broadcast-card__meta" aria-label="Broadcast creative specs">
             {specs.map((spec) => (
               <div key={spec.label}>
                 <dt>{spec.label}</dt>

@@ -9,12 +9,12 @@ function AdSlot({ slotId }) {
   if (selectedAd) {
     return (
       <section
-        className={`ad-slot ad-slot--${slotId}`}
-        data-ad-id={selectedAd.id ?? 'unknown'}
-        data-ad-slot={slotId}
-        data-ad-source={selectedSource}
+        className={`broadcast-slot broadcast-slot--${slotId}`}
+        data-broadcast-id={selectedAd.id ?? 'unknown'}
+        data-broadcast-slot={slotId}
+        data-broadcast-source={selectedSource}
       >
-        <small className="ad-slot__label">Sponsored · {slotId}</small>
+        <small className="broadcast-label">Broadcast · {slotId}</small>
         <AdCard ad={selectedAd} />
       </section>
     )
@@ -26,12 +26,12 @@ function AdSlot({ slotId }) {
 
   return (
     <aside
-      className="ad-slot ad-slot--placeholder"
-      data-ad-id="none"
-      data-ad-slot={slotId}
-      data-ad-source="none"
+      className="broadcast-slot broadcast-slot--placeholder"
+      data-broadcast-id="none"
+      data-broadcast-slot={slotId}
+      data-broadcast-source="none"
     >
-      <span>Mock ad slot</span>
+      <span>Mock broadcast slot</span>
       <strong>{slotId}</strong>
       <small>Visible in mock GM mode only</small>
     </aside>
