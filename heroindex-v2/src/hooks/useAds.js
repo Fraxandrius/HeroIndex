@@ -1,15 +1,24 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { mockAds } from '../data/mockAds.js'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 import { subscribeToAds } from '../services/adsService.js'
+import { CANONICAL_AD_SLOT_IDS } from '../utils/adSlots.js'
 
 const env = import.meta.env ?? {}
-const activeAdSlotIds = new Set()
-const adSlotListeners = new Set()
-let adSlotIdsSnapshot = []
 
-function getActiveAdBySlotId(ads, slotId) {
-  return ads.find((ad) => ad.slotId === slotId && ad.active) ?? null
+function getActiveMockAdBySlotId(slotId) {
+  return mockAds.find((ad) => ad.slotId === slotId && ad.active === true) ?? null
+}
+
+function getAdTimestamp(ad) {
+  const rawDate = ad.updatedAt ?? ad.createdAt
+  const timestamp = rawDate ? Date.parse(rawDate) : 0
+
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+function sortAdsByNewest(firstAd, secondAd) {
+  return getAdTimestamp(secondAd) - getAdTimestamp(firstAd)
 }
 
 function getFirebaseDebugConfig() {
@@ -35,130 +44,113 @@ function getErrorMessage(error) {
   return error.message ?? String(error)
 }
 
-function getSource({ error, firebaseAds, requestedSource }) {
+function getAdsSource({ error, firebaseAds }) {
   if (error) {
     return 'error'
   }
 
-  if (requestedSource === 'firebase' && firebaseAds.length > 0) {
+  if (firebaseAds.length > 0) {
     return 'firebase'
   }
 
-  if (requestedSource === 'firebase') {
-    return 'empty'
-  }
-
-  return 'mock'
+  return getFirebaseClient().isConfigured ? 'empty' : 'mock'
 }
 
-function createAdsState({ firebaseAds, error = null, source }) {
-  const normalizedFirebaseAds = firebaseAds ?? []
-  const adsSource = getSource({
-    error,
-    firebaseAds: normalizedFirebaseAds,
-    requestedSource: source,
-  })
+export function resolveAdForSlot(slotId, firebaseAds) {
+  const firebaseCandidates = firebaseAds.filter((ad) => ad.slotId === slotId)
+  const activeFirebaseCandidates = firebaseCandidates
+    .filter((ad) => ad.active === true)
+    .sort(sortAdsByNewest)
+  const selectedFirebaseAd = activeFirebaseCandidates[0] ?? null
+
+  if (selectedFirebaseAd) {
+    return {
+      ad: selectedFirebaseAd,
+      activeFirebaseCandidatesCount: activeFirebaseCandidates.length,
+      firebaseCandidatesCount: firebaseCandidates.length,
+      mockFallback: getActiveMockAdBySlotId(slotId),
+      source: 'firebase',
+    }
+  }
+
+  const mockFallback = getActiveMockAdBySlotId(slotId)
 
   return {
-    ads: adsSource === 'firebase' ? normalizedFirebaseAds : mockAds,
+    ad: mockFallback,
+    activeFirebaseCandidatesCount: activeFirebaseCandidates.length,
+    firebaseCandidatesCount: firebaseCandidates.length,
+    mockFallback,
+    source: mockFallback ? 'mock' : 'none',
+  }
+}
+
+function createSlotDebug(slotId, firebaseAds) {
+  const resolution = resolveAdForSlot(slotId, firebaseAds)
+
+  return {
+    slotId,
+    firebaseCandidatesCount: resolution.firebaseCandidatesCount,
+    activeFirebaseCandidatesCount: resolution.activeFirebaseCandidatesCount,
+    mockFallbackExists: Boolean(resolution.mockFallback),
+    selectedSource: resolution.source,
+    selectedAdId: resolution.ad?.id ?? 'none',
+    selectedAdBrand: resolution.ad?.brand ?? 'none',
+    selectedAdHeadline: resolution.ad?.headline ?? 'none',
+    selectedImageUrl: Boolean(resolution.ad?.imageUrl),
+  }
+}
+
+function createAdsState({ firebaseAds, error = null }) {
+  const normalizedFirebaseAds = firebaseAds ?? []
+
+  return {
     debug: {
       ...getFirebaseDebugConfig(),
-      source: adsSource,
+      source: getAdsSource({ error, firebaseAds: normalizedFirebaseAds }),
       firebaseAdsCount: normalizedFirebaseAds.length,
       mockAdsCount: mockAds.length,
       errorMessage: getErrorMessage(error),
+      slots: CANONICAL_AD_SLOT_IDS.map((slotId) =>
+        createSlotDebug(slotId, normalizedFirebaseAds),
+      ),
     },
     error,
-    source: adsSource,
+    firebaseAds: normalizedFirebaseAds,
+    mockAds,
   }
-}
-
-function notifyAdSlotListeners() {
-  adSlotListeners.forEach((listener) => listener())
-}
-
-function subscribeToAdSlotIds(listener) {
-  adSlotListeners.add(listener)
-
-  return () => {
-    adSlotListeners.delete(listener)
-  }
-}
-
-function getAdSlotIdsSnapshot() {
-  return adSlotIdsSnapshot
-}
-
-function refreshAdSlotIdsSnapshot() {
-  adSlotIdsSnapshot = Array.from(activeAdSlotIds).sort()
-}
-
-export function registerAdSlot(slotId) {
-  activeAdSlotIds.add(slotId)
-  refreshAdSlotIdsSnapshot()
-  notifyAdSlotListeners()
-
-  return () => {
-    activeAdSlotIds.delete(slotId)
-    refreshAdSlotIdsSnapshot()
-    notifyAdSlotListeners()
-  }
-}
-
-export function useRegisteredAdSlotIds() {
-  return useSyncExternalStore(
-    subscribeToAdSlotIds,
-    getAdSlotIdsSnapshot,
-    getAdSlotIdsSnapshot,
-  )
 }
 
 export function useAds() {
   const [adsState, setAdsState] = useState(() =>
-    createAdsState({ firebaseAds: [], source: 'mock' }),
+    createAdsState({ firebaseAds: [] }),
   )
 
   useEffect(() => {
-    const isFirebaseConfigured = getFirebaseClient().isConfigured
     const unsubscribe = subscribeToAds({
       onData: (firebaseAds) => {
-        setAdsState(
-          createAdsState({
-            firebaseAds,
-            source: isFirebaseConfigured ? 'firebase' : 'mock',
-          }),
-        )
+        setAdsState(createAdsState({ firebaseAds }))
       },
       onError: (error) => {
-        setAdsState(createAdsState({ firebaseAds: [], error, source: 'firebase' }))
+        setAdsState(createAdsState({ firebaseAds: [], error }))
       },
     })
 
     return unsubscribe
   }, [])
 
-  const activeAdsBySlotId = useMemo(
-    () =>
-      adsState.ads.reduce((adsBySlotId, ad) => {
-        if (!ad.active) {
-          return adsBySlotId
-        }
-
-        return {
-          ...adsBySlotId,
-          [ad.slotId]: ad,
-        }
-      }, {}),
-    [adsState.ads],
+  const getActiveAdForSlot = useCallback(
+    (slotId) => resolveAdForSlot(slotId, adsState.firebaseAds).ad,
+    [adsState.firebaseAds],
   )
 
-  const getActiveAdForSlot = useCallback(
-    (slotId) => activeAdsBySlotId[slotId] ?? getActiveAdBySlotId(mockAds, slotId),
-    [activeAdsBySlotId],
+  const getAdResolutionForSlot = useCallback(
+    (slotId) => resolveAdForSlot(slotId, adsState.firebaseAds),
+    [adsState.firebaseAds],
   )
 
   return {
     ...adsState,
     getActiveAdForSlot,
+    getAdResolutionForSlot,
   }
 }

@@ -3,15 +3,21 @@ import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const ADS_PATH = 'ads'
 
+function normalizeAd(id, ad) {
+  return {
+    id,
+    ...ad,
+  }
+}
+
 export function normalizeAdsSnapshot(snapshotValue) {
   if (!snapshotValue) {
     return []
   }
 
-  return Object.entries(snapshotValue).map(([id, ad]) => ({
-    id,
-    ...ad,
-  }))
+  return Object.entries(snapshotValue)
+    .filter(([, ad]) => ad && typeof ad === 'object')
+    .map(([id, ad]) => normalizeAd(id, ad))
 }
 
 export function subscribeToAds({ onData, onError }) {

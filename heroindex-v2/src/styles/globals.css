@@ -738,3 +738,30 @@ button {
   overflow-wrap: anywhere;
   text-align: right;
 }
+
+.ads-debug-panel h3 {
+  color: #68d8ff;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  margin: 1rem 0 0.6rem;
+  text-transform: uppercase;
+}
+
+.ads-debug-panel__slots {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 45vh;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.ads-debug-panel__slot {
+  border-top: 1px solid rgba(151, 164, 205, 0.22);
+  padding-top: 0.65rem;
+}
+
+.ads-debug-panel__slot h4 {
+  color: #ffffff;
+  font-size: 0.78rem;
+  margin: 0 0 0.45rem;
+}

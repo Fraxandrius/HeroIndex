@@ -1,4 +1,4 @@
-import { useAds, useRegisteredAdSlotIds } from '../../hooks/useAds.js'
+import { useAds } from '../../hooks/useAds.js'
 
 function formatBoolean(value) {
   return value ? 'yes' : 'no'
@@ -18,7 +18,6 @@ function shouldShowAdsDebugPanel() {
 
 function AdsDebugPanelContent() {
   const { debug } = useAds()
-  const slotIds = useRegisteredAdSlotIds()
 
   const rows = [
     ['Firebase configured', formatBoolean(debug.firebaseConfigured)],
@@ -27,7 +26,6 @@ function AdsDebugPanelContent() {
     ['Ads source', debug.source],
     ['Firebase ads count', debug.firebaseAdsCount],
     ['mockAds count', debug.mockAdsCount],
-    ['Current slotIds encontrados', slotIds.length > 0 ? slotIds.join(', ') : 'none'],
     ['Error message', debug.errorMessage ?? 'none'],
     ['import.meta.env.MODE', debug.mode ?? 'unknown'],
     ['import.meta.env.PROD', String(debug.prod)],
@@ -45,6 +43,49 @@ function AdsDebugPanelContent() {
           </div>
         ))}
       </dl>
+
+      <h3>Canonical slots</h3>
+      <div className="ads-debug-panel__slots">
+        {debug.slots.map((slot) => (
+          <section className="ads-debug-panel__slot" key={slot.slotId}>
+            <h4>{slot.slotId}</h4>
+            <dl>
+              <div className="ads-debug-panel__row">
+                <dt>firebase candidates count</dt>
+                <dd>{slot.firebaseCandidatesCount}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>active firebase candidates count</dt>
+                <dd>{slot.activeFirebaseCandidatesCount}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>mock fallback exists</dt>
+                <dd>{formatBoolean(slot.mockFallbackExists)}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>selected source</dt>
+                <dd>{slot.selectedSource}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>selected ad id</dt>
+                <dd>{slot.selectedAdId}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>selected ad brand</dt>
+                <dd>{slot.selectedAdBrand}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>selected ad headline</dt>
+                <dd>{slot.selectedAdHeadline}</dd>
+              </div>
+              <div className="ads-debug-panel__row">
+                <dt>selected imageUrl</dt>
+                <dd>{formatBoolean(slot.selectedImageUrl)}</dd>
+              </div>
+            </dl>
+          </section>
+        ))}
+      </div>
     </aside>
   )
 }
