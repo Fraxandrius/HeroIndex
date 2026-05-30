@@ -264,6 +264,23 @@ function setCMSAdBusy(isBusy){
   btn.textContent=isBusy?'Publicando anuncio...':'Crear anuncio →';
 }
 
+function setCMSPanel(panel='news'){
+  document.querySelectorAll('[data-cms-panel]').forEach(section=>{
+    section.classList.toggle('active', section.dataset.cmsPanel===panel);
+  });
+  document.querySelectorAll('[data-cms-tab]').forEach(tab=>{
+    tab.classList.toggle('active', tab.dataset.cmsTab===panel);
+  });
+  document.querySelectorAll('.cms-panel-divider').forEach(divider=>{
+    divider.style.display='none';
+  });
+  cmsSetStatus(panel==='ads'
+    ? 'Panel anuncios: marca es opcional y el texto corto/CTA se autogenera si lo dejas vacío.'
+    : panel==='news'
+      ? 'Panel noticias: publica posts para Home y Media Feed.'
+      : 'Panel comentarios: agrega conversación simulada a una noticia publicada.', 'info');
+}
+
 function validateCMSImage(file, kind='ad'){
   const config=getCMSImageConfig(kind);
   if(!file) {
@@ -1961,16 +1978,13 @@ function createCMSNews(){
 function createCMSAd(){
   const session=currentSession||{type:'public'};
   if(session.type!=='gm') return toast('Solo GM puede crear anuncios');
-   const brandRaw=getCMSFieldValue('cms-ad-brand');
+  const placement=getCMSAdPlacement();
+  const placementMeta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+  const brandRaw=getCMSFieldValue('cms-ad-brand');
   const headlineRaw=getCMSFieldValue('cms-ad-headline');
-  const brand=cleanPublicText(brandRaw);
-  const headline=cleanPublicText(headlineRaw);
-  if(!brand || !headline){
-    const msg=`Marca y titular son obligatorios. Detectado: marca=${brandRaw.length} caracteres, titular=${headlineRaw.length} caracteres.`;
-    cmsSetStatus(msg,'error');
-    toast('Marca y titular son obligatorios');
-    return;
-  }
+  const bodyRaw=getCMSFieldValue('cms-ad-body');
+  const brand=cleanPublicText(brandRaw) || placementMeta.label;
+  const headline=cleanPublicText(headlineRaw) || cleanPublicText(bodyRaw) || `${brand} · campaña visual`;
   const fileInput=document.getElementById('cms-ad-image');
   const file=getCMSUploadFile('ad', fileInput);
   const validation=validateCMSAdImage(file);
@@ -1982,8 +1996,8 @@ function createCMSAd(){
   }
   const payload={
     brand, headline,
-    body:cleanPublicText(document.getElementById('cms-ad-body')?.value||''),
-    placement:getCMSAdPlacement(),
+    body:cleanPublicText(bodyRaw),
+    placement,
     active:!!document.getElementById('cms-ad-active')?.checked,
      imageRequired:true,
     slotProfile:`${getCMSAdPlacement()}-visual-slot`

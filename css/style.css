@@ -3102,3 +3102,33 @@ body:not(.gm-active) .gm-post{
   .crop-controls label { grid-template-columns: 1fr; }
   .crop-actions { flex-direction: column; }
 }
+
+/* ── Phase GM-UX: Content Manager tabs ────────────────────── */
+.cms-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+.cms-tab {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.055);
+  color: var(--muted2);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.cms-tab:hover,
+.cms-tab.active {
+  color: var(--amber);
+  border-color: rgba(255,214,102,.45);
+  background: rgba(255,214,102,.1);
+}
+.content-manager-card [data-cms-panel] { display: none; }
+.content-manager-card [data-cms-panel].active { display: flex; }
+.cms-panel-divider { display: none; 

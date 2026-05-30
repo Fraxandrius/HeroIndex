@@ -12,7 +12,6 @@
 <body>
 <div id="app">
 
-
   <!-- DESKTOP SIDEBAR -->
   <aside class="sidebar desktop-only">
     <div class="sidebar-logo">
@@ -376,12 +375,19 @@
             </div>
           </div>
 
+          
           <!-- CONTENT MANAGER -->
           <div class="card content-manager-card" style="border-color:rgba(255,214,102,0.24)">
             <div class="card-label" style="color:var(--amber)">CONTENT MANAGER — FIREBASE</div>
             <p class="cms-help">Publica contenido compartido para todos los jugadores. TODO: en producción esto requiere Firebase Auth y reglas de seguridad reales.</p>
+            <div class="cms-tabs" role="tablist" aria-label="Content Manager">
+              <button class="cms-tab active" type="button" data-cms-tab="news" onclick="setCMSPanel('news')">Noticias</button>
+              <button class="cms-tab" type="button" data-cms-tab="ads" onclick="setCMSPanel('ads')">Anuncios</button>
+              <button class="cms-tab" type="button" data-cms-tab="comments" onclick="setCMSPanel('comments')">Comentarios</button>
+            </div>
+            <div id="cms-status" class="cms-status" aria-live="polite"></div>
 
-            <div class="cms-section">
+            <div class="cms-section active" data-cms-panel="news">
               <div class="cms-section-title">Crear noticia / media post</div>
               <div class="gm-form">
                 <div class="fg full"><label>Título</label><input type="text" id="cms-news-title" placeholder="Nuevo clip de rescate domina el feed..."></div>
@@ -402,16 +408,15 @@
                 <label class="cms-check full"><input type="checkbox" id="cms-news-published" checked> Publicado</label>
               </div>
               <button class="btn-primary" onclick="createCMSNews()">Publicar noticia →</button>
-              <div id="cms-status" class="cms-status" aria-live="polite"></div>
             </div>
 
-            <div class="divider"></div>
-            <div class="cms-section">
+            <div class="divider cms-panel-divider"></div>
+            <div class="cms-section" data-cms-panel="ads">
               <div class="cms-section-title">Crear anuncio</div>
               <div class="gm-form">
                 <div class="fg"><label>Marca</label><input type="text" id="cms-ad-brand" placeholder="VOLT Energy"></div>
                 <div class="fg"><label>Placement</label><select id="cms-ad-placement" onchange="updateCMSAdPlacementHelp()"><option value="home">Home sponsor</option><option value="news">Noticias inline</option><option value="sidebar">Sidebar rail</option></select></div>
-                <div class="fg full"><label>Texto</label><textarea id="cms-ad-body" placeholder="Copy publicitario..."></textarea></div>
+                   <div class="fg full"><label>Texto corto / CTA <span class="cms-required">opcional</span></label><input type="text" id="cms-ad-headline" placeholder="Energía para héroes de alto rendimiento"></div>
                   <div class="fg full"><label>Imagen anuncio <span class="cms-required">obligatoria · máx. 2 MB</span></label><input type="file" id="cms-ad-image" accept="image/png,image/jpeg,image/webp" onchange="previewCMSAdImage(this)"></div>
                 <div class="cms-ad-preview full" id="cms-ad-preview">
                   <div class="cms-ad-preview-box"><span>Preview del anuncio</span></div>
@@ -422,8 +427,8 @@
               <button class="btn-primary" id="cms-ad-submit" onclick="createCMSAd()">Crear anuncio →</button>
             </div>
 
-            <div class="divider"></div>
-            <div class="cms-section">
+            <div class="divider cms-panel-divider"></div>
+            <div class="cms-section" data-cms-panel="comments">
               <div class="cms-section-title">Agregar comentario falso</div>
               <div class="gm-form">
                 <div class="fg full"><label>Noticia</label><select id="cms-comment-news"><option value="">Cargando noticias...</option></select></div>
