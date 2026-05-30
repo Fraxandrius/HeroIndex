@@ -1066,3 +1066,52 @@ button {
   color: #ff9b9b;
   overflow-wrap: anywhere;
 }
+
+.gm-manager-section {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.gm-manager-section h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.gm-manager-table-wrap {
+  overflow-x: auto;
+}
+
+.gm-manager-table {
+  border-collapse: collapse;
+  min-width: 44rem;
+  width: 100%;
+}
+
+.gm-manager-table th,
+.gm-manager-table td {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.gm-manager-table th {
+  color: #68d8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gm-manager-table td {
+  color: #d7def3;
+  overflow-wrap: anywhere;
+}
+
+.gm-manager-title {
+  display: grid;
+  gap: 0.35rem;
+}
