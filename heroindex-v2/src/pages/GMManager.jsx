@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { createCorporation } from '../services/corporationsService.js'
 import { createHero } from '../services/heroesService.js'
 import { createNews } from '../services/newsService.js'
 
@@ -26,6 +27,19 @@ const emptyHeroForm = {
   name: '',
   powerClass: '',
   powers: '',
+  trustScore: '',
+}
+
+const emptyCorporationForm = {
+  active: true,
+  approval: '',
+  bannerUrl: '',
+  country: '',
+  description: '',
+  logoUrl: '',
+  name: '',
+  sector: '',
+  tagline: '',
   trustScore: '',
 }
 
@@ -105,6 +119,10 @@ function GMManager() {
   const [heroFormError, setHeroFormError] = useState('')
   const [heroFormSuccess, setHeroFormSuccess] = useState('')
   const [isCreatingHero, setIsCreatingHero] = useState(false)
+  const [corporationForm, setCorporationForm] = useState(emptyCorporationForm)
+  const [corporationFormError, setCorporationFormError] = useState('')
+  const [corporationFormSuccess, setCorporationFormSuccess] = useState('')
+  const [isCreatingCorporation, setIsCreatingCorporation] = useState(false)
   const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -240,6 +258,75 @@ const handleNewsFieldChange = (event) => {
       setHeroFormError(error.message ?? String(error))
     } finally {
       setIsCreatingHero(false)
+    }
+  }
+
+
+  const handleCorporationFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setCorporationForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setCorporationFormError('')
+    setCorporationFormSuccess('')
+  }
+
+  const handleCreateCorporation = async (event) => {
+    event.preventDefault()
+
+    if (!corporationForm.name.trim() || !corporationForm.sector.trim()) {
+      setCorporationFormError('Name and sector are required.')
+      setCorporationFormSuccess('')
+      return
+    }
+
+    const approval = corporationForm.approval.trim()
+    const trustScore = corporationForm.trustScore.trim()
+    const parsedApproval = approval === '' ? null : Number(approval)
+    const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+
+    if (
+      (approval !== '' && Number.isNaN(parsedApproval)) ||
+      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+    ) {
+      setCorporationFormError('Approval and trustScore must be valid numbers.')
+      setCorporationFormSuccess('')
+      return
+    }
+
+    const corporationPayload = {
+      active: corporationForm.active,
+      bannerUrl: corporationForm.bannerUrl.trim(),
+      country: corporationForm.country.trim(),
+      description: corporationForm.description.trim(),
+      logoUrl: corporationForm.logoUrl.trim(),
+      name: corporationForm.name.trim(),
+      sector: corporationForm.sector.trim(),
+      tagline: corporationForm.tagline.trim(),
+    }
+
+    if (approval !== '') {
+      corporationPayload.approval = parsedApproval
+    }
+
+    if (trustScore !== '') {
+      corporationPayload.trustScore = parsedTrustScore
+    }
+
+    setIsCreatingCorporation(true)
+    setCorporationFormError('')
+    setCorporationFormSuccess('')
+
+    try {
+      await createCorporation(corporationPayload)
+      setCorporationForm(emptyCorporationForm)
+      setCorporationFormSuccess('Corporation created successfully.')
+    } catch (error) {
+      setCorporationFormError(error.message ?? String(error))
+    } finally {
+      setIsCreatingCorporation(false)
     }
   }
 
@@ -467,6 +554,118 @@ const handleNewsFieldChange = (event) => {
           {heroFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{heroFormSuccess}</p> : null}
           <button className="gm-manager-action" disabled={isCreatingHero} type="submit">
             {isCreatingHero ? 'Creating…' : 'Crear Hero'}
+          </button>
+        </form>
+      </section>
+
+ <section className="gm-manager-create">
+        <div className="gm-manager-title">
+          <p className="page-card__kicker">Create</p>
+          <h3>Crear Corporation</h3>
+        </div>
+        <form className="gm-manager-form" onSubmit={handleCreateCorporation}>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Name *</span>
+              <input
+                name="name"
+                onChange={handleCorporationFieldChange}
+                type="text"
+                value={corporationForm.name}
+              />
+            </label>
+            <label>
+              <span>Sector *</span>
+              <input
+                name="sector"
+                onChange={handleCorporationFieldChange}
+                type="text"
+                value={corporationForm.sector}
+              />
+            </label>
+          </div>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Tagline</span>
+              <input
+                name="tagline"
+                onChange={handleCorporationFieldChange}
+                type="text"
+                value={corporationForm.tagline}
+              />
+            </label>
+            <label>
+              <span>Country</span>
+              <input
+                name="country"
+                onChange={handleCorporationFieldChange}
+                type="text"
+                value={corporationForm.country}
+              />
+            </label>
+          </div>
+          <label>
+            <span>Description</span>
+            <textarea
+              name="description"
+              onChange={handleCorporationFieldChange}
+              rows="4"
+              value={corporationForm.description}
+            />
+          </label>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Logo URL</span>
+              <input
+                name="logoUrl"
+                onChange={handleCorporationFieldChange}
+                type="url"
+                value={corporationForm.logoUrl}
+              />
+            </label>
+            <label>
+              <span>Cover URL</span>
+              <input
+                name="bannerUrl"
+                onChange={handleCorporationFieldChange}
+                type="url"
+                value={corporationForm.bannerUrl}
+              />
+            </label>
+          </div>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Approval</span>
+              <input
+                name="approval"
+                onChange={handleCorporationFieldChange}
+                type="number"
+                value={corporationForm.approval}
+              />
+            </label>
+            <label>
+              <span>Trust Score</span>
+              <input
+                name="trustScore"
+                onChange={handleCorporationFieldChange}
+                type="number"
+                value={corporationForm.trustScore}
+              />
+            </label>
+          </div>
+          <label className="gm-manager-check">
+            <input
+              checked={corporationForm.active}
+              name="active"
+              onChange={handleCorporationFieldChange}
+              type="checkbox"
+            />
+            <span>Active</span>
+          </label>
+          {corporationFormError ? <p className="gm-manager-message gm-manager-message--error">{corporationFormError}</p> : null}
+          {corporationFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{corporationFormSuccess}</p> : null}
+          <button className="gm-manager-action" disabled={isCreatingCorporation} type="submit">
+            {isCreatingCorporation ? 'Creating…' : 'Crear Corporation'}
           </button>
         </form>
       </section>
