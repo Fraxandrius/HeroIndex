@@ -3062,3 +3062,43 @@ body:not(.gm-active) .gm-post{
   text-transform: uppercase;
   pointer-events: none;
 }
+
+/* ── Phase Ads-4: CMS image crop modal ────────────────────── */
+.crop-modal-box {
+  width: min(760px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+}
+.crop-canvas {
+  width: 100%;
+  max-height: 52vh;
+  display: block;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: #08111f;
+  box-shadow: inset 0 0 0 1px rgba(255,214,102,.14), 0 18px 48px rgba(0,0,0,.28);
+}
+.crop-controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.crop-controls label {
+  display: grid;
+  grid-template-columns: 92px minmax(0,1fr);
+  gap: 10px;
+  align-items: center;
+  color: var(--muted2);
+  font-size: 12px;
+}
+.crop-controls input[type="range"] { width: 100%; accent-color: var(--amber); }
+.crop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+@media (max-width: 640px) {
+  .crop-controls label { grid-template-columns: 1fr; }
+  .crop-actions { flex-direction: column; }
+}
