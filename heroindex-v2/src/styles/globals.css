@@ -1115,3 +1115,84 @@ button {
   display: grid;
   gap: 0.35rem;
 }
+
+.gm-manager-action {
+  background: rgba(104, 216, 255, 0.1);
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #bdefff;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+}
+
+.gm-manager-detail {
+  background: rgba(7, 11, 23, 0.52);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+}
+
+.gm-manager-detail__top {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.gm-manager-detail__top h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  margin: 0.2rem 0;
+  text-transform: capitalize;
+}
+
+.gm-manager-detail__top small {
+  color: #8ea0ce;
+  font-weight: 800;
+}
+
+.gm-manager-detail__fields {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.gm-manager-detail__fields div {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.75rem;
+}
+
+.gm-manager-detail__fields dt {
+  color: #68d8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gm-manager-detail__fields dd {
+  color: #ffffff;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.gm-manager-detail__fields pre {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.85rem;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+  .gm-manager-detail__top {
+    flex-direction: column;
+  }
+}

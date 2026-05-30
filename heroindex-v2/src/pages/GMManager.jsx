@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -26,6 +27,22 @@ function getValue(value) {
   return value
 }
 
+function getDetailValue(value) {
+  if (value === undefined || value === null || value === '') {
+    return '—'
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false'
+  }
+
+  if (Array.isArray(value) || typeof value === 'object') {
+    return JSON.stringify(value, null, 2)
+  }
+
+  return String(value)
+}
+
 function GMManagerSummary({ count, error, label, loading }) {
   const status = getStatus({ error, loading })
 
@@ -52,6 +69,9 @@ function GMManagerSection({ children, title }) {
 }
 
 function GMManager() {
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [selectedType, setSelectedType] = useState(null)
+  const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const {
@@ -59,6 +79,20 @@ function GMManager() {
     error: corporationsError,
     loading: corporationsLoading,
   } = useCorporations()
+
+  const handleViewDetail = (type, item) => {
+    setSelectedType(type)
+    setSelectedItem(item)
+    
+    window.setTimeout(() => {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+  }
+
+  const closeDetail = () => {
+    setSelectedType(null)
+    setSelectedItem(null)
+  }
 
   return (
     <section className="page-card gm-manager-page">
@@ -87,6 +121,41 @@ function GMManager() {
         />
       </div>
       
+      {selectedItem && (
+        <aside className="gm-manager-detail" aria-label="Detalle" ref={detailRef}>
+          <div className="gm-manager-detail__top">
+            <div>
+              <p className="page-card__kicker">Detalle</p>
+              <h3>{selectedType}</h3>
+              <small>ID: {getValue(selectedItem.id)}</small>
+            </div>
+            <button
+              className="gm-manager-action"
+              onClick={closeDetail}
+              type="button"
+            >
+              Cerrar detalle
+            </button>
+          </div>
+
+          <dl className="gm-manager-detail__fields">
+            {Object.entries(selectedItem).map(([field, value]) => (
+              <div key={field}>
+                <dt>{field}</dt>
+                <dd>
+                  {Array.isArray(value) ||
+                  (typeof value === 'object' && value !== null) ? (
+                    <pre>{getDetailValue(value)}</pre>
+                  ) : (
+                    getDetailValue(value)
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
+      )}
+
       <GMManagerSection title="News">
         <table className="gm-manager-table">
           <thead>
@@ -95,6 +164,7 @@ function GMManager() {
               <th>Category / Type</th>
               <th>Active</th>
               <th>Created</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -104,6 +174,15 @@ function GMManager() {
                 <td>{getValue(newsItem.category ?? newsItem.type)}</td>
                 <td>{getValue(newsItem.active)}</td>
                 <td>{getValue(newsItem.createdAt)}</td>
+                <td>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => handleViewDetail('news', newsItem)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -120,6 +199,7 @@ function GMManager() {
               <th>Approval</th>
               <th>Trust</th>
               <th>Active</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -131,6 +211,15 @@ function GMManager() {
                 <td>{getValue(hero.approval)}</td>
                 <td>{getValue(hero.trustScore)}</td>
                 <td>{getValue(hero.active)}</td>
+                <td>
+                  <button
+                    className="gm-manager-action"
+                     onClick={() => handleViewDetail('hero', hero)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -147,6 +236,7 @@ function GMManager() {
               <th>Approval</th>
               <th>Trust</th>
               <th>Active</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -158,6 +248,15 @@ function GMManager() {
                 <td>{getValue(corporation.approval)}</td>
                 <td>{getValue(corporation.trustScore)}</td>
                 <td>{getValue(corporation.active)}</td>
+                 <td>
+                  <button
+                    className="gm-manager-action"
+                     onClick={() => handleViewDetail('corporation', corporation)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
