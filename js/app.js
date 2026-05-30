@@ -306,7 +306,7 @@ function previewCMSImage(input, kind='ad'){
   const validation=validateCMSImage(file, kind);
   const {preview, help}=getCMSPreviewNodes(kind);
   if(preview) preview.classList.remove('is-ready','has-error');
-  f(!validation.ok){
+  if(!validation.ok){
     const {box}=getCMSPreviewNodes(kind);
     const config=getCMSImageConfig(kind);
     if(preview) preview.classList.add('has-error');
