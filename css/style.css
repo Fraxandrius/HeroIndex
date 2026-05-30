@@ -3298,3 +3298,67 @@ body.gm-active #home-sidebar-rail-panel .ad-slot-empty .ad-sponsor {
     min-height: min(520px, 120vw);
   }
 }
+
+/* ── Phase Ads-8: Home content/sidebar layout polish ───────── */
+.home-main-panel,
+.home-sidebar-panel {
+  min-width: 0;
+}
+.home-sponsor-panel {
+  align-self: start;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(251,146,60,.2), transparent 30%),
+    linear-gradient(135deg, rgba(120,53,15,.34), rgba(15,23,42,.96));
+}
+.sidebar-ad-panel {
+  align-self: start;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,214,102,.12), transparent 34%),
+    linear-gradient(160deg, rgba(15,23,42,.96), rgba(17,24,39,.98));
+}
+.home-sponsor-panel .home-section-head,
+.sidebar-ad-panel .home-section-head {
+  margin-bottom: 12px;
+}
+.home-sponsor-panel .home-section-kicker,
+.sidebar-ad-panel .home-section-kicker {
+  color: #fde68a;
+}
+.home-sponsor-panel .home-section-kicker::before,
+.sidebar-ad-panel .home-section-kicker::before {
+  background: linear-gradient(135deg, #fb923c, #facc15);
+  box-shadow: 0 0 16px rgba(250,204,21,.36);
+}
+@media (min-width: 900px) {
+  .home-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    column-gap: 18px;
+    row-gap: 14px;
+  }
+  .home-main-panel {
+    grid-column: 1;
+  }
+  .home-sidebar-panel {
+    grid-column: 2;
+  }
+  .sidebar-ad-panel {
+    top: 22px;
+  }
+  .home-sponsor-panel {
+    margin-top: -2px;
+  }
+}
+@media (max-width: 899px) {
+  .stories-panel{order:1;}
+  .featured-panel{order:2;}
+  .home-sponsor-panel{order:3;}
+  .feed-panel{order:4;}
+  .sidebar-ad-panel{order:5; position: static;}
+  .rankings-panel{order:6;}
+  .clips-panel{order:7;}
+  .public-alerts-panel{order:8;}
+  .home-sponsor-panel,
+  .sidebar-ad-panel {
+    border-radius: 20px;
+  }
+}
