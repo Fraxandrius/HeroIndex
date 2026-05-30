@@ -3198,3 +3198,33 @@ body.gm-active .sidebar-ad-panel .ad-slot {
     min-height: 320px;
   }
 }
+
+/* ── Phase Ads-6: separate Home slot regions from slot content ─ */
+#home-sponsor-panel,
+#home-sidebar-rail-panel {
+  min-width: 0;
+}
+#home-sponsor-panel[hidden],
+#home-sidebar-rail-panel[hidden],
+.home-section-panel.is-hidden {
+  display: none !important;
+}
+#home-sponsor-slot,
+#home-sidebar-rail-slot {
+  display: grid;
+  min-width: 0;
+  min-height: 1px;
+  pointer-events: auto;
+}
+#home-sponsor-slot .ad-slot,
+#home-sidebar-rail-slot .ad-slot {
+  width: 100%;
+}
+#home-sponsor-slot:empty,
+#home-sidebar-rail-slot:empty {
+  min-height: 0;
+}
+body.gm-active #home-sponsor-slot:empty,
+body.gm-active #home-sidebar-rail-slot:empty {
+  min-height: 120px;
+}

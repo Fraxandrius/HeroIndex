@@ -925,37 +925,60 @@ function requestAdsRenderRefresh(){
 }
 
 
-function setAdSlotPanelVisible(targetEl, visible=true){
-  const panel=targetEl?.closest('.home-section-panel');
-  if(panel) panel.style.display=visible ? '' : 'none';
+function setAdSlotPanelVisible(targetEl, visible=true, panelId=''){
+  const panel=panelId ? document.getElementById(panelId) : targetEl?.closest('.home-section-panel');
+  if(panel) {
+    panel.hidden=!visible;
+    panel.classList.toggle('is-hidden', !visible);
+  }
 }
 
-function renderAdSlot(slotId='home-sponsor', targetEl=null, { fallbackHtml='' }={}){
-  if(!targetEl) return;
+function getHomeAdSlotTarget(slotId='home-sponsor'){
   const canonicalSlotId=normalizeAdSlotId(slotId);
+  const targetIds={
+    'home-sponsor':'home-sponsor-slot',
+    'sidebar-rail':'home-sidebar-rail-slot'
+  };
+  const legacyIds={
+    'home-sponsor':'home-ads',
+    'sidebar-rail':'home-sidebar-ads'
+  };
+  return document.getElementById(targetIds[canonicalSlotId]) || document.getElementById(legacyIds[canonicalSlotId]);
+}
+
+function getHomeAdPanelId(slotId='home-sponsor'){
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  return canonicalSlotId==='sidebar-rail' ? 'home-sidebar-rail-panel' : 'home-sponsor-panel';
+}
+
+function renderAdSlot(slotId='home-sponsor', targetEl=null, { fallbackHtml='', panelId='' }={}){
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  const target=targetEl || getHomeAdSlotTarget(canonicalSlotId);
+  if(!target) return;
   const gmMode=currentSession?.type==='gm' && gmActive;
-  console.info('[CMS] Rendering '+canonicalSlotId+' slot', { gmMode, loadedAds:loadedAds.length });
+  const resolvedPanelId=panelId || getHomeAdPanelId(canonicalSlotId);
+  console.info('[CMS] Rendering '+canonicalSlotId+' slot', { gmMode, loadedAds:loadedAds.length, panelId:resolvedPanelId });
   const ad=getActiveAdForSlot(loadedAds, canonicalSlotId);
   if(ad) {
-    setAdSlotPanelVisible(targetEl,true);
-    targetEl.innerHTML=renderAdSlotCard(ad, canonicalSlotId);
+    setAdSlotPanelVisible(target,true,resolvedPanelId);
+    target.innerHTML=renderAdSlotCard(ad, canonicalSlotId);
     return;
   }
   const emptyHtml=gmMode ? renderAdSlotEmpty(canonicalSlotId) : fallbackHtml;
-  setAdSlotPanelVisible(targetEl, !!emptyHtml);
-  targetEl.innerHTML=emptyHtml;
+  setAdSlotPanelVisible(target, !!emptyHtml, resolvedPanelId);
+  target.innerHTML=emptyHtml;
 }
 
 function renderHomeAds(){
-  const homeEl=document.getElementById('home-ads');
-  const sidebarEl=document.getElementById('home-sidebar-ads');
+  const homeEl=getHomeAdSlotTarget('home-sponsor');
+  const sidebarEl=getHomeAdSlotTarget('sidebar-rail');
   if(!homeEl && !sidebarEl) return;
    const fallbackSlots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
   const fallbackHome=fallbackSlots.map(slot=>renderAdSlotCard({...slot, active:true},'home-sponsor')).join('');
    requestAdsRenderRefresh();
    console.info('[CMS] GM mode true / false:', !!(currentSession?.type==='gm' && gmActive));
-  renderAdSlot('home-sponsor', homeEl, { fallbackHtml:fallbackHome });
-  renderAdSlot('sidebar-rail', sidebarEl, { fallbackHtml:'' });
+  renderAdSlot('home-sponsor', homeEl, { fallbackHtml:fallbackHome, panelId:'home-sponsor-panel' });
+  renderAdSlot('sidebar-rail', sidebarEl, { fallbackHtml:'', panelId:'home-sidebar-rail-panel' });
 }
 
 function renderMiniChart(hero){
