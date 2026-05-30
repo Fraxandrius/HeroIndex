@@ -15,18 +15,20 @@ The files in this directory centralize temporary mock data used by the visual Ho
 When Firebase is connected for each area, these fixtures should be replaced with documents whose fields map to the current UI needs:
 
 - Hero documents: `id`, `name`, `ring` or status label, `tone` or avatar styling token, `score`, `move`, feature copy, sigil/avatar data, and display stats.
-- News documents: `id`, `title`, `source`, publish timestamps, summary/body copy, tags, and any related ad slot references.
-- Ad documents: `id`, `slotId`, `placement`, `brand`, `headline`, `body`, `imageUrl`, `active`, `createdAt`, `updatedAt`, and optional display metadata such as `label`, `aspectRatioLabel`, and `recommendedSize`.
+- Corporation documents at `/corporations/{corporationId}`: `name`, `tagline`, `description`, `sector`, `country`, `logoUrl`, `bannerUrl`, `approval`, `trustScore`, active state, and timestamps.
+- News documents at `/news/{newsId}`: `title`, `source`, publish timestamps, summary/body copy, tags, metrics, trending score/movement, and optional inline placement references.
+- Ad documents: `slotId`, `placement`, `label`, `aspectRatioLabel`, `recommendedSize`, `imageUrl`, `headline`, `brand`, `body`, `active`, campaign metadata, targeting rules, and creative assets.
 - Social post documents: `id`, author profile fields, handle, timestamp, title/body text, tag, engagement metric, and optional inline placement references.
 - Clip documents: `id`, `title`, duration, view count, thumbnail/preview asset, source URL, and related hero IDs.
 
-## Future Firebase routes
+## Firebase routes
 
 The expected collection routes are:
 
 - `/heroes`
 - `/news`
-- `/ads/{adId}`
+- `/corporations`
+- `/ads`
 - `/socialPosts`
 
-Only Ads are wired to Firebase in the current phase. Heroes, News, Social Posts, and Clips must continue using local mock data until their Firebase phases begin.
+News now reads from `/news` with `mockNews.js` as fallback. Corporations now read from `/corporations` with `mockCorporations.js` as fallback. The other routes remain documented for future integration.

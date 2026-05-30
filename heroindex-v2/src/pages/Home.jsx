@@ -4,10 +4,13 @@ import {
   mockFeaturedHero,
   mockHeroStories,
 } from '../data/mockHeroes.js'
+import { useCorporations } from '../hooks/useCorporations.js'
 import { useNews } from '../hooks/useNews.js'
 
 function Home() {
   const { feedNews, trendingNews } = useNews()
+  const { corporations } = useCorporations()
+  const featuredCorporations = corporations.slice(0, 3)
 
   return (
     <div className="home-page">
@@ -96,6 +99,26 @@ function Home() {
           </section>
 
           <AdSlot slotId="sidebar-rail" />
+
+
+          <section className="side-panel">
+            <div className="section-heading">
+              <p className="page-card__kicker">Corporations</p>
+              <h2>Trusted operators</h2>
+            </div>
+            <div className="corporation-mini-list">
+              {featuredCorporations.map((corporation) => (
+                <article className="corporation-mini-card" key={corporation.id}>
+                  <strong>{corporation.name}</strong>
+                  <span>{corporation.sector}</span>
+                  <small>
+                    {corporation.country} · {corporation.approval} approval ·{' '}
+                    {corporation.trustScore} trust
+                  </small>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <section className="side-panel">
             <div className="section-heading">

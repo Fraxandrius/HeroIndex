@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import AdsDebugPanel from './components/debug/AdsDebugPanel.jsx'
 import AppShell from './components/layout/AppShell.jsx'
+import Corporations from './pages/Corporations.jsx'
 import GMPanel from './pages/GMPanel.jsx'
 import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
@@ -13,6 +14,12 @@ const routes = [
   { id: 'home', label: 'Home', path: '/', component: Home },
   { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking },
   { id: 'profiles', label: 'Profiles', path: '/profiles', component: Profiles },
+  {
+    id: 'corporations',
+    label: 'Corporations',
+    path: '/corporations',
+    component: Corporations,
+  },
   { id: 'news', label: 'News', path: '/news', component: News },
   {
     id: 'mission-calculator',

@@ -1,11 +1,15 @@
+import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 
 function Profiles() {
   const { heroes, source } = useHeroes()
+  const { getCorporationById, source: corporationsSource } = useCorporations()
 
   return (
     <section className="page-card profiles-page">
-      <p className="page-card__kicker">Players · {source}</p>
+      <p className="page-card__kicker">
+        Players · {source} heroes · {corporationsSource} corporations
+      </p>
       <h2>Profiles</h2>
       <div className="profiles-list">
         {heroes.map((hero) => (
@@ -24,7 +28,9 @@ function Profiles() {
               <p className="page-card__kicker">{hero.powerClass}</p>
               <h3>{hero.name}</h3>
               <p>{hero.description}</p>
-              <small>{hero.corporationId}</small>
+               <small>
+                {getCorporationById(hero.corporationId)?.name ?? hero.corporationId}
+              </small>
             </div>
           </article>
         ))}
