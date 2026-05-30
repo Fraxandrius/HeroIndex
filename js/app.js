@@ -1,6 +1,6 @@
 // ── STATE ────────────────────────────────────────────────────
 let heroes = [];
-let gmActive = true;
+let gmActive = false;
 let selectedKarmaHero = null;
 let karmaChecks = {};
 let missionHeroes = new Set();
@@ -632,13 +632,24 @@ function showPage(name, btn){
   if(name==='noticias') renderNewsFeed();
 }
 
+
 // ── GM TOGGLE ────────────────────────────────────────────────
 function toggleGM(src){
-  const d=document.getElementById('gm-toggle-desk');
+  const session=currentSession||{type:'public'};
   const m=document.getElementById('gm-toggle-mobile');
+  if(session.type!=='gm'){
+    gmActive=false;
+    if(d) d.checked=false;
+    if(m) m.checked=false;
+    document.body.classList.remove('gm-active');
+    const dot=document.getElementById('gm-dot');
+    if(dot) dot.classList.remove('show');
+    renderAll();
+    return;
+  }
   if(src==='desk'  &&m) m.checked=d.checked;
   if(src==='mobile'&&d) d.checked=m.checked;
-  gmActive=(d||m).checked;
+    gmActive=!!(d||m)?.checked;
   document.body.classList.toggle('gm-active',gmActive);
   const dot=document.getElementById('gm-dot');
   if(dot) dot.classList.toggle('show',gmActive);
@@ -2444,13 +2455,9 @@ function handleImport(input){importData(input.files[0],data=>{heroes=data;saveHe
 // ── INIT — llamado por auth.js después del login ──────────────
 function initHeroIndex(){
 // Apply role-based chrome from auth session (GM/hero/public)
-if(currentSession?.type==='gm'){
-  document.body.classList.add('gm-active');
-  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.add('show');
-}else{
-  document.body.classList.remove('gm-active');
-  const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.remove('show');
-}
+gmActive = currentSession?.type === 'gm' && gmActive;
+document.body.classList.toggle('gm-active', gmActive);
+const dotEl=document.getElementById('gm-dot');if(dotEl) dotEl.classList.toggle('show', gmActive);
 
 // Show loading overlay
 const appEl=document.getElementById('app');

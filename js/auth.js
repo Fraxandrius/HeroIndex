@@ -36,24 +36,41 @@ function startApp() {
 }
 
 // ── APPLY SESSION — what the user sees ───────────────────────
+function setGMChrome(isGM, active = false) {
+  const shouldShowGM = !!isGM;
+  const shouldActivateGM = shouldShowGM && !!active;
+  if (typeof gmActive !== 'undefined') gmActive = shouldActivateGM;
+  document.body.classList.toggle('gm-active', shouldActivateGM);
+
+  const deskToggle = document.getElementById('gm-toggle-desk');
+  const mobileToggle = document.getElementById('gm-toggle-mobile');
+  [deskToggle, mobileToggle].forEach(toggle => {
+    if (!toggle) return;
+    toggle.checked = shouldActivateGM;
+    toggle.disabled = !shouldShowGM;
+  });
+
+  const deskRow = deskToggle?.closest('.gm-toggle-row');
+  if (deskRow) deskRow.style.display = shouldShowGM ? '' : 'none';
+  const modalRow = mobileToggle?.closest('.modal-toggle-row');
+  if (modalRow) modalRow.style.display = shouldShowGM ? '' : 'none';
+
+  const dot = document.getElementById('gm-dot');
+  if (dot) dot.classList.toggle('show', shouldActivateGM);
+  const notifBtn = document.querySelector('.notif-btn');
+  if (notifBtn) notifBtn.style.display = shouldShowGM ? '' : 'none';
+}
+
 function applySession() {
   if (!currentSession) return;
-  if (currentSession.type === 'gm') {
-    document.body.classList.add('gm-active');
-    const dot = document.getElementById('gm-dot');
-    if (dot) dot.classList.add('show');
+  const isGM = currentSession.type === 'gm';
+  setGMChrome(isGM, isGM);
+  if (isGM) {
     updateSessionBadge('⬡ GM', '#ff4444');
+    } else if (currentSession.type === 'hero') {
+    updateSessionBadge(currentSession.alias, null);
   } else {
-    document.body.classList.remove('gm-active');
-    const toggleDesk = document.getElementById('gm-toggle-desk');
-    if (toggleDesk) toggleDesk.closest('.gm-toggle-row').style.display = 'none';
-    const notifBtn = document.querySelector('.notif-btn');
-    if (notifBtn) notifBtn.style.display = 'none';
-    if (currentSession.type === 'hero') {
-      updateSessionBadge(currentSession.alias, null);
-    } else {
-      updateSessionBadge('Invitado', null);
-    }
+    updateSessionBadge('Público', null);
   }
   // Hide nav items based on role
   if (currentSession.type !== 'gm') {
