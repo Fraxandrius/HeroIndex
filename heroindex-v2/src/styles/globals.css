@@ -1196,3 +1196,92 @@ button {
     flex-direction: column;
   }
 }
+
+.gm-manager-create {
+  background: rgba(7, 11, 23, 0.52);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+}
+
+.gm-manager-create h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.gm-manager-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.gm-manager-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gm-manager-form label span,
+.gm-manager-check span {
+  color: #8ea0ce;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gm-manager-form input,
+.gm-manager-form textarea {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  font: inherit;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.gm-manager-form textarea {
+  resize: vertical;
+}
+
+.gm-manager-form__grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.gm-manager-check {
+  align-items: center;
+  display: flex !important;
+  gap: 0.6rem;
+}
+
+.gm-manager-check input {
+  width: auto;
+}
+
+.gm-manager-message {
+  border-radius: 0.85rem;
+  font-weight: 800;
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.gm-manager-message--error {
+  background: rgba(255, 155, 155, 0.12);
+  color: #ffb4b4;
+}
+
+.gm-manager-message--success {
+  background: rgba(123, 241, 168, 0.12);
+  color: #7bf1a8;
+}
+
+.gm-manager-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

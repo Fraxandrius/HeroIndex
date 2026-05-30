@@ -2,6 +2,17 @@ import { useRef, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { createNews } from '../services/newsService.js'
+
+const emptyNewsForm = {
+  active: true,
+  body: '',
+  category: '',
+  imageUrl: '',
+  layer: '',
+  summary: '',
+  title: '',
+}
 
 function getStatus({ error, loading }) {
   if (loading) {
@@ -71,6 +82,10 @@ function GMManagerSection({ children, title }) {
 function GMManager() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
+  const [newsForm, setNewsForm] = useState(emptyNewsForm)
+  const [newsFormError, setNewsFormError] = useState('')
+  const [newsFormSuccess, setNewsFormSuccess] = useState('')
+  const [isCreatingNews, setIsCreatingNews] = useState(false)
   const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -92,6 +107,49 @@ function GMManager() {
   const closeDetail = () => {
     setSelectedType(null)
     setSelectedItem(null)
+  }
+
+const handleNewsFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setNewsForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setNewsFormError('')
+    setNewsFormSuccess('')
+  }
+
+  const handleCreateNews = async (event) => {
+    event.preventDefault()
+
+    if (!newsForm.title.trim() || !newsForm.summary.trim()) {
+      setNewsFormError('Title and summary are required.')
+      setNewsFormSuccess('')
+      return
+    }
+
+    setIsCreatingNews(true)
+    setNewsFormError('')
+    setNewsFormSuccess('')
+
+    try {
+      await createNews({
+        active: newsForm.active,
+        body: newsForm.body.trim(),
+        category: newsForm.category.trim(),
+        imageUrl: newsForm.imageUrl.trim(),
+        layer: newsForm.layer.trim(),
+        summary: newsForm.summary.trim(),
+        title: newsForm.title.trim(),
+      })
+      setNewsForm(emptyNewsForm)
+      setNewsFormSuccess('News created successfully.')
+    } catch (error) {
+      setNewsFormError(error.message ?? String(error))
+    } finally {
+      setIsCreatingNews(false)
+    }
   }
 
   return (
@@ -121,6 +179,85 @@ function GMManager() {
         />
       </div>
       
+      <section className="gm-manager-create">
+        <div className="gm-manager-title">
+          <p className="page-card__kicker">Create</p>
+          <h3>Crear News</h3>
+        </div>
+        <form className="gm-manager-form" onSubmit={handleCreateNews}>
+          <label>
+            <span>Title *</span>
+            <input
+              name="title"
+              onChange={handleNewsFieldChange}
+              type="text"
+              value={newsForm.title}
+            />
+          </label>
+          <label>
+            <span>Summary *</span>
+            <textarea
+              name="summary"
+              onChange={handleNewsFieldChange}
+              rows="3"
+              value={newsForm.summary}
+            />
+          </label>
+          <label>
+            <span>Body</span>
+            <textarea
+              name="body"
+              onChange={handleNewsFieldChange}
+              rows="4"
+              value={newsForm.body}
+            />
+          </label>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Category</span>
+              <input
+                name="category"
+                onChange={handleNewsFieldChange}
+                type="text"
+                value={newsForm.category}
+              />
+            </label>
+            <label>
+              <span>Layer</span>
+              <input
+                name="layer"
+                onChange={handleNewsFieldChange}
+                type="text"
+                value={newsForm.layer}
+              />
+            </label>
+          </div>
+          <label>
+            <span>Image URL</span>
+            <input
+              name="imageUrl"
+              onChange={handleNewsFieldChange}
+              type="url"
+              value={newsForm.imageUrl}
+            />
+          </label>
+          <label className="gm-manager-check">
+            <input
+              checked={newsForm.active}
+              name="active"
+              onChange={handleNewsFieldChange}
+              type="checkbox"
+            />
+            <span>Active</span>
+          </label>
+          {newsFormError ? <p className="gm-manager-message gm-manager-message--error">{newsFormError}</p> : null}
+          {newsFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{newsFormSuccess}</p> : null}
+          <button className="gm-manager-action" disabled={isCreatingNews} type="submit">
+            {isCreatingNews ? 'Creating…' : 'Crear News'}
+          </button>
+        </form>
+      </section>
+
       {selectedItem && (
         <aside className="gm-manager-detail" aria-label="Detalle" ref={detailRef}>
           <div className="gm-manager-detail__top">
