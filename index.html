@@ -375,7 +375,7 @@
             </div>
           </div>
 
-          
+
           <!-- CONTENT MANAGER -->
           <div class="card content-manager-card" style="border-color:rgba(255,214,102,0.24)">
             <div class="card-label" style="color:var(--amber)">CONTENT MANAGER — FIREBASE</div>
@@ -414,7 +414,7 @@
             <div class="cms-section" data-cms-panel="ads">
               <div class="cms-section-title">Crear anuncio</div>
               <div class="gm-form">
-                <div class="fg"><label>Marca</label><input type="text" id="cms-ad-brand" placeholder="VOLT Energy"></div>
+                 <div class="fg"><label>Placement</label><select id="cms-ad-placement" onchange="updateCMSAdPlacementHelp()"><option value="home-sponsor">Home sponsor</option><option value="news-inline">Noticias inline</option><option value="sidebar-rail">Sidebar rail</option></select></div>
                 <div class="fg"><label>Placement</label><select id="cms-ad-placement" onchange="updateCMSAdPlacementHelp()"><option value="home">Home sponsor</option><option value="news">Noticias inline</option><option value="sidebar">Sidebar rail</option></select></div>
                    <div class="fg full"><label>Texto corto / CTA <span class="cms-required">opcional</span></label><input type="text" id="cms-ad-headline" placeholder="Energía para héroes de alto rendimiento"></div>
                   <div class="fg full"><label>Imagen anuncio <span class="cms-required">obligatoria · máx. 2 MB</span></label><input type="file" id="cms-ad-image" accept="image/png,image/jpeg,image/webp" onchange="previewCMSAdImage(this)"></div>
