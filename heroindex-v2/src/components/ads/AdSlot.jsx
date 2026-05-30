@@ -1,8 +1,10 @@
-import { getActiveMockAdBySlotId, isGMMode } from '../../data/mockAds.js'
+import { isGMMode } from '../../data/mockAds.js'
+import { useAds } from '../../hooks/useAds.js'
 import AdCard from './AdCard.jsx'
 
 function AdSlot({ slotId }) {
-  const ad = getActiveMockAdBySlotId(slotId)
+  const { getActiveAdForSlot } = useAds()
+  const ad = getActiveAdForSlot(slotId)
 
   if (ad) {
     return <AdCard ad={ad} />

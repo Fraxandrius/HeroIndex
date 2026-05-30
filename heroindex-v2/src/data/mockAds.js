@@ -2,6 +2,7 @@ export const isGMMode = false
 
 export const mockAds = [
   {
+    id: 'mock-home-sponsor',
     slotId: 'home-sponsor',
     placement: 'home-feature-below',
     label: 'Homepage sponsor',
@@ -12,8 +13,11 @@ export const mockAds = [
     brand: 'Aegis Outfitters',
     body: 'Mock campaign card reserved for the primary Home sponsor placement.',
     active: true,
+    createdAt: '2026-05-30T00:00:00.000Z',
+    updatedAt: '2026-05-30T00:00:00.000Z',
   },
   {
+    id: 'mock-sidebar-rail',
     slotId: 'sidebar-rail',
     placement: 'home-sidebar-rail',
     label: 'Sidebar rail sponsor',
@@ -24,8 +28,11 @@ export const mockAds = [
     brand: 'Signal Tower Labs',
     body: 'A compact mock ad designed for the right column rail experience.',
     active: true,
+    createdAt: '2026-05-30T00:00:00.000Z',
+    updatedAt: '2026-05-30T00:00:00.000Z',
   },
   {
+    id: 'mock-news-inline',
     slotId: 'news-inline',
     placement: 'feed-inline-news',
     label: 'Inline news placement',
@@ -36,6 +43,8 @@ export const mockAds = [
     brand: 'Civic Watch Network',
     body: 'Mock inline placement that appears between social and news-style posts.',
     active: true,
+    createdAt: '2026-05-30T00:00:00.000Z',
+    updatedAt: '2026-05-30T00:00:00.000Z',
   },
 ]
 

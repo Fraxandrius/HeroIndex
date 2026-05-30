@@ -1,16 +1,32 @@
-# React + Vite
+# HeroIndex v2 mock data
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The files in this directory centralize temporary mock data used by the visual Home experience. They are intentionally local JavaScript fixtures only, except for Ads: `mockAds.js` now also acts as the fallback data source when Firebase Realtime Database is not configured, `/ads` is empty, or an Ads read fails.
 
-Currently, two official plugins are available:
+## Temporary data
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `mockHeroes.js` provides temporary hero story rail entries, the Home feature hero, and trending hero rankings.
+- `mockSocialPosts.js` provides temporary social feed posts for the Home timeline.
+- `mockClips.js` provides temporary featured clip cards.
+- `mockAds.js` provides fallback ad slot metadata and active creative content for `home-sponsor`, `sidebar-rail`, and `news-inline` while Ads reads from Firebase are optional.
+- `mockNews.js` provides temporary editorial/news metadata that helps document where inline news-related placements will live later.
 
-## React Compiler
+## Future Firebase fields
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+When Firebase is connected for each area, these fixtures should be replaced with documents whose fields map to the current UI needs:
 
-## Expanding the ESLint configuration
+- Hero documents: `id`, `name`, `ring` or status label, `tone` or avatar styling token, `score`, `move`, feature copy, sigil/avatar data, and display stats.
+- News documents: `id`, `title`, `source`, publish timestamps, summary/body copy, tags, and any related ad slot references.
+- Ad documents: `id`, `slotId`, `placement`, `brand`, `headline`, `body`, `imageUrl`, `active`, `createdAt`, `updatedAt`, and optional display metadata such as `label`, `aspectRatioLabel`, and `recommendedSize`.
+- Social post documents: `id`, author profile fields, handle, timestamp, title/body text, tag, engagement metric, and optional inline placement references.
+- Clip documents: `id`, `title`, duration, view count, thumbnail/preview asset, source URL, and related hero IDs.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Future Firebase routes
+
+The expected collection routes are:
+
+- `/heroes`
+- `/news`
+- `/ads/{adId}`
+- `/socialPosts`
+
+Only Ads are wired to Firebase in the current phase. Heroes, News, Social Posts, and Clips must continue using local mock data until their Firebase phases begin.
