@@ -1,0 +1,194 @@
+:root {
+  color: #d7def3;
+  background: #0a0f1e;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(55, 91, 255, 0.22), transparent 32rem),
+    linear-gradient(135deg, #0a0f1e 0%, #11182b 54%, #151127 100%);
+}
+
+.sidebar {
+  border-right: 1px solid rgba(151, 164, 205, 0.18);
+  background: rgba(7, 11, 23, 0.78);
+  padding: 1.5rem;
+}
+
+.sidebar__brand {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar__brand strong {
+  color: #ffffff;
+  display: block;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.sidebar__brand small {
+  color: #92a0c7;
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
+}
+
+.sidebar__logo {
+  align-items: center;
+  background: linear-gradient(135deg, #62d6ff, #7c5cff 58%, #f45dff);
+  border-radius: 1rem;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 800;
+  height: 3rem;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  width: 3rem;
+}
+
+.sidebar__nav {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sidebar__link {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  color: #aeb8d8;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.sidebar__link:hover,
+.sidebar__link[aria-current='page'] {
+  background: rgba(124, 92, 255, 0.16);
+  border-color: rgba(124, 92, 255, 0.4);
+  color: #ffffff;
+}
+
+.app-shell__workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  align-items: center;
+  border-bottom: 1px solid rgba(151, 164, 205, 0.18);
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+}
+
+.topbar h1 {
+  color: #ffffff;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  margin: 0.25rem 0 0;
+}
+
+.topbar__eyebrow,
+.page-card__kicker {
+  color: #68d8ff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.topbar__status {
+  border: 1px solid rgba(104, 216, 255, 0.38);
+  border-radius: 999px;
+  color: #bdefff;
+  padding: 0.45rem 0.8rem;
+}
+
+.app-shell__content {
+  padding: 2rem;
+}
+
+.page-card {
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(151, 164, 205, 0.2);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  max-width: 880px;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.page-card h2 {
+  color: #ffffff;
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  line-height: 1.1;
+  margin: 0.4rem 0 1rem;
+}
+
+.page-card p {
+  color: #aeb8d8;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-bottom: 1px solid rgba(151, 164, 205, 0.18);
+    border-right: 0;
+  }
+
+  .sidebar__nav {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .app-shell__content {
+    padding: 1.25rem;
+  }
+}
