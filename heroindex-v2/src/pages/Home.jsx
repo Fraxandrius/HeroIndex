@@ -3,11 +3,12 @@ import { mockClips } from '../data/mockClips.js'
 import {
   mockFeaturedHero,
   mockHeroStories,
-  mockTrendingHeroes,
 } from '../data/mockHeroes.js'
-import { mockSocialPosts } from '../data/mockSocialPosts.js'
+import { useNews } from '../hooks/useNews.js'
 
 function Home() {
+  const { feedNews, trendingNews } = useNews()
+
   return (
     <div className="home-page">
       <section className="story-rail" aria-label="Hero stories">
@@ -26,7 +27,7 @@ function Home() {
       </section>
 
       <div className="home-grid">
-        <div className="home-main" aria-label="HeroIndex social feed">
+        <div className="home-main" aria-label="HeroIndex news feed">
           <section className="hero-feature">
             <div className="hero-feature__copy">
               <p className="page-card__kicker">{mockFeaturedHero.kicker}</p>
@@ -47,11 +48,11 @@ function Home() {
 
           <section className="feed-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">Social feed</p>
-              <h2>Live from the HeroIndex network</h2>
+              <p className="page-card__kicker">News feed</p>
+              <h2>Live from the HeroIndex newsroom</h2>
             </div>
 
-            {mockSocialPosts.map((item) => (
+            {feedNews.map((item) => (
               <article className="feed-card" key={item.id}>
                 <div className="feed-card__avatar" aria-hidden="true">
                   {item.author[0]}
@@ -68,8 +69,8 @@ function Home() {
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
                   <footer>{item.metric}</footer>
-                  {item.inlineAdSlotId ? (
-                    <AdSlot slotId={item.inlineAdSlotId} />
+                  {item.inlinePlacementSlotId ? (
+                    <AdSlot slotId={item.inlinePlacementSlotId} />
                   ) : null}
                 </div>
               </article>
@@ -80,15 +81,15 @@ function Home() {
         <aside className="home-sidebar" aria-label="Home sidebar">
           <section className="side-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">Trending heroes</p>
+              <p className="page-card__kicker">Trending news</p>
               <h2>Rising now</h2>
             </div>
             <ol className="trending-list">
-              {mockTrendingHeroes.map((hero) => (
-                <li key={hero.id}>
-                  <span>{hero.name}</span>
-                  <strong>{hero.score}</strong>
-                  <small>{hero.move}</small>
+              {trendingNews.map((newsItem) => (
+                <li key={newsItem.id}>
+                  <span>{newsItem.title}</span>
+                  <strong>{newsItem.metric}</strong>
+                  <small>{newsItem.movement}</small>
                 </li>
               ))}
             </ol>
@@ -119,7 +120,7 @@ function Home() {
           </section>
         </aside>
       </div>
-    </div>   
+    </div>
   )
 }
 

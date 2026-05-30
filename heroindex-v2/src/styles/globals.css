@@ -800,3 +800,32 @@ button {
   font-size: 0.78rem;
   margin: 0 0 0.45rem;
 }
+
+.news-page {
+  max-width: 960px;
+}
+
+.news-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.news-list__item {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 1rem;
+}
+
+.news-list__item h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.news-list__item footer {
+  color: #c6d2f2;
+  font-weight: 700;
+}
