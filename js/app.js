@@ -15,6 +15,8 @@ let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
 let myProfileDraft = null;
 let loadedAds = [];
+let adsLoadedOnce = false;
+let adsLoadPending = false;
 
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
@@ -842,12 +844,19 @@ function renderHomeStories(session=getHomeViewSession()){
 function renderHomeSocialFeed(session=getHomeViewSession()){
   const feed=document.getElementById('home-news-feed');
   if(!feed) return;
-  loadNews().then(all=>{
-    const visibility=getNewsVisibilityByRole(session);
-    const news=all.map(normalizeNewsItem).filter(n=>n.published!==false && visibility.includes(n.visibility||'public'));
+    const renderPosts=(news=[])=>{
     const posts=(typeof getHomeSocialPosts==='function'?getHomeSocialPosts({heroes,news,session}):[])
       .filter(p=>!p.gmOnly || session.type==='gm');
     feed.innerHTML=posts.map(p=>renderSocialPost(p, session.type==='gm')).join('')||'<div class="news-empty">Sin publicaciones disponibles.</div>';
+  };
+  renderPosts([]);
+  loadNews().then(all=>{
+    const visibility=getNewsVisibilityByRole(session);
+    const news=all.map(normalizeNewsItem).filter(n=>n.published!==false && visibility.includes(n.visibility||'public'));
+    renderPosts(news);
+  }).catch(error=>{
+    console.error('[CMS] Home feed load error:', error);
+    renderPosts([]);
   });
 }
 
@@ -901,12 +910,28 @@ function renderAdSlotEmpty(slotId='home-sponsor'){
   </div>`;
 }
 
+function requestAdsRenderRefresh(){
+  if(adsLoadedOnce || adsLoadPending || typeof loadAds!=='function') return;
+  adsLoadPending=true;
+  loadAds().then(ads=>{
+    loadedAds=(ads||[]).map(normalizeAdForRender);
+    adsLoadedOnce=true;
+    console.info('[CMS] Loaded ads count:', loadedAds.length, 'from render refresh');
+    renderHomeAds();
+    const np=document.getElementById('page-noticias');
+    if(np&&np.classList.contains('active')) renderNewsFeed();
+  }).catch(error=>console.error('[CMS] Ad render refresh error:', error))
+    .finally(()=>{adsLoadPending=false;});
+}
+
+
 function renderHomeAds(){
   const homeEl=document.getElementById('home-ads');
   const sidebarEl=document.getElementById('home-sidebar-ads');
   if(!homeEl && !sidebarEl) return;
    const fallbackSlots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
- const ads=loadedAds.length ? loadedAds : [];
+  requestAdsRenderRefresh();
+   const ads=loadedAds.length ? loadedAds : [];
   const homeAd=getActiveAdForSlot(ads,'home-sponsor');
   const sidebarAd=getActiveAdForSlot(ads,'sidebar-rail');
   if(homeEl){
@@ -2415,6 +2440,7 @@ loadHeroes().then(h=>{
   if(typeof loadAds==='function'){
     loadAds().then(ads=>{
       loadedAds=(ads||[]).map(normalizeAdForRender);
+      adsLoadedOnce=true;
       console.info('[CMS] Loaded ads count:', loadedAds.length, 'for render state');
       renderHome();
       const np=document.getElementById('page-noticias');
@@ -2425,6 +2451,7 @@ loadHeroes().then(h=>{
   if(typeof onAdsChange==='function'){
     onAdsChange(updated=>{
       loadedAds=(updated||[]).map(normalizeAdForRender);
+      adsLoadedOnce=true;
       console.info('[CMS] Loaded ads count:', loadedAds.length, 'from listener into render state');
       renderHome();
       const np=document.getElementById('page-noticias');
