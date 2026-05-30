@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { createHero } from '../services/heroesService.js'
 import { createNews } from '../services/newsService.js'
 
 const emptyNewsForm = {
@@ -12,6 +13,20 @@ const emptyNewsForm = {
   layer: '',
   summary: '',
   title: '',
+}
+
+const emptyHeroForm = {
+  active: true,
+  alias: '',
+  approval: '',
+  avatarUrl: '',
+  bannerUrl: '',
+  corporationId: '',
+  description: '',
+  name: '',
+  powerClass: '',
+  powers: '',
+  trustScore: '',
 }
 
 function getStatus({ error, loading }) {
@@ -86,6 +101,10 @@ function GMManager() {
   const [newsFormError, setNewsFormError] = useState('')
   const [newsFormSuccess, setNewsFormSuccess] = useState('')
   const [isCreatingNews, setIsCreatingNews] = useState(false)
+  const [heroForm, setHeroForm] = useState(emptyHeroForm)
+  const [heroFormError, setHeroFormError] = useState('')
+  const [heroFormSuccess, setHeroFormSuccess] = useState('')
+  const [isCreatingHero, setIsCreatingHero] = useState(false)
   const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -149,6 +168,78 @@ const handleNewsFieldChange = (event) => {
       setNewsFormError(error.message ?? String(error))
     } finally {
       setIsCreatingNews(false)
+    }
+  }
+
+  const handleHeroFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setHeroForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setHeroFormError('')
+    setHeroFormSuccess('')
+  }
+
+  const handleCreateHero = async (event) => {
+    event.preventDefault()
+
+    if (!heroForm.name.trim() || !heroForm.powerClass.trim()) {
+      setHeroFormError('Name and powerClass are required.')
+      setHeroFormSuccess('')
+      return
+    }
+
+    const approval = heroForm.approval.trim()
+    const trustScore = heroForm.trustScore.trim()
+    const parsedApproval = approval === '' ? null : Number(approval)
+    const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+
+    if (
+      (approval !== '' && Number.isNaN(parsedApproval)) ||
+      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+    ) {
+      setHeroFormError('Approval and trustScore must be valid numbers.')
+      setHeroFormSuccess('')
+      return
+    }
+
+    const heroPayload = {
+      active: heroForm.active,
+      alias: heroForm.alias.trim(),
+      avatarUrl: heroForm.avatarUrl.trim(),
+      bannerUrl: heroForm.bannerUrl.trim(),
+      corporationId: heroForm.corporationId.trim(),
+      description: heroForm.description.trim(),
+      name: heroForm.name.trim(),
+      powerClass: heroForm.powerClass.trim(),
+      powers: heroForm.powers
+        .split(',')
+        .map((power) => power.trim())
+        .filter(Boolean),
+    }
+
+    if (approval !== '') {
+      heroPayload.approval = parsedApproval
+    }
+
+    if (trustScore !== '') {
+      heroPayload.trustScore = parsedTrustScore
+    }
+
+    setIsCreatingHero(true)
+    setHeroFormError('')
+    setHeroFormSuccess('')
+
+    try {
+      await createHero(heroPayload)
+      setHeroForm(emptyHeroForm)
+      setHeroFormSuccess('Hero created successfully.')
+    } catch (error) {
+      setHeroFormError(error.message ?? String(error))
+    } finally {
+      setIsCreatingHero(false)
     }
   }
 
@@ -254,6 +345,128 @@ const handleNewsFieldChange = (event) => {
           {newsFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{newsFormSuccess}</p> : null}
           <button className="gm-manager-action" disabled={isCreatingNews} type="submit">
             {isCreatingNews ? 'Creating…' : 'Crear News'}
+          </button>
+        </form>
+      </section>
+
+<section className="gm-manager-create">
+        <div className="gm-manager-title">
+          <p className="page-card__kicker">Create</p>
+          <h3>Crear Hero</h3>
+        </div>
+        <form className="gm-manager-form" onSubmit={handleCreateHero}>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Name *</span>
+              <input
+                name="name"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.name}
+              />
+            </label>
+            <label>
+              <span>Alias</span>
+              <input
+                name="alias"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.alias}
+              />
+            </label>
+          </div>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Corporation ID</span>
+              <input
+                name="corporationId"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.corporationId}
+              />
+            </label>
+            <label>
+              <span>Power Class *</span>
+              <input
+                name="powerClass"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.powerClass}
+              />
+            </label>
+          </div>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Approval</span>
+              <input
+                name="approval"
+                onChange={handleHeroFieldChange}
+                type="number"
+                value={heroForm.approval}
+              />
+            </label>
+            <label>
+              <span>Trust Score</span>
+              <input
+                name="trustScore"
+                onChange={handleHeroFieldChange}
+                type="number"
+                value={heroForm.trustScore}
+              />
+            </label>
+          </div>
+          <label>
+            <span>Description</span>
+            <textarea
+              name="description"
+              onChange={handleHeroFieldChange}
+              rows="4"
+              value={heroForm.description}
+            />
+          </label>
+          <label>
+            <span>Powers</span>
+            <input
+              name="powers"
+              onChange={handleHeroFieldChange}
+              placeholder="Flight, strength, tactical analysis"
+              type="text"
+              value={heroForm.powers}
+            />
+          </label>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Avatar URL</span>
+              <input
+                name="avatarUrl"
+                onChange={handleHeroFieldChange}
+                type="url"
+                value={heroForm.avatarUrl}
+              />
+            </label>
+            <label>
+              <span>Cover URL</span>
+              <input
+                name="bannerUrl"
+                onChange={handleHeroFieldChange}
+                type="url"
+                value={heroForm.bannerUrl}
+              />
+            </label>
+          </div>
+          <label className="gm-manager-check">
+            <input
+              checked={heroForm.active}
+              name="active"
+              onChange={handleHeroFieldChange}
+              type="checkbox"
+            />
+            <span>Active</span>
+          </label>
+          {heroFormError ? <p className="gm-manager-message gm-manager-message--error">{heroFormError}</p> : null}
+          {heroFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{heroFormSuccess}</p> : null}
+          <button className="gm-manager-action" disabled={isCreatingHero} type="submit">
+            {isCreatingHero ? 'Creating…' : 'Crear Hero'}
           </button>
         </form>
       </section>

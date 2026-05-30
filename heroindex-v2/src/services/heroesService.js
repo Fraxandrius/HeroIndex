@@ -1,4 +1,4 @@
-import { onValue, ref } from 'firebase/database'
+import { onValue, push, ref, set } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const HEROES_PATH = 'heroes'
@@ -39,4 +39,28 @@ export function subscribeToHeroes({ onData, onError }) {
       onError?.(error)
     },
   )
+}
+
+export async function createHero(heroData) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const timestamp = Date.now()
+  const heroRef = push(ref(database, HEROES_PATH))
+  const payload = {
+    ...heroData,
+    active: heroData.active ?? true,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }
+
+  await set(heroRef, payload)
+
+  return {
+    id: heroRef.key,
+    ...payload,
+  }
 }
