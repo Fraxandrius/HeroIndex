@@ -14,6 +14,7 @@ let newsSource = 'heroindex';  // composer source
 let rankingFilter = '';        // selected country or corp name
 let profileSearch = '';
 let myProfileDraft = null;
+let loadedAds = [];
 
 // ── CONSTANTS ────────────────────────────────────────────────
 const ATTR_LABELS = {
@@ -223,16 +224,42 @@ const CMS_IMAGE_CONFIG = {
     help: 'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.'
   }
 };
+const AD_SLOTS = {
+  'home-sponsor': { ...(window.AD_SLOTS?.['home-sponsor'] || {}), placement:'home', label:'Home sponsor', aspectRatio:16/9, outputWidth:1600, outputHeight:900, className:'slot-home', empty:'Slot Home sponsor sin anuncio activo' },
+  'sidebar-rail': { ...(window.AD_SLOTS?.['sidebar-rail'] || {}), placement:'sidebar', label:'Sidebar rail', aspectRatio:9/16, outputWidth:900, outputHeight:1600, className:'slot-sidebar', empty:'Slot Sidebar rail sin anuncio activo' },
+  'news-inline': { ...(window.AD_SLOTS?.['news-inline'] || {}), placement:'news', label:'Noticias inline', aspectRatio:4/3, outputWidth:1200, outputHeight:900, className:'slot-news', empty:'Slot Media Feed sin anuncio activo' }
+};
+window.AD_SLOTS = AD_SLOTS;
 const CMS_AD_PLACEMENT_HELP = {
-  home:'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.',
-  news:'Noticias inline usa formato 4:3. Evita texto pequeño porque aparece entre posts.',
-  sidebar:'Sidebar rail usa formato vertical/compacto 9:16. Evita textos largos y deja el logo centrado.'
+  'home-sponsor':'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.',
+  'news-inline':'Noticias inline usa formato 4:3. Evita texto pequeño porque aparece entre posts.',
+  'sidebar-rail':'Sidebar rail usa formato vertical/compacto 9:16. Evita textos largos y deja el logo centrado.'
 };
-const AD_SLOT_META = {
-  home:{label:'Home sponsor', className:'slot-home', empty:'Slot Home sponsor sin anuncio activo'},
-  news:{label:'Noticias inline', className:'slot-news', empty:'Slot Media Feed sin anuncio activo'},
-  sidebar:{label:'Sidebar rail', className:'slot-sidebar', empty:'Slot Sidebar rail sin anuncio activo'}
-};
+
+function normalizeAdSlotId(value=''){
+  const raw=String(value||'').trim().toLowerCase();
+  if(AD_SLOTS[raw]) return raw;
+  const compact=raw.replace(/[_\s]+/g,'-');
+  if(AD_SLOTS[compact]) return compact;
+  if(['home','home sponsor','home-sponsor','sponsor','patrocinado'].includes(raw)) return 'home-sponsor';
+  if(['sidebar','sidebar rail','sidebar-rail','rail','lateral'].includes(raw)) return 'sidebar-rail';
+  if(['news','news inline','news-inline','noticias','noticias inline','noticias-inline','media-feed'].includes(raw)) return 'news-inline';
+  return 'home-sponsor';
+}
+
+function normalizeAdPlacement(value=''){
+  const raw=String(value||'').trim().toLowerCase();
+  if(['home','sidebar','news'].includes(raw)) return raw;
+  return AD_SLOTS[normalizeAdSlotId(value)]?.placement || 'home';
+}
+
+function getAdSlot(slotId='home-sponsor'){ return AD_SLOTS[normalizeAdSlotId(slotId)] || AD_SLOTS['home-sponsor']; }
+function inferAdSlotId(ad={}){ return normalizeAdSlotId(ad.slotId || ad.slotProfile || ad.placement || 'home'); }
+function normalizeAdForRender(ad={}){
+  const slotId=inferAdSlotId(ad);
+  const slot=getAdSlot(slotId);
+  return {...ad, slotId, slotProfile:ad.slotProfile||slotId, placement:slot.placement};
+}
 
 function formatBytes(bytes=0){
   if(bytes < 1024) return `${bytes} B`;
@@ -240,8 +267,12 @@ function formatBytes(bytes=0){
   return `${(bytes/(1024*1024)).toFixed(1)} MB`;
 }
 
+function getCMSAdSlotId(){
+  return normalizeAdSlotId(document.getElementById('cms-ad-placement')?.value || 'home-sponsor');
+}
+
 function getCMSAdPlacement(){
-  return document.getElementById('cms-ad-placement')?.value || 'home';
+  return getAdSlot(getCMSAdSlotId()).placement;
 }
 
 function getCMSImageConfig(kind='ad'){
@@ -251,8 +282,8 @@ function getCMSImageConfig(kind='ad'){
 function updateCMSAdPlacementHelp(message){
   const help=document.getElementById('cms-ad-placement-help');
   if(!help) return;
-  const placement=getCMSAdPlacement();
-  help.textContent=message || CMS_AD_PLACEMENT_HELP[placement] || CMS_AD_PLACEMENT_HELP.home;
+  const slotId=getCMSAdSlotId();
+  help.textContent=message || CMS_AD_PLACEMENT_HELP[slotId] || CMS_AD_PLACEMENT_HELP['home-sponsor'];
 const input=document.getElementById('cms-ad-image');
   if(input?.files?.[0]) previewCMSImage(input,'ad');
 }
@@ -307,22 +338,23 @@ function getCMSPreviewNodes(kind='ad'){
 const cmsCroppedFiles = {};
 let cmsCropState = null;
 
-function getCMSImageKey(kind='ad', placement=''){
-  return kind==='slot' ? `slot-${placement||'home'}` : kind;
+function getCMSImageKey(kind='ad', slotId=''){
+  return kind==='slot' ? `slot-${normalizeAdSlotId(slotId||'home-sponsor')}` : kind;
 }
 
-function getCMSImageAspect(kind='ad', placement=''){
-  if(kind==='news') return 16/9;
-  const target = placement || getCMSAdPlacement();
-  if(target==='news') return 4/3;
-  if(target==='sidebar') return 9/16;
-  return 16/9;
+function getCMSImageSlot(kind='ad', slotId=''){
+  if(kind==='news') return { label:'MEDIA 16:9', aspectRatio:16/9, outputWidth:1600, outputHeight:900 };
+  return getAdSlot(slotId || getCMSAdSlotId());
 }
 
-function getCMSImageLabel(kind='ad', placement=''){
+function getCMSImageAspect(kind='ad', slotId=''){
+  return getCMSImageSlot(kind, slotId).aspectRatio || 1;
+}
+
+function getCMSImageLabel(kind='ad', slotId=''){
   if(kind==='news') return 'MEDIA 16:9';
-  const target = placement || getCMSAdPlacement();
-  return target==='sidebar' ? 'SIDEBAR 9:16' : target==='news' ? 'NEWS 4:3' : 'HOME 16:9';
+  const slot=getCMSImageSlot(kind, slotId);
+  return `${slot.label} ${slot.outputWidth}:${slot.outputHeight}`;
 }
 
 function renderCMSImagePreview(file, kind='ad', message='', placement=''){
@@ -331,8 +363,7 @@ function renderCMSImagePreview(file, kind='ad', message='', placement=''){
   if(!preview || !box) return;
   preview.classList.remove('is-ready','has-error');
   box.innerHTML=`<span>${config.boxText}</span>`;
-  if(help) help.textContent=message || (kind!=='news' ? CMS_AD_PLACEMENT_HELP[placement || getCMSAdPlacement()] : config.help);
-  if(!file) return;
+  if(help) help.textContent=message || (kind!=='news' ? CMS_AD_PLACEMENT_HELP[normalizeAdSlotId(placement || getCMSAdSlotId())] : config.help);
   const url=URL.createObjectURL(file);
    const label=getCMSImageLabel(kind, placement);
   box.innerHTML=`<img src="${url}" alt="Preview ${kind}" onload="URL.revokeObjectURL('${url}')"><span>${label}</span>`;
@@ -363,11 +394,11 @@ function previewCMSImage(input, kind='ad'){
   openCMSCropper({
     file,
     kind,
-    placement:kind==='ad'?getCMSAdPlacement():'news',
+     placement:kind==='ad'?getCMSAdSlotId():'news',
     key,
     onComplete:cropped=>{
       cmsCroppedFiles[key]=cropped;
-      renderCMSImagePreview(cropped, kind, `Recorte listo: ${cropped.name} · ${formatBytes(cropped.size)}. ${kind==='ad' ? (CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || '') : getCMSImageConfig(kind).help}`);
+      renderCMSImagePreview(cropped, kind, `Recorte listo: ${cropped.name} · ${formatBytes(cropped.size)}. ${kind==='ad' ? (CMS_AD_PLACEMENT_HELP[getCMSAdSlotId()] || '') : getCMSImageConfig(kind).help}`, kind==='ad'?getCMSAdSlotId():'news');
       cmsSetStatus(`Recorte listo: ${formatBytes(cropped.size)}`,'success');
     },
     onCancel:()=>{
@@ -435,9 +466,11 @@ function openCMSCropper({file, kind='ad', placement='', key='', onComplete=null,
 }
 
 function getCMSCropOutputSize(aspect){
-  if(aspect < 1) return {width:720, height:1280};
+  const slot = cmsCropState ? getCMSImageSlot(cmsCropState.kind, cmsCropState.placement) : null;
+  if(slot?.outputWidth && slot?.outputHeight) return {width:slot.outputWidth, height:slot.outputHeight};
+  if(aspect < 1) return {width:900, height:1600};
   if(aspect < 1.5) return {width:1200, height:900};
-  return {width:1280, height:720};
+  return {width:1600, height:900};
 }
 
 function renderCMSCropCanvas(){
@@ -497,15 +530,17 @@ function confirmCMSCrop(){
   }, 'image/jpeg', 0.84);
 }
 
-function buildSlotAdPayload(placement='home', imageUrl=''){
-  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+
+function buildSlotAdPayload(slotId='home-sponsor', imageUrl=''){
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  const slot=getAdSlot(canonicalSlotId);
   return {
-    brand: meta.label,
-    headline: `${meta.label} · campaña visual`,
+    brand: slot.label,
+    headline: `${slot.label} · campaña visual`,
     body: '',
-    placement,
-    slotId: `${placement}-visual-slot`,
-    slotProfile: `${placement}-visual-slot`,
+    placement: slot.placement,
+    slotId: canonicalSlotId,
+    slotProfile: canonicalSlotId,
     imageOnly: true,
     imageRequired: true,
     imageUrl,
@@ -513,9 +548,10 @@ function buildSlotAdPayload(placement='home', imageUrl=''){
   };
 }
 
-function handleAdSlotUpload(placement='home'){
+function handleAdSlotUpload(slotId='home-sponsor'){
   const session=currentSession||{type:'public'};
-  if(session.type!=='gm') return;
+  if(session.type!=='gm' || !gmActive) return;
+  const canonicalSlotId=normalizeAdSlotId(slotId);
   const input=document.createElement('input');
   input.type='file';
   input.accept='image/png,image/jpeg,image/webp';
@@ -530,30 +566,32 @@ function handleAdSlotUpload(placement='home'){
     openCMSCropper({
       file,
       kind:'slot',
-      placement,
-      key:getCMSImageKey('slot',placement),
-      onComplete:cropped=>uploadAdSlotImage(placement,cropped),
+      placement:canonicalSlotId,
+      key:getCMSImageKey('slot',canonicalSlotId),
+      onComplete:cropped=>uploadAdSlotImage(canonicalSlotId,cropped),
       onCancel:()=>cmsSetStatus('Recorte cancelado. El slot no fue modificado.','error')
     });
   };
   input.click();
 }
 
-function uploadAdSlotImage(placement='home', file){
-  cmsSetStatus(`Uploading image... ${placement} slot`,'working');
+function uploadAdSlotImage(slotId='home-sponsor', file){
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  const slot=getAdSlot(canonicalSlotId);
+  cmsSetStatus(`Uploading image... ${canonicalSlotId} slot`,'working');
   uploadContentImage(file,'ads')
     .then(imageUrl=>{
       if(!imageUrl) throw new Error('La imagen del slot no devolvió URL de descarga.');
       cmsSetStatus('Image URL obtained: '+imageUrl,'working');
-      const payload=buildSlotAdPayload(placement,imageUrl);
-      if(typeof createAdSlotContent==='function') return createAdSlotContent(placement,payload);
+      const payload=buildSlotAdPayload(canonicalSlotId,imageUrl);
+      if(typeof createAdSlotContent==='function') return createAdSlotContent(canonicalSlotId,payload);
       return createAdContent(payload);
     })
     .then(created=>{
       console.info('[CMS] Slot ad saved:', created);
       renderHome();
-      if(placement==='news') renderNewsFeed();
-      cmsSetStatus(`Slot ${placement} actualizado con imagen publicitaria recortada.`,'success');
+      if(slot.placement==='news') renderNewsFeed();
+      cmsSetStatus(`Slot ${canonicalSlotId} actualizado con imagen publicitaria recortada.`,'success');
       toast('Slot publicitario actualizado');
     })
     .catch(e=>{
@@ -563,6 +601,14 @@ function uploadAdSlotImage(placement='home', file){
       toast(msg);
     });
 }
+
+document.addEventListener('click', event=>{
+  const target=event.target.closest('[data-ad-slot]');
+  if(!target) return;
+  if((currentSession||{type:'public'}).type!=='gm' || !gmActive) return;
+  event.preventDefault();
+  handleAdSlotUpload(target.dataset.adSlot);
+});
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
@@ -816,19 +862,28 @@ function renderSocialPost(p,isGM){
   </article>`;
 }
 
-function renderAdSlotCard(slot, placement='home'){
-  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
-  const title=cleanPublicText(slot.headline||slot.title||meta.label);
-  const sponsor=cleanPublicText(slot.brand||slot.sponsor||'HeroIndex Partner');
-  const image=slot.imageUrl||slot.image||'';
-  const body=cleanPublicText(slot.body||slot.cta||'Conocer más');
-   const editable=(currentSession?.type==='gm')?' is-editable':'';
-  const click=(currentSession?.type==='gm')?` onclick="handleAdSlotUpload('${placement}')" title="Cambiar imagen del slot ${meta.label}"`:'';
-  const imageOnly=slot.imageOnly?' image-only':'';
-  return `<div class="ad-slot ${meta.className}${editable}${imageOnly}" data-placement="${placement}"${click}>
-    <div class="ad-visual" style="background:${slot.fallbackColor||'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'}">
+function getActiveAdForSlot(ads=[], slotId='home-sponsor'){
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  const found=(ads||[]).map(normalizeAdForRender).find(ad=>ad.active!==false && ad.slotId===canonicalSlotId);
+  console.info('[CMS] Active ad', found?'found':'not found', 'for slot', canonicalSlotId);
+  return found || null;
+}
+
+function renderAdSlotCard(slot={}, slotId='home-sponsor'){
+  const canonicalSlotId=normalizeAdSlotId(slotId || slot.slotId || slot.placement);
+  const meta=getAdSlot(canonicalSlotId);
+  const ad=normalizeAdForRender({...slot, slotId:slot.slotId||canonicalSlotId});
+  const title=cleanPublicText(ad.headline||ad.title||meta.label);
+  const sponsor=cleanPublicText(ad.brand||ad.sponsor||'HeroIndex Partner');
+  const image=ad.imageUrl||ad.image||'';
+  const body=cleanPublicText(ad.body||ad.cta||'Conocer más');
+  const editable=(currentSession?.type==='gm' && gmActive)?' is-editable':'';
+  const imageOnly=ad.imageOnly?' image-only':'';
+  console.info('[CMS] Rendering ad slot', canonicalSlotId, { active:ad.active!==false, hasImage:!!image });
+  return `<div class="ad-slot ${meta.className}${editable}${imageOnly}" data-ad-slot="${canonicalSlotId}" data-placement="${meta.placement}">
+    <div class="ad-visual" style="background:${ad.fallbackColor||'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'}">
       ${image?`<img src="${image}" alt="${title}" onerror="this.style.display='none'">`:''}
-      ${slot.imageOnly?`<div class="ad-edit-pill gm-only">Cambiar imagen</div>`:`<div class="ad-overlay">
+      ${ad.imageOnly?`<div class="ad-edit-pill gm-only">Cambiar imagen</div>`:`<div class="ad-overlay">
         <div class="ad-sponsor">${sponsor}</div>
         <div class="ad-title">${title}</div>
         <button class="btn-sec ad-cta">${body}</button>
@@ -837,10 +892,11 @@ function renderAdSlotCard(slot, placement='home'){
   </div>`;
 }
 
-function renderAdSlotEmpty(placement='home'){
-  if(currentSession?.type!=='gm') return '';
-  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
-  return `<div class="ad-slot ad-slot-empty ${meta.className} is-editable" data-placement="${placement}" onclick="handleAdSlotUpload('${placement}')" title="Subir imagen para ${meta.label}">
+function renderAdSlotEmpty(slotId='home-sponsor'){
+  if(currentSession?.type!=='gm' || !gmActive) return '';
+  const meta=getAdSlot(slotId);
+  console.info('[CMS] Rendering ad slot', normalizeAdSlotId(slotId), 'empty GM placeholder');
+  return `<div class="ad-slot ad-slot-empty ${meta.className} is-editable" data-ad-slot="${normalizeAdSlotId(slotId)}" data-placement="${meta.placement}" title="Subir imagen para ${meta.label}">
     <div class="ad-visual"><div class="ad-overlay"><div class="ad-sponsor">${meta.label}</div><div class="ad-title">${meta.empty}</div><small>Click para subir imagen directa al slot.</small></div></div>
   </div>`;
 }
@@ -850,23 +906,17 @@ function renderHomeAds(){
   const sidebarEl=document.getElementById('home-sidebar-ads');
   if(!homeEl && !sidebarEl) return;
    const fallbackSlots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
-  const renderSlots=(ads=[])=>{
-    const active=ads.filter(ad=>ad.active!==false);
-    const homeAds=active.filter(ad=>!ad.placement || ad.placement==='home');
-    const sidebarAds=active.filter(ad=>ad.placement==='sidebar');
-    if(homeEl){
-      const slots=homeAds.length ? homeAds : fallbackSlots;
-      homeEl.innerHTML=slots.map(slot=>renderAdSlotCard(slot,'home')).join('')||renderAdSlotEmpty('home');
-    }
-    if(sidebarEl){
-      sidebarEl.innerHTML=sidebarAds.length
-        ? sidebarAds.map(slot=>renderAdSlotCard(slot,'sidebar')).join('')
-        : renderAdSlotEmpty('sidebar');
-    }
-  };
-  if(typeof loadAds==='function'){
-      loadAds().then(renderSlots).catch(()=>renderSlots([]));
-  } else renderSlots([]);
+ const ads=loadedAds.length ? loadedAds : [];
+  const homeAd=getActiveAdForSlot(ads,'home-sponsor');
+  const sidebarAd=getActiveAdForSlot(ads,'sidebar-rail');
+  if(homeEl){
+    if(homeAd) homeEl.innerHTML=renderAdSlotCard(homeAd,'home-sponsor');
+    else if(currentSession?.type==='gm' && gmActive) homeEl.innerHTML=renderAdSlotEmpty('home-sponsor');
+    else homeEl.innerHTML=fallbackSlots.map(slot=>renderAdSlotCard({...slot, active:true},'home-sponsor')).join('');
+  }
+  if(sidebarEl){
+    sidebarEl.innerHTML=sidebarAd ? renderAdSlotCard(sidebarAd,'sidebar-rail') : renderAdSlotEmpty('sidebar-rail');
+  }
 }
 
 function renderMiniChart(hero){
@@ -1853,20 +1903,21 @@ function renderNewsComments(comments=[]){
 }
 
 function renderNewsAdPost(ad={}){
-  const image=ad.imageUrl||'';
-  const meta=AD_SLOT_META.news;
-  const editable=(currentSession?.type==='gm')?' is-editable':'';
-  const click=(currentSession?.type==='gm')?' onclick="handleAdSlotUpload(\'news\')" title="Subir imagen para Noticias inline"':'';
+   const meta=getAdSlot('news-inline');
+  const normalized=ad.emptySlot ? ad : normalizeAdForRender(ad);
+  const image=normalized.imageUrl||'';
+  const editable=(currentSession?.type==='gm' && gmActive)?' is-editable':'';
   if(ad.emptySlot){
-    return `<article class="media-post source-corp media-ad-post slot-news ad-slot-empty${editable}"${click}>
+    return `<article class="media-post source-corp media-ad-post slot-news ad-slot-empty${editable}" data-ad-slot="news-inline">
       <div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${meta.label}</strong><span class="media-badge promoted">GM slot</span></div><p>Click-to-upload</p></div></div>
       <div class="media-copy"><h2>${meta.empty}</h2><p>Click para subir una imagen directa al slot inline del Media Feed.</p></div>
     </article>`;
   }
-  return `<article class="media-post source-corp media-ad-post slot-news${editable}${ad.imageOnly?' image-only':''}"${click}>
-    ${ad.imageOnly&&image?`<div class="media-thumb corp"><img src="${image}" alt="${cleanPublicText(ad.headline||meta.label)}" onerror="this.style.display='none'"><span>AD</span><div class="ad-edit-pill gm-only">Cambiar imagen</div></div>`:`<div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(ad.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · ${ad.placement||'news'}</p></div></div>
-    <div class="media-copy"><h2>${cleanPublicText(ad.headline)}</h2>${ad.body?`<p>${cleanPublicText(ad.body)}</p>`:''}</div>
-    <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(ad.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(ad.brand)}</b><small>HeroIndex Partner</small></div></div>`}
+  console.info('[CMS] Rendering ad slot', 'news-inline', { active:normalized.active!==false, hasImage:!!image });
+  return `<article class="media-post source-corp media-ad-post slot-news${editable}${normalized.imageOnly?' image-only':''}" data-ad-slot="news-inline">
+    ${normalized.imageOnly&&image?`<div class="media-thumb corp"><img src="${image}" alt="${cleanPublicText(normalized.headline||meta.label)}" onerror="this.style.display='none'"><span>AD</span><div class="ad-edit-pill gm-only">Cambiar imagen</div></div>`:`<div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(normalized.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · news-inline</p></div></div>
+    <div class="media-copy"><h2>${cleanPublicText(normalized.headline)}</h2>${normalized.body?`<p>${cleanPublicText(normalized.body)}</p>`:''}</div>
+    <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(normalized.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(normalized.brand)}</b><small>HeroIndex Partner</small></div></div>`}
   </article>`;
 }
 
@@ -1886,15 +1937,17 @@ function renderNewsFeed(){
     else filtered=base;
     console.info('[CMS] Rendering news count:', filtered.length, { tab:newsTab, session:viewSession.type, gmActive });
     if(!filtered.length){
-       feed.innerHTML=`<div class="news-empty media-empty">Sin publicaciones en esta categoría.<br><small>Tab: ${newsTab} · Sesión visible: ${viewSession.type}. Revisa published/source/visibility en Firebase.</small></div>`;
+       const newsAd=getActiveAdForSlot(loadedAds,'news-inline');
+      const adHtml=newsAd ? renderNewsAdPost(newsAd) : (viewSession.type==='gm' ? renderNewsAdPost({slotId:'news-inline', emptySlot:true}) : '');
+      feed.innerHTML=`${adHtml}<div class="news-empty media-empty">Sin publicaciones en esta categoría.<br><small>Tab: ${newsTab} · Sesión visible: ${viewSession.type}. Revisa published/source/visibility en Firebase.</small></div>`;
       return;
     }
      const commentsPromise=Promise.all(filtered.map(n=>typeof loadComments==='function'?loadComments(n.id):Promise.resolve([])));
-    const adsPromise=typeof loadAds==='function'?loadAds().catch(error=>{ console.error('[CMS] Ads load error:', error); return []; }):Promise.resolve([]);
+     const adsPromise=Promise.resolve(loadedAds);
     Promise.all([commentsPromise, adsPromise]).then(([commentLists, ads])=>{
-      const newsAds=ads.filter(ad=>ad.active!==false && ad.placement==='news');
+      const newsAd=getActiveAdForSlot(ads,'news-inline');
       const posts=filtered.map((n,i)=>renderNewsItem(n,true,commentLists[i]||[]));
-      const adPosts=newsAds.length ? newsAds.map(renderNewsAdPost) : (viewSession.type==='gm' ? [renderNewsAdPost({placement:'news', emptySlot:true})] : []);
+      const adPosts=newsAd ? [renderNewsAdPost(newsAd)] : (viewSession.type==='gm' ? [renderNewsAdPost({slotId:'news-inline', emptySlot:true})] : []);
       const combined=adPosts.length ? [posts[0], ...adPosts, ...posts.slice(1)] : posts;
       feed.innerHTML=combined.join('');
     }).catch(error=>{
@@ -1978,12 +2031,13 @@ function createCMSNews(){
 function createCMSAd(){
   const session=currentSession||{type:'public'};
   if(session.type!=='gm') return toast('Solo GM puede crear anuncios');
-  const placement=getCMSAdPlacement();
-  const placementMeta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+  const slotId=getCMSAdSlotId();
+  const slot=getAdSlot(slotId);
+  const placement=slot.placement;
   const brandRaw=getCMSFieldValue('cms-ad-brand');
   const headlineRaw=getCMSFieldValue('cms-ad-headline');
   const bodyRaw=getCMSFieldValue('cms-ad-body');
-  const brand=cleanPublicText(brandRaw) || placementMeta.label;
+  const brand=cleanPublicText(brandRaw) || slot.label;
   const headline=cleanPublicText(headlineRaw) || cleanPublicText(bodyRaw) || `${brand} · campaña visual`;
   const fileInput=document.getElementById('cms-ad-image');
   const file=getCMSUploadFile('ad', fileInput);
@@ -1998,9 +2052,11 @@ function createCMSAd(){
     brand, headline,
     body:cleanPublicText(bodyRaw),
     placement,
+    slotId,
+    slotProfile:slotId,
+    imageOnly:false,
     active:!!document.getElementById('cms-ad-active')?.checked,
-     imageRequired:true,
-    slotProfile:`${getCMSAdPlacement()}-visual-slot`
+    imageRequired:true
   };
   setCMSAdBusy(true);
   cmsSetStatus('Uploading image...','working');
@@ -2008,11 +2064,12 @@ function createCMSAd(){
     .then(imageUrl=>{
       if(!imageUrl) throw new Error('La imagen del anuncio no devolvió URL de descarga. Intenta subirla otra vez.');
       cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+       if(payload.active && typeof createAdSlotContent==='function') return createAdSlotContent(slotId,{...payload,imageUrl});
       return createAdContent({...payload,imageUrl});
     })
     .then(created=>{
       console.info('[CMS] Ad saved:', created);
-      if(created.placement==='news') renderNewsFeed();
+       if(created.slotId==='news-inline' || created.placement==='news') renderNewsFeed();
       renderHome();
       ['cms-ad-brand','cms-ad-headline','cms-ad-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       if(fileInput) fileInput.value='';
@@ -2354,6 +2411,26 @@ loadHeroes().then(h=>{
     const np=document.getElementById('page-noticias');
     if(np&&np.classList.contains('active')) renderNewsFeed();
    });
+   
+  if(typeof loadAds==='function'){
+    loadAds().then(ads=>{
+      loadedAds=(ads||[]).map(normalizeAdForRender);
+      console.info('[CMS] Loaded ads count:', loadedAds.length, 'for render state');
+      renderHome();
+      const np=document.getElementById('page-noticias');
+      if(np&&np.classList.contains('active')) renderNewsFeed();
+    }).catch(error=>console.error('[CMS] Initial ads load error:', error));
+  }
+
+  if(typeof onAdsChange==='function'){
+    onAdsChange(updated=>{
+      loadedAds=(updated||[]).map(normalizeAdForRender);
+      console.info('[CMS] Loaded ads count:', loadedAds.length, 'from listener into render state');
+      renderHome();
+      const np=document.getElementById('page-noticias');
+      if(np&&np.classList.contains('active')) renderNewsFeed();
+    });
+  }
 });
 }
 initLogin();

@@ -107,6 +107,34 @@ function onHeroesChange(callback) {
 }
 
 // ── SHARED CONTENT HELPERS ───────────────────────────────────
+window.AD_SLOTS = window.AD_SLOTS || {
+  'home-sponsor': { placement:'home', label:'Home sponsor', aspectRatio:16/9, outputWidth:1600, outputHeight:900 },
+  'sidebar-rail': { placement:'sidebar', label:'Sidebar rail', aspectRatio:9/16, outputWidth:900, outputHeight:1600 },
+  'news-inline': { placement:'news', label:'Noticias inline', aspectRatio:4/3, outputWidth:1200, outputHeight:900 }
+};
+const DATA_AD_SLOTS = window.AD_SLOTS;
+
+function normalizeAdSlotId(value='') {
+  const raw = String(value || '').trim().toLowerCase();
+  if (DATA_AD_SLOTS[raw]) return raw;
+  const compact = raw.replace(/[_\s]+/g,'-');
+  if (DATA_AD_SLOTS[compact]) return compact;
+  if (['home','home-sponsor','home sponsor','sponsor','patrocinado'].includes(raw)) return 'home-sponsor';
+  if (['sidebar','sidebar-rail','sidebar rail','rail','lateral'].includes(raw)) return 'sidebar-rail';
+  if (['news','news-inline','news inline','noticias','noticias-inline','media-feed'].includes(raw)) return 'news-inline';
+  return 'home-sponsor';
+}
+
+function normalizeAdPlacement(value='') {
+  const raw = String(value || '').trim().toLowerCase();
+  if (['home','sidebar','news'].includes(raw)) return raw;
+  return DATA_AD_SLOTS[normalizeAdSlotId(value)]?.placement || 'home';
+}
+
+function inferAdSlotId(ad={}) {
+  return normalizeAdSlotId(ad.slotId || ad.slotProfile || ad.placement || 'home');
+}
+
 // TODO: Production security requires Firebase Auth plus Realtime Database and Storage security rules.
 function normalizeDbList(data) {
   if (!data) return [];
@@ -202,16 +230,19 @@ function onNewsChange(callback) {
 }
 
 function normalizeCmsAd(ad={}) {
+  const slotId = inferAdSlotId(ad);
+  const slot = DATA_AD_SLOTS[slotId] || DATA_AD_SLOTS['home-sponsor'];
+  const placement = normalizeAdPlacement(ad.placement || slot.placement);
   return {
     ...ad,
     id: ad.id || Date.now(),
-    brand: ad.brand || ad.sponsor || 'HeroIndex Partner',
-    headline: ad.headline || ad.title || 'Campaña pública HeroIndex',
+    brand: ad.brand || ad.sponsor || slot.label || 'HeroIndex Partner',
+    headline: ad.headline || ad.title || `${slot.label || 'HeroIndex'} · campaña visual`,
     body: ad.body || ad.cta || '',
     imageUrl: ad.imageUrl || ad.image || '',
-    placement: ad.placement || 'home',
-    slotId: ad.slotId || '',
-    slotProfile: ad.slotProfile || '',
+     placement,
+    slotId,
+    slotProfile: ad.slotProfile || slotId,
     imageOnly: !!ad.imageOnly,
     active: ad.active !== false,
     createdAt: ad.createdAt || new Date().toISOString(),
@@ -242,21 +273,38 @@ function createAdContent(item) {
   });
 }
 
-function createAdSlotContent(placement='home', item={}) {
+function createAdSlotContent(slotId='home-sponsor', item={}) {
   if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para slots publicitarios.'));
-  const slotId = item.slotId || `${placement}-visual-slot`;
+  const canonicalSlotId = normalizeAdSlotId(slotId || item.slotId || item.placement);
+  const slot = DATA_AD_SLOTS[canonicalSlotId] || DATA_AD_SLOTS['home-sponsor'];
   const adsRef = db.ref('ads');
   return adsRef.once('value').then(snapshot => {
     const updates = {};
-    normalizeDbList(snapshot.val()).forEach(ad => {
-      if (ad.active !== false && (ad.slotId === slotId || (!ad.slotId && ad.placement === placement && ad.imageOnly))) {
+    normalizeDbList(snapshot.val()).map(normalizeCmsAd).forEach(ad => {
+      if (ad.active !== false && ad.slotId === canonicalSlotId) {
         updates[`${ad.id}/active`] = false;
         updates[`${ad.id}/updatedAt`] = new Date().toISOString();
       }
     });
     if (Object.keys(updates).length) return adsRef.update(updates);
     return null;
-  }).then(() => createAdContent({ ...item, placement, slotId, active: true, imageOnly: true }));
+  }).then(() => createAdContent({
+    ...item,
+    placement: slot.placement,
+    slotId: canonicalSlotId,
+    slotProfile: canonicalSlotId,
+    active: true,
+    imageOnly: item.imageOnly === undefined ? true : !!item.imageOnly
+  }));
+}
+
+function onAdsChange(callback) {
+  if (!db) { callback([]); return; }
+  db.ref('ads').on('value', snapshot => {
+    const rows = sortContentNewestFirst(normalizeDbList(snapshot.val()).map(normalizeCmsAd));
+    console.info('[CMS] Loaded ads count:', rows.length, 'from /ads listener');
+    callback(rows);
+  }, error => console.error('Firebase ads listener error:', error));
 }
 
 function normalizeCmsComment(c={}) {
