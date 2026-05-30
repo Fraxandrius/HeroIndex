@@ -3228,3 +3228,137 @@ body.gm-active #home-sponsor-slot:empty,
 body.gm-active #home-sidebar-rail-slot:empty {
   min-height: 120px;
 }
+
+/* ── Phase Ads-7: fixed Home slot dimensions and GM upload affordance ─ */
+#home-sponsor-slot.home-ads,
+#home-sidebar-rail-slot.home-sidebar-ads {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+#home-sponsor-panel,
+#home-sidebar-rail-panel {
+  isolation: isolate;
+}
+#home-sponsor-slot .ad-slot,
+#home-sidebar-rail-slot .ad-slot {
+  min-width: 0;
+  border-color: rgba(255,255,255,.13);
+  box-shadow: 0 18px 42px rgba(2,8,23,.22);
+  pointer-events: auto;
+}
+#home-sponsor-slot .ad-slot.slot-home .ad-visual {
+  aspect-ratio: 16 / 9;
+  min-height: clamp(190px, 22vw, 330px);
+}
+#home-sidebar-rail-slot .ad-slot.slot-sidebar .ad-visual {
+  aspect-ratio: 9 / 16;
+  min-height: clamp(420px, 58vw, 620px);
+}
+#home-sponsor-slot .ad-slot .ad-visual,
+#home-sidebar-rail-slot .ad-slot .ad-visual {
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+}
+#home-sponsor-slot .ad-slot .ad-visual img,
+#home-sidebar-rail-slot .ad-slot .ad-visual img {
+  opacity: .72;
+}
+#home-sponsor-slot .ad-slot.image-only .ad-visual img,
+#home-sidebar-rail-slot .ad-slot.image-only .ad-visual img {
+  opacity: 1;
+}
+body.gm-active #home-sponsor-panel .ad-slot-empty,
+body.gm-active #home-sidebar-rail-panel .ad-slot-empty {
+  border-color: rgba(255,214,102,.62);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,214,102,.18), transparent 32%),
+    linear-gradient(145deg, rgba(31,41,55,.98), rgba(15,23,42,.98));
+  box-shadow: 0 18px 48px rgba(255,214,102,.09);
+}
+body.gm-active #home-sponsor-panel .ad-slot-empty .ad-visual,
+body.gm-active #home-sidebar-rail-panel .ad-slot-empty .ad-visual {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+body.gm-active #home-sponsor-panel .ad-slot-empty .ad-overlay,
+body.gm-active #home-sidebar-rail-panel .ad-slot-empty .ad-overlay {
+  max-width: 320px;
+}
+body.gm-active #home-sponsor-panel .ad-slot-empty .ad-sponsor,
+body.gm-active #home-sidebar-rail-panel .ad-slot-empty .ad-sponsor {
+  color: #fde68a;
+}
+@media (max-width: 899px) {
+  #home-sponsor-slot .ad-slot.slot-home .ad-visual {
+    min-height: 200px;
+  }
+  #home-sidebar-rail-slot .ad-slot.slot-sidebar .ad-visual {
+    min-height: min(520px, 120vw);
+  }
+}
+
+/* ── Phase Ads-8: Home content/sidebar layout polish ───────── */
+.home-main-panel,
+.home-sidebar-panel {
+  min-width: 0;
+}
+.home-sponsor-panel {
+  align-self: start;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(251,146,60,.2), transparent 30%),
+    linear-gradient(135deg, rgba(120,53,15,.34), rgba(15,23,42,.96));
+}
+.sidebar-ad-panel {
+  align-self: start;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,214,102,.12), transparent 34%),
+    linear-gradient(160deg, rgba(15,23,42,.96), rgba(17,24,39,.98));
+}
+.home-sponsor-panel .home-section-head,
+.sidebar-ad-panel .home-section-head {
+  margin-bottom: 12px;
+}
+.home-sponsor-panel .home-section-kicker,
+.sidebar-ad-panel .home-section-kicker {
+  color: #fde68a;
+}
+.home-sponsor-panel .home-section-kicker::before,
+.sidebar-ad-panel .home-section-kicker::before {
+  background: linear-gradient(135deg, #fb923c, #facc15);
+  box-shadow: 0 0 16px rgba(250,204,21,.36);
+}
+@media (min-width: 900px) {
+  .home-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    column-gap: 18px;
+    row-gap: 14px;
+  }
+  .home-main-panel {
+    grid-column: 1;
+  }
+  .home-sidebar-panel {
+    grid-column: 2;
+  }
+  .sidebar-ad-panel {
+    top: 22px;
+  }
+  .home-sponsor-panel {
+    margin-top: -2px;
+  }
+}
+@media (max-width: 899px) {
+  .stories-panel{order:1;}
+  .featured-panel{order:2;}
+  .home-sponsor-panel{order:3;}
+  .feed-panel{order:4;}
+  .sidebar-ad-panel{order:5; position: static;}
+  .rankings-panel{order:6;}
+  .clips-panel{order:7;}
+  .public-alerts-panel{order:8;}
+  .home-sponsor-panel,
+  .sidebar-ad-panel {
+    border-radius: 20px;
+  }
+}
