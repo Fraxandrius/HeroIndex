@@ -829,3 +829,91 @@ button {
   color: #c6d2f2;
   font-weight: 700;
 }
+
+.profiles-page,
+.ranking-page {
+  max-width: 960px;
+}
+
+.profiles-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.profile-card {
+  align-items: center;
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  padding-top: 1rem;
+}
+
+.profile-card__avatar {
+  align-items: center;
+  background: linear-gradient(135deg, #68d8ff, #7c5cff);
+  border-radius: 1rem;
+  color: #ffffff;
+  display: flex;
+  font-weight: 900;
+  height: 4rem;
+  justify-content: center;
+  overflow: hidden;
+  width: 4rem;
+}
+
+.profile-card__avatar img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.profile-card h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.profile-card small {
+  color: #8ea0ce;
+  display: block;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.hero-ranking-list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
+.hero-ranking-list li {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 0.85rem;
+}
+
+.hero-ranking-list span {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.hero-ranking-list strong {
+  color: #68d8ff;
+}
+
+.hero-ranking-list small {
+  background: rgba(123, 241, 168, 0.12);
+  border-radius: 999px;
+  color: #7bf1a8;
+  padding: 0.25rem 0.5rem;
+}
