@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import AdsDebugPanel from './components/debug/AdsDebugPanel.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import GMPanel from './pages/GMPanel.jsx'
 import Home from './pages/Home.jsx'
@@ -39,6 +40,7 @@ function App() {
       onNavigate={setActiveRouteId}
     >
       <ActivePage />
+      <AdsDebugPanel />
     </AppShell>
   )
 }

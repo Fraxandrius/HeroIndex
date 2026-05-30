@@ -693,3 +693,48 @@ button {
     gap: 0.25rem;
   }
 }
+
+.ads-debug-panel {
+  background: rgba(7, 11, 23, 0.92);
+  border: 1px solid rgba(104, 216, 255, 0.36);
+  border-radius: 1rem;
+  bottom: 1rem;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  color: #d7def3;
+  font-size: 0.78rem;
+  max-width: min(26rem, calc(100vw - 2rem));
+  padding: 1rem;
+  position: fixed;
+  right: 1rem;
+  z-index: 50;
+}
+
+.ads-debug-panel h2 {
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.ads-debug-panel dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.ads-debug-panel__row {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.ads-debug-panel dt {
+  color: #92a0c7;
+  font-weight: 700;
+}
+
+.ads-debug-panel dd {
+  color: #ffffff;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}

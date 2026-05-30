@@ -1,9 +1,12 @@
+import { useEffect } from 'react'
 import { isGMMode } from '../../data/mockAds.js'
-import { useAds } from '../../hooks/useAds.js'
+import { registerAdSlot, useAds } from '../../hooks/useAds.js'
 import AdCard from './AdCard.jsx'
 
 function AdSlot({ slotId }) {
   const { getActiveAdForSlot } = useAds()
+
+  useEffect(() => registerAdSlot(slotId), [slotId])
   const ad = getActiveAdForSlot(slotId)
 
   if (ad) {
