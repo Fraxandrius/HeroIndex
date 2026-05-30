@@ -42,7 +42,7 @@ function getActiveHeroes(heroes) {
   return heroes.filter((hero) => hero.active !== false)
 }
 
-function createHeroesState({ firebaseHeroes, error = null }) {
+function createHeroesState({ firebaseHeroes, error = null, loading = false }) {
   const normalizedFirebaseHeroes = firebaseHeroes ?? []
   const hasFirebaseHeroes = normalizedFirebaseHeroes.length > 0
   const sourceHeroes = hasFirebaseHeroes ? normalizedFirebaseHeroes : mockHeroes
@@ -50,6 +50,7 @@ function createHeroesState({ firebaseHeroes, error = null }) {
 
   return {
     error,
+    loading,
     firebaseHeroes: normalizedFirebaseHeroes,
     heroes,
     source: hasFirebaseHeroes ? 'firebase' : 'mock',
@@ -58,7 +59,7 @@ function createHeroesState({ firebaseHeroes, error = null }) {
 
 export function useHeroes() {
   const [heroesState, setHeroesState] = useState(() =>
-    createHeroesState({ firebaseHeroes: [] }),
+    createHeroesState({ firebaseHeroes: [], loading: true }),
   )
 
   useEffect(() => {
@@ -83,6 +84,7 @@ export function useHeroes() {
     ...heroesState,
     debug: {
       errorMessage: getErrorMessage(heroesState.error),
+      loading: heroesState.loading,
       firebaseConfigured: getFirebaseClient().isConfigured,
       firebaseHeroesCount: heroesState.firebaseHeroes.length,
       mockHeroesCount: mockHeroes.length,

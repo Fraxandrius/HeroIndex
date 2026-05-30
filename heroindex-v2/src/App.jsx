@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import AdsDebugPanel from './components/debug/AdsDebugPanel.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Corporations from './pages/Corporations.jsx'
+import GMManager from './pages/GMManager.jsx'
 import GMPanel from './pages/GMPanel.jsx'
 import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
@@ -28,6 +29,7 @@ const routes = [
     component: MissionCalculator,
   },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma },
+  { id: 'gm-manager', label: 'GM Manager', path: '/gm-manager', component: GMManager },
   { id: 'gm-panel', label: 'GM Panel', path: '/gm-panel', component: GMPanel },
 ]
 

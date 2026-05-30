@@ -1029,3 +1029,40 @@ button {
 .corporation-mini-card small {
   color: #8ea0ce;
 }
+
+.gm-manager-page {
+  max-width: 960px;
+}
+
+.gm-manager-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin-top: 1.5rem;
+}
+
+.gm-manager-summary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+}
+
+.gm-manager-summary strong {
+  color: #ffffff;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.gm-manager-summary span {
+  color: #c6d2f2;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.gm-manager-summary small {
+  color: #ff9b9b;
+  overflow-wrap: anywhere;
+}

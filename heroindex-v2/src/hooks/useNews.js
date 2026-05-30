@@ -92,7 +92,7 @@ function getErrorMessage(error) {
   return error.message ?? String(error)
 }
 
-function createNewsState({ firebaseNews, error = null }) {
+function createNewsState({ firebaseNews, error = null, loading = false }) {
   const normalizedFirebaseNews = firebaseNews ?? []
   const hasFirebaseNews = normalizedFirebaseNews.length > 0
   const activeNews = hasFirebaseNews ? normalizedFirebaseNews : mockNews
@@ -100,6 +100,7 @@ function createNewsState({ firebaseNews, error = null }) {
 
   return {
     error,
+    loading,
     firebaseNews: normalizedFirebaseNews,
     newsItems,
     source: hasFirebaseNews ? 'firebase' : 'mock',
@@ -108,7 +109,7 @@ function createNewsState({ firebaseNews, error = null }) {
 
 export function useNews() {
   const [newsState, setNewsState] = useState(() =>
-    createNewsState({ firebaseNews: [] }),
+    createNewsState({ firebaseNews: [], loading: true }),
   )
 
   useEffect(() => {
@@ -133,6 +134,7 @@ export function useNews() {
     ...newsState,
     debug: {
       errorMessage: getErrorMessage(newsState.error),
+      loading: newsState.loading,
       firebaseConfigured: getFirebaseClient().isConfigured,
       firebaseNewsCount: newsState.firebaseNews.length,
       mockNewsCount: mockNews.length,

@@ -53,7 +53,7 @@ function getActiveCorporations(corporations) {
   return corporations.filter((corporation) => corporation.active !== false)
 }
 
-function createCorporationsState({ firebaseCorporations, error = null }) {
+function createCorporationsState({ firebaseCorporations, error = null, loading = false }) {
   const normalizedFirebaseCorporations = firebaseCorporations ?? []
   const hasFirebaseCorporations = normalizedFirebaseCorporations.length > 0
   const sourceCorporations = hasFirebaseCorporations
@@ -66,6 +66,7 @@ function createCorporationsState({ firebaseCorporations, error = null }) {
   return {
     corporations,
     error,
+    loading,
     firebaseCorporations: normalizedFirebaseCorporations,
     source: hasFirebaseCorporations ? 'firebase' : 'mock',
   }
@@ -73,7 +74,7 @@ function createCorporationsState({ firebaseCorporations, error = null }) {
 
 export function useCorporations() {
   const [corporationsState, setCorporationsState] = useState(() =>
-    createCorporationsState({ firebaseCorporations: [] }),
+    createCorporationsState({ firebaseCorporations: [], loading: true }),
   )
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export function useCorporations() {
     corporationsById,
     debug: {
       errorMessage: getErrorMessage(corporationsState.error),
-      firebaseConfigured: getFirebaseClient().isConfigured,
+      loading: corporationsState.loading,
       firebaseCorporationsCount: corporationsState.firebaseCorporations.length,
       mockCorporationsCount: mockCorporations.length,
       source: corporationsState.source,
