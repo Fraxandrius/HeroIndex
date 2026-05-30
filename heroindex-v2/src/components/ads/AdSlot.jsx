@@ -3,11 +3,21 @@ import { useAds } from '../../hooks/useAds.js'
 import AdCard from './AdCard.jsx'
 
 function AdSlot({ slotId }) {
-  const { getActiveAdForSlot } = useAds()
-  const ad = getActiveAdForSlot(slotId)
+  const { getAdResolutionForSlot } = useAds()
+  const { ad: selectedAd, source: selectedSource } = getAdResolutionForSlot(slotId)
 
-  if (ad) {
-    return <AdCard ad={ad} />
+  if (selectedAd) {
+    return (
+      <section
+        className={`ad-slot ad-slot--${slotId}`}
+        data-ad-id={selectedAd.id ?? 'unknown'}
+        data-ad-slot={slotId}
+        data-ad-source={selectedSource}
+      >
+        <small className="ad-slot__label">Sponsored · {slotId}</small>
+        <AdCard ad={selectedAd} />
+      </section>
+    )
   }
 
   if (!isGMMode) {
@@ -15,7 +25,12 @@ function AdSlot({ slotId }) {
   }
 
   return (
-    <aside className="ad-slot ad-slot--placeholder" data-ad-slot={slotId}>
+    <aside
+      className="ad-slot ad-slot--placeholder"
+      data-ad-id="none"
+      data-ad-slot={slotId}
+      data-ad-source="none"
+    >
       <span>Mock ad slot</span>
       <strong>{slotId}</strong>
       <small>Visible in mock GM mode only</small>
