@@ -205,12 +205,33 @@ function cmsErrorMessage(error){
   return error?.message || 'Error CMS desconocido.';
 }
 
-const CMS_AD_MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const CMS_ALLOWED_AD_IMAGE_TYPES = ['image/jpeg','image/png','image/webp'];
+const CMS_IMAGE_CONFIG = {
+  news: {
+    maxBytes: 3 * 1024 * 1024,
+    required: false,
+    allowedTypes: ['image/jpeg','image/png','image/webp'],
+    emptyMessage: 'La noticia puede publicarse sin imagen; si agregas una, usa JPG, PNG o WEBP de máximo 3 MB.',
+    boxText: 'Preview noticia',
+    help: 'Media cards usan formato 16:9. Deja el foco visual en el centro para que se adapte al Home y al Media Feed.'
+  },
+  ad: {
+    maxBytes: 2 * 1024 * 1024,
+    required: true,
+    allowedTypes: ['image/jpeg','image/png','image/webp'],
+    emptyMessage: 'Los anuncios visuales necesitan una imagen. Selecciona un JPG, PNG o WEBP de máximo 2 MB.',
+    boxText: 'Preview anuncio',
+    help: 'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.'
+  }
+};
 const CMS_AD_PLACEMENT_HELP = {
   home:'Home sponsor usa formato horizontal 16:9. Usa imágenes con texto grande y poco detalle.',
   news:'Noticias inline usa formato 4:3. Evita texto pequeño porque aparece entre posts.',
-  sidebar:'Sidebar rail se mostrará en espacios laterales/compactos; por ahora también se lista en Patrocinado hasta Phase Ads-2.'
+  sidebar:'Sidebar rail usa formato vertical/compacto 9:16. Evita textos largos y deja el logo centrado.'
+};
+const AD_SLOT_META = {
+  home:{label:'Home sponsor', className:'slot-home', empty:'Slot Home sponsor sin anuncio activo'},
+  news:{label:'Noticias inline', className:'slot-news', empty:'Slot Media Feed sin anuncio activo'},
+  sidebar:{label:'Sidebar rail', className:'slot-sidebar', empty:'Slot Sidebar rail sin anuncio activo'}
 };
 
 function formatBytes(bytes=0){
@@ -223,11 +244,17 @@ function getCMSAdPlacement(){
   return document.getElementById('cms-ad-placement')?.value || 'home';
 }
 
+function getCMSImageConfig(kind='ad'){
+  return CMS_IMAGE_CONFIG[kind] || CMS_IMAGE_CONFIG.ad;
+}
+
 function updateCMSAdPlacementHelp(message){
   const help=document.getElementById('cms-ad-placement-help');
   if(!help) return;
   const placement=getCMSAdPlacement();
   help.textContent=message || CMS_AD_PLACEMENT_HELP[placement] || CMS_AD_PLACEMENT_HELP.home;
+const input=document.getElementById('cms-ad-image');
+  if(input?.files?.[0]) previewCMSImage(input,'ad');
 }
 
 function setCMSAdBusy(isBusy){
@@ -237,48 +264,74 @@ function setCMSAdBusy(isBusy){
   btn.textContent=isBusy?'Publicando anuncio...':'Crear anuncio →';
 }
 
-function validateCMSAdImage(file){
-  if(!file) return { ok:false, message:'Los anuncios visuales necesitan una imagen. Selecciona un JPG, PNG o WEBP de máximo 2 MB.' };
-  if(!CMS_ALLOWED_AD_IMAGE_TYPES.includes(file.type)) {
+function validateCMSImage(file, kind='ad'){
+  const config=getCMSImageConfig(kind);
+  if(!file) {
+    return config.required
+      ? { ok:false, message:config.emptyMessage }
+      : { ok:true, empty:true, message:config.emptyMessage };
+  }
+  if(!config.allowedTypes.includes(file.type)) {
     return { ok:false, message:'Formato no permitido. Usa JPG, PNG o WEBP.' };
   }
-  if(file.size > CMS_AD_MAX_IMAGE_BYTES) {
-    return { ok:false, message:`Imagen demasiado pesada (${formatBytes(file.size)}). Máximo permitido: ${formatBytes(CMS_AD_MAX_IMAGE_BYTES)}.` };
+  if(file.size > config.maxBytes) {
+    return { ok:false, message:`Imagen demasiado pesada (${formatBytes(file.size)}). Máximo permitido: ${formatBytes(config.maxBytes)}.` };
   }
   return { ok:true, message:`Imagen lista: ${file.name} · ${formatBytes(file.size)}.` };
 }
 
-function previewCMSAdImage(input){
-  const file=input?.files?.[0] || null;
-  const preview=document.getElementById('cms-ad-preview');
-  const box=preview?.querySelector('.cms-ad-preview-box');
-  if(!preview || !box) return;
-  preview.classList.remove('is-ready','has-error');
-  box.innerHTML='<span>Preview del anuncio</span>';
-  const validation=validateCMSAdImage(file);
-  if(!validation.ok){
-    preview.classList.add('has-error');
-    updateCMSAdPlacementHelp(validation.message);
-    if(file) {
-      input.value='';
-      cmsSetStatus(validation.message,'error');
-    }
-    return;
-  }
-  const url=URL.createObjectURL(file);
-  box.innerHTML=`<img src="${url}" alt="Preview anuncio" onload="URL.revokeObjectURL('${url}')"><span>${getCMSAdPlacement().toUpperCase()}</span>`;
-  preview.classList.add('is-ready');
-  updateCMSAdPlacementHelp(`${validation.message} ${CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || ''}`);
-  cmsSetStatus(validation.message,'success');
+function getCMSPreviewNodes(kind='ad'){
+  const preview=document.getElementById(kind==='news'?'cms-news-preview':'cms-ad-preview');
+  const box=preview?.querySelector('.cms-image-preview-box, .cms-ad-preview-box');
+  const help=document.getElementById(kind==='news'?'cms-news-image-help':'cms-ad-placement-help');
+  return {preview, box, help};
 }
 
-function clearCMSAdPreview(){
-  const preview=document.getElementById('cms-ad-preview');
-  const box=preview?.querySelector('.cms-ad-preview-box');
-  if(preview) preview.classList.remove('is-ready','has-error');
-  if(box) box.innerHTML='<span>Preview del anuncio</span>';
-  updateCMSAdPlacementHelp();
+function renderCMSImagePreview(file, kind='ad', message=''){
+  const config=getCMSImageConfig(kind);
+  const {preview, box, help}=getCMSPreviewNodes(kind);
+  if(!preview || !box) return;
+  preview.classList.remove('is-ready','has-error');
+  box.innerHTML=`<span>${config.boxText}</span>`;
+  if(help) help.textContent=message || (kind==='ad' ? CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] : config.help);
+  if(!file) return;
+  const url=URL.createObjectURL(file);
+  const label=kind==='ad' ? getCMSAdPlacement().toUpperCase() : 'MEDIA 16:9';
+  box.innerHTML=`<img src="${url}" alt="Preview ${kind}" onload="URL.revokeObjectURL('${url}')"><span>${label}</span>`;
+  preview.classList.add('is-ready');
 }
+
+function previewCMSImage(input, kind='ad'){
+  const file=input?.files?.[0] || null;
+  const validation=validateCMSImage(file, kind);
+  const {preview, help}=getCMSPreviewNodes(kind);
+  if(preview) preview.classList.remove('is-ready','has-error');
+  f(!validation.ok){
+    const {box}=getCMSPreviewNodes(kind);
+    const config=getCMSImageConfig(kind);
+    if(preview) preview.classList.add('has-error');
+    if(box) box.innerHTML=`<span>${config.boxText}</span>`;
+    if(help) help.textContent=validation.message;
+    if(file && input) input.value='';
+    cmsSetStatus(validation.message,'error');
+    return validation;
+  }
+  renderCMSImagePreview(file, kind, `${validation.message} ${kind==='ad' ? (CMS_AD_PLACEMENT_HELP[getCMSAdPlacement()] || '') : getCMSImageConfig(kind).help}`);
+  if(file) cmsSetStatus(validation.message,'success');
+  return validation;
+}
+
+function previewCMSAdImage(input){ return previewCMSImage(input,'ad'); }
+function previewCMSNewsImage(input){ return previewCMSImage(input,'news'); }
+function validateCMSAdImage(file){ return validateCMSImage(file,'ad'); }
+function validateCMSNewsImage(file){ return validateCMSImage(file,'news'); }
+
+function clearCMSImagePreview(kind='ad'){
+  renderCMSImagePreview(null, kind);
+}
+
+function clearCMSAdPreview(){ clearCMSImagePreview('ad'); }
+function clearCMSNewsPreview(){ clearCMSImagePreview('news'); }
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
@@ -532,34 +585,54 @@ function renderSocialPost(p,isGM){
   </article>`;
 }
 
+function renderAdSlotCard(slot, placement='home'){
+  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+  const title=cleanPublicText(slot.headline||slot.title||meta.label);
+  const sponsor=cleanPublicText(slot.brand||slot.sponsor||'HeroIndex Partner');
+  const image=slot.imageUrl||slot.image||'';
+  const body=cleanPublicText(slot.body||slot.cta||'Conocer más');
+  return `<div class="ad-slot ${meta.className}" data-placement="${placement}">
+    <div class="ad-visual" style="background:${slot.fallbackColor||'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'}">
+      ${image?`<img src="${image}" alt="${title}" onerror="this.style.display='none'">`:''}
+      <div class="ad-overlay">
+        <div class="ad-sponsor">${sponsor}</div>
+        <div class="ad-title">${title}</div>
+        <button class="btn-sec ad-cta">${body}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAdSlotEmpty(placement='home'){
+  if(currentSession?.type!=='gm') return '';
+  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+  return `<div class="ad-slot ad-slot-empty ${meta.className}" data-placement="${placement}">
+    <div class="ad-visual"><div class="ad-overlay"><div class="ad-sponsor">${meta.label}</div><div class="ad-title">${meta.empty}</div><small>Phase Ads-3: aquí irá click-to-upload directo.</small></div></div>
+  </div>`;
+}
+
 function renderHomeAds(){
-  const adEl=document.getElementById('home-ads');
-  if(!adEl) return;
+  const homeEl=document.getElementById('home-ads');
+  const sidebarEl=document.getElementById('home-sidebar-ads');
+  if(!homeEl && !sidebarEl) return;
    const fallbackSlots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
-  const renderSlots=slots=>{
-    adEl.innerHTML=slots.map(slot=>{
-      const title=slot.headline||slot.title;
-      const sponsor=slot.brand||slot.sponsor;
-      const image=slot.imageUrl||slot.image||'';
-      const body=slot.body||slot.cta||'Conocer más';
-      return `<div class="ad-slot">
-        <div class="ad-visual" style="background:${slot.fallbackColor||'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'}">
-          ${image?`<img src="${image}" alt="${title}" onerror="this.style.display='none'">`:''}
-          <div class="ad-overlay">
-            <div class="ad-sponsor">${sponsor}</div>
-            <div class="ad-title">${title}</div>
-            <button class="btn-sec ad-cta">${body}</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('')||'<div class="news-empty">Sin espacios comerciales activos.</div>';
+  const renderSlots=(ads=[])=>{
+    const active=ads.filter(ad=>ad.active!==false);
+    const homeAds=active.filter(ad=>!ad.placement || ad.placement==='home');
+    const sidebarAds=active.filter(ad=>ad.placement==='sidebar');
+    if(homeEl){
+      const slots=homeAds.length ? homeAds : fallbackSlots;
+      homeEl.innerHTML=slots.map(slot=>renderAdSlotCard(slot,'home')).join('')||renderAdSlotEmpty('home');
+    }
+    if(sidebarEl){
+      sidebarEl.innerHTML=sidebarAds.length
+        ? sidebarAds.map(slot=>renderAdSlotCard(slot,'sidebar')).join('')
+        : renderAdSlotEmpty('sidebar');
+    }
   };
   if(typeof loadAds==='function'){
-    loadAds().then(ads=>{
-      const active=ads.filter(ad=>ad.active!==false && (!ad.placement || ['home','sidebar'].includes(ad.placement)));
-      renderSlots(active.length ? active : fallbackSlots);
-    }).catch(()=>renderSlots(fallbackSlots));
-  } else renderSlots(fallbackSlots);
+      loadAds().then(renderSlots).catch(()=>renderSlots([]));
+  } else renderSlots([]);
 }
 
 function renderMiniChart(hero){
@@ -1547,7 +1620,7 @@ function renderNewsComments(comments=[]){
 
 function renderNewsAdPost(ad){
   const image=ad.imageUrl||'';
-  return `<article class="media-post source-corp media-ad-post">
+    return `<article class="media-post source-corp media-ad-post slot-news">
     <div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(ad.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · ${ad.placement||'news'}</p></div></div>
     <div class="media-copy"><h2>${cleanPublicText(ad.headline)}</h2>${ad.body?`<p>${cleanPublicText(ad.body)}</p>`:''}</div>
     <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(ad.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(ad.brand)}</b><small>HeroIndex Partner</small></div></div>
@@ -1608,7 +1681,15 @@ function createCMSNews(){
   if(session.type!=='gm') return toast('Solo GM puede crear contenido');
   const title=cleanPublicText(document.getElementById('cms-news-title')?.value||'');
   if(!title) return toast('El título de noticia es obligatorio');
-  const file=document.getElementById('cms-news-image')?.files?.[0]||null;
+ const fileInput=document.getElementById('cms-news-image');
+  const file=fileInput?.files?.[0]||null;
+  const validation=validateCMSNewsImage(file);
+  if(!validation.ok){
+    cmsSetStatus(validation.message,'error');
+    toast(validation.message);
+    previewCMSNewsImage(fileInput);
+    return;
+  }
   const source=document.getElementById('cms-news-source')?.value||'heroindex';
   const payload={
     title,
@@ -1623,7 +1704,8 @@ function createCMSNews(){
     tags:String(document.getElementById('cms-news-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
     published:!!document.getElementById('cms-news-published')?.checked,
     visibility:source==='oracle'?'gm':'public',
-    date:today()
+    date:today(),
+    imageProfile:'news-card-16x9'
   };
   cmsSetStatus(file?'Uploading image...':'Saving news to database path: /news','working');
   uploadContentImage(file,'news')
@@ -1637,6 +1719,7 @@ function createCMSNews(){
       renderNewsFeed();renderHome();refreshCMSNewsOptions();
       ['cms-news-title','cms-news-public','cms-news-corp','cms-news-oracle','cms-news-tags'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       const img=document.getElementById('cms-news-image'); if(img) img.value='';
+      clearCMSNewsPreview();
       const visibilityNote=created.visibility==='gm'?' Publicado como ORÁCULO: visible solo en GM.':' Publicado en Media Feed → Todas.';
       cmsSetStatus('News saved: '+(created.title||created.headline)+'.'+visibilityNote,'success');
       toast('Contenido publicado');
@@ -1669,7 +1752,8 @@ function createCMSAd(){
     body:cleanPublicText(document.getElementById('cms-ad-body')?.value||''),
     placement:getCMSAdPlacement(),
     active:!!document.getElementById('cms-ad-active')?.checked,
-    imageRequired:true
+     imageRequired:true,
+    slotProfile:`${getCMSAdPlacement()}-visual-slot`
   };
   setCMSAdBusy(true);
   cmsSetStatus('Uploading image...','working');
