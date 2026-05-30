@@ -4,7 +4,7 @@ import { getFirebaseClient } from '../firebase/firebaseClient.js'
 import { subscribeToNews } from '../services/newsService.js'
 
 function getNewsTimestamp(newsItem) {
-  const rawDate = newsItem.publishedAt ?? newsItem.updatedAt ?? newsItem.createdAt
+  const rawDate = newsItem.createdAt
   const timestamp = rawDate ? Date.parse(rawDate) : 0
 
   return Number.isNaN(timestamp) ? 0 : timestamp

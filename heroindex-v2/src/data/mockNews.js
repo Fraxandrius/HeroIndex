@@ -3,7 +3,7 @@ export const mockNews = [
     id: 'news-skyline-patrol-record',
     source: 'Sentinel Dispatch',
     handle: '@sentinelwire',
-    publishedAt: '2026-05-30T08:48:00.000Z',
+    createdAt: '2026-05-30T08:48:00.000Z',
     time: '12m',
     title: 'Nova Sentinel breaks the skyline patrol record',
     summary:
@@ -17,7 +17,7 @@ export const mockNews = [
     id: 'news-onyx-vale-drone-swarm',
     source: 'HeroIndex Studio',
     handle: '@heroindex',
-    publishedAt: '2026-05-30T08:26:00.000Z',
+    createdAt: '2026-05-30T08:26:00.000Z',
     time: '34m',
     title: 'Featured clip: Onyx Vale disables a rogue drone swarm',
     summary:
@@ -32,7 +32,7 @@ export const mockNews = [
     id: 'news-waterfront-rescue-chain',
     source: 'Karma Council',
     handle: '@karmawatch',
-    publishedAt: '2026-05-30T08:00:00.000Z',
+    createdAt: '2026-05-30T08:00:00.000Z',
     time: '1h',
     title: 'Community karma spikes after waterfront rescue chain',
     summary:

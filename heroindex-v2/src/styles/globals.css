@@ -263,7 +263,7 @@ button {
   background: linear-gradient(135deg, #7bf1a8, #047857);
 }
 
-.sponsor-slot {
+.ad-slot {
   background:
     linear-gradient(90deg, rgba(104, 216, 255, 0.16), rgba(124, 92, 255, 0.18)),
    rgba(15, 23, 42, 0.82);
@@ -278,7 +278,7 @@ button {
   padding: 1rem;
 }
 
-.sponsor-slot__label {
+.ad-slot__label {
   color: #68d8ff;
   font-size: 0.72rem;
   font-weight: 800;
@@ -286,24 +286,24 @@ button {
   text-transform: uppercase;
 }
 
-.sponsor-slot strong {
+.ad-slot strong {
   color: #ffffff;
   font-size: 1.05rem;
 }
 
-.sponsor-slot span,
-.sponsor-slot small {
+.ad-slot span,
+.ad-slot small {
   font-size: 0.78rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 
-.sponsor-slot--placeholder {
+.ad-slot--placeholder {
   min-height: 9rem;
 }
 
-.sponsor-card {
+.ad-card {
     min-height: 8rem;
   background:
     linear-gradient(135deg, rgba(104, 216, 255, 0.16), rgba(124, 92, 255, 0.18)),
@@ -319,7 +319,7 @@ button {
   padding: 1rem;
 }
 
-.sponsor-card__media {
+.ad-card__media {
   align-items: center;
   aspect-ratio: 1;
   background:
@@ -333,7 +333,7 @@ button {
   padding: 1rem;
 }
 
-.sponsor-card__media img {
+.ad-card__media img {
   height: 100%;
   max-height: 4.75rem;
   max-width: 100%;
@@ -341,7 +341,7 @@ button {
   width: 100%;
 }
 
-.sponsor-card__image-fallback {
+.ad-card__image-fallback {
   align-items: center;
   color: #ffffff;
   display: grid;
@@ -351,82 +351,82 @@ button {
   text-align: center;
 }
 
-.sponsor-card__image-fallback strong {
+.ad-card__image-fallback strong {
   color: #68d8ff;
   font-size: 0.76rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.sponsor-card__image-fallback span {
+.ad-card__image-fallback span {
   font-size: 0.86rem;
   font-weight: 800;
   line-height: 1.2;
 }
 
-.sponsor-card__content {
+.ad-card__content {
   display: grid;
   gap: 0.7rem;
   min-width: 0;
 }
 
-.sponsor-card__eyebrow,
-.sponsor-card__meta {
+.ad-card__eyebrow,
+.ad-card__meta {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.sponsor-card__eyebrow span,
-.sponsor-card__eyebrow small,
-.sponsor-card__meta dt {
+.ad-card__eyebrow span,
+.ad-card__eyebrow small,
+.ad-card__meta dt {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.sponsor-card__eyebrow span {
+.ad-card__eyebrow span {
   color: #68d8ff;
 }
 
-.sponsor-card__eyebrow small {
+.ad-card__eyebrow small {
   color: #aeb8d8;
 }
 
-.sponsor-card h3,
-.sponsor-card p,
-.sponsor-card__meta {
+.ad-card h3,
+.ad-card p,
+.ad-card__meta {
   margin: 0;
 }
 
-.sponsor-card h3 {
+.ad-card h3 {
   color: #ffffff;
   font-size: clamp(1rem, 2vw, 1.35rem);
   line-height: 1.15;
 }
 
-.sponsor-card p {
+.ad-card p {
   color: #aeb8d8;
   line-height: 1.55;
 }
 
-.sponsor-card__meta {
+.ad-card__meta {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 0.7rem;
 }
 
-.sponsor-card__meta div {
+.ad-card__meta div {
   display: grid;
   gap: 0.15rem;
 }
 
-.sponsor-card__meta dt {
+.ad-card__meta dt {
   color: #8ea0ce;
 }
 
-.sponsor-card__meta dd {
+.ad-card__meta dd {
   color: #ffffff;
   font-size: 0.82rem;
   margin: 0;
@@ -718,7 +718,7 @@ button {
     font-size: clamp(2.25rem, 12vw, 3.6rem);
   }
 
-   .sponsor-card,
+   .ad-card,
   .feed-card {
     grid-template-columns: 1fr;
   }
@@ -729,7 +729,7 @@ button {
   }
 }
 
-.diagnostics-panel {
+.ads-debug-panel {
   background: rgba(7, 11, 23, 0.92);
   border: 1px solid rgba(104, 216, 255, 0.36);
   border-radius: 1rem;
@@ -744,37 +744,37 @@ button {
   z-index: 50;
 }
 
-.diagnostics-panel h2 {
+.ads-debug-panel h2 {
   color: #ffffff;
   font-size: 0.95rem;
   margin: 0 0 0.75rem;
 }
 
-.diagnostics-panel dl {
+.ads-debug-panel dl {
   display: grid;
   gap: 0.45rem;
   margin: 0;
 }
 
-.diagnostics-panel__row {
+.ads-debug-panel__row {
   display: grid;
   gap: 0.25rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
-.diagnostics-panel dt {
+.ads-debug-panel dt {
   color: #92a0c7;
   font-weight: 700;
 }
 
-.diagnostics-panel dd {
+.ads-debug-panel dd {
   color: #ffffff;
   margin: 0;
   overflow-wrap: anywhere;
   text-align: right;
 }
 
-.diagnostics-panel h3 {
+.ads-debug-panel h3 {
   color: #68d8ff;
   font-size: 0.82rem;
   letter-spacing: 0.08em;
@@ -782,7 +782,7 @@ button {
   text-transform: uppercase;
 }
 
-.diagnostics-panel__slots {
+.ads-debug-panel__slots {
   display: grid;
   gap: 0.75rem;
   max-height: 45vh;
@@ -790,12 +790,12 @@ button {
   padding-right: 0.2rem;
 }
 
-.diagnostics-panel__slot {
+.ads-debug-panel__slot {
   border-top: 1px solid rgba(151, 164, 205, 0.22);
   padding-top: 0.65rem;
 }
 
-.diagnostics-panel__slot h4 {
+.ads-debug-panel__slot h4 {
   color: #ffffff;
   font-size: 0.78rem;
   margin: 0 0 0.45rem;

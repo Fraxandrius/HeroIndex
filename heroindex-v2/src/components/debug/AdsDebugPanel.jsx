@@ -25,12 +25,12 @@ function getSlotDomState(slotId) {
     }
   }
 
-  const slotElement = document.querySelector(`.sponsor-slot[data-placement-slot="${slotId}"]`)
+  const slotElement = document.querySelector(`.ad-slot[data-ad-slot="${slotId}"]`)
 
   return {
     mountedInDom: Boolean(slotElement),
     selectedAdPassedToAdCard: Boolean(
-      slotElement?.querySelector(`.sponsor-card[data-placement-slot="${slotId}"]`),
+      slotElement?.querySelector(`.ad-card[data-ad-slot="${slotId}"]`),
     ),
   }
 }
@@ -57,9 +57,9 @@ function AdsDebugPanelContent() {
     ['Firebase configured', formatBoolean(debug.firebaseConfigured)],
     ['Has VITE_FIREBASE_DATABASE_URL', formatBoolean(debug.hasDatabaseUrl)],
     ['Has VITE_FIREBASE_PROJECT_ID', formatBoolean(debug.hasProjectId)],
-    ['Content source', debug.source],
-    ['Firebase content count', debug.firebaseAdsCount],
-    ['mock content count', debug.mockAdsCount],
+    ['Ads source', debug.source],
+    ['Firebase ads count', debug.firebaseAdsCount],
+    ['mockAds count', debug.mockAdsCount],
     ['Error message', debug.errorMessage ?? 'none'],
     ['import.meta.env.MODE', debug.mode ?? 'unknown'],
     ['import.meta.env.PROD', String(debug.prod)],
@@ -67,11 +67,11 @@ function AdsDebugPanelContent() {
   ]
 
   return (
-    <aside className="diagnostics-panel" aria-label="Sponsor diagnostics panel">
-      <h2>Sponsor diagnostics</h2>
+    <aside className="ads-debug-panel" aria-label="Ads debug panel">
+      <h2>Ads debug</h2>
       <dl>
         {rows.map(([label, value]) => (
-          <div className="diagnostics-panel__row" key={label}>
+          <div className="ads-debug-panel__row" key={label}>
             <dt>{label}</dt>
             <dd>{value}</dd>
           </div>
@@ -79,7 +79,7 @@ function AdsDebugPanelContent() {
       </dl>
 
       <h3>Canonical slots</h3>
-      <div className="diagnostics-panel__slots">
+      <div className="ads-debug-panel__slots">
         {debug.slots.map((slot) => {
           const domState = slotDomState[slot.slotId] ?? {
             mountedInDom: false,
@@ -87,47 +87,47 @@ function AdsDebugPanelContent() {
           }
 
           return (
-            <section className="diagnostics-panel__slot" key={slot.slotId}>
+            <section className="ads-debug-panel__slot" key={slot.slotId}>
               <h4>{slot.slotId}</h4>
               <dl>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>firebase candidates count</dt>
                   <dd>{slot.firebaseCandidatesCount}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>active firebase candidates count</dt>
                   <dd>{slot.activeFirebaseCandidatesCount}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>mock fallback exists</dt>
                   <dd>{formatBoolean(slot.mockFallbackExists)}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>selected source</dt>
                   <dd>{slot.selectedSource}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
-                  <dt>selected content id</dt>
+                <div className="ads-debug-panel__row">
+                  <dt>selected ad id</dt>
                   <dd>{slot.selectedAdId}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
-                  <dt>selected content brand</dt>
+                <div className="ads-debug-panel__row">
+                  <dt>selected ad brand</dt>
                   <dd>{slot.selectedAdBrand}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
-                  <dt>selected content headline</dt>
+                <div className="ads-debug-panel__row">
+                  <dt>selected ad headline</dt>
                   <dd>{slot.selectedAdHeadline}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>selected imageUrl</dt>
                   <dd>{formatBoolean(slot.selectedImageUrl)}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
+                <div className="ads-debug-panel__row">
                   <dt>mounted in DOM</dt>
                   <dd>{formatBoolean(domState.mountedInDom)}</dd>
                 </div>
-                <div className="diagnostics-panel__row">
-                  <dt>selected content passed to AdCard</dt>
+                <div className="ads-debug-panel__row">
+                  <dt>selected ad passed to AdCard</dt>
                   <dd>{formatBoolean(domState.selectedAdPassedToAdCard)}</dd>
                 </div>
               </dl>

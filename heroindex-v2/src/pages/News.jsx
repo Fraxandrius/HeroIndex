@@ -1,5 +1,9 @@
+import { useNews } from '../hooks/useNews.js'
+
 function News() {
   const { feedNews, source } = useNews()
+
+  console.log('feedNews', feedNews)
 
   return (
     <section className="page-card news-page">
