@@ -3041,3 +3041,24 @@ body:not(.gm-active) .gm-post{
   .cms-image-preview,
   .cms-ad-preview { grid-template-columns: 1fr; }
 }
+
+/* ── Phase Ads-3: GM click-to-upload ad slots ─────────────── */
+.ad-slot.is-editable { cursor: pointer; outline: 1px solid rgba(255,214,102,.18); transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.ad-slot.is-editable:hover { transform: translateY(-1px); border-color: rgba(255,214,102,.52); box-shadow: 0 14px 36px rgba(255,214,102,.11); }
+.ad-slot.image-only .ad-visual img { opacity: 1; }
+.ad-slot.image-only .ad-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.18)); pointer-events: none; }
+.ad-edit-pill {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  font-size: 10px;
+  color: #ffe8a6;
+  background: rgba(0,0,0,.46);
+  border: 1px solid rgba(255,214,102,.34);
+  border-radius: 999px;
+  padding: 4px 8px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  pointer-events: none;
+}

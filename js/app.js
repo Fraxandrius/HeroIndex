@@ -333,6 +333,67 @@ function clearCMSImagePreview(kind='ad'){
 function clearCMSAdPreview(){ clearCMSImagePreview('ad'); }
 function clearCMSNewsPreview(){ clearCMSImagePreview('news'); }
 
+function getCMSFieldValue(id){
+  const el=document.getElementById(id) || document.querySelector(`[name="${id}"]`);
+  return String(el?.value ?? '').replace(/\u00a0/g,' ').trim();
+}
+
+function buildSlotAdPayload(placement='home', imageUrl=''){
+  const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
+  return {
+    brand: meta.label,
+    headline: `${meta.label} · campaña visual`,
+    body: '',
+    placement,
+    slotId: `${placement}-visual-slot`,
+    slotProfile: `${placement}-visual-slot`,
+    imageOnly: true,
+    imageRequired: true,
+    imageUrl,
+    active: true
+  };
+}
+
+function handleAdSlotUpload(placement='home'){
+  const session=currentSession||{type:'public'};
+  if(session.type!=='gm') return;
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/png,image/jpeg,image/webp';
+  input.onchange=()=>{
+    const file=input.files?.[0]||null;
+    const validation=validateCMSAdImage(file);
+    if(!validation.ok){
+      cmsSetStatus(validation.message,'error');
+      toast(validation.message);
+      return;
+    }
+    cmsSetStatus(`Uploading image... ${placement} slot`,'working');
+    uploadContentImage(file,'ads')
+      .then(imageUrl=>{
+        if(!imageUrl) throw new Error('La imagen del slot no devolvió URL de descarga.');
+        cmsSetStatus('Image URL obtained: '+imageUrl,'working');
+        const payload=buildSlotAdPayload(placement,imageUrl);
+        if(typeof createAdSlotContent==='function') return createAdSlotContent(placement,payload);
+        return createAdContent(payload);
+      })
+      .then(created=>{
+        console.info('[CMS] Slot ad saved:', created);
+        renderHome();
+        if(placement==='news') renderNewsFeed();
+        cmsSetStatus(`Slot ${placement} actualizado con imagen publicitaria.`,'success');
+        toast('Slot publicitario actualizado');
+      })
+      .catch(e=>{
+        console.error('[CMS] Slot upload error:', e);
+        const msg=cmsErrorMessage(e);
+        cmsSetStatus(msg,'error');
+        toast(msg);
+      });
+  };
+  input.click();
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(name, btn){
   // Permission check
@@ -591,14 +652,17 @@ function renderAdSlotCard(slot, placement='home'){
   const sponsor=cleanPublicText(slot.brand||slot.sponsor||'HeroIndex Partner');
   const image=slot.imageUrl||slot.image||'';
   const body=cleanPublicText(slot.body||slot.cta||'Conocer más');
-  return `<div class="ad-slot ${meta.className}" data-placement="${placement}">
+   const editable=(currentSession?.type==='gm')?' is-editable':'';
+  const click=(currentSession?.type==='gm')?` onclick="handleAdSlotUpload('${placement}')" title="Cambiar imagen del slot ${meta.label}"`:'';
+  const imageOnly=slot.imageOnly?' image-only':'';
+  return `<div class="ad-slot ${meta.className}${editable}${imageOnly}" data-placement="${placement}"${click}>
     <div class="ad-visual" style="background:${slot.fallbackColor||'linear-gradient(135deg,#201031 0%,#4f1d73 100%)'}">
       ${image?`<img src="${image}" alt="${title}" onerror="this.style.display='none'">`:''}
-      <div class="ad-overlay">
+      ${slot.imageOnly?`<div class="ad-edit-pill gm-only">Cambiar imagen</div>`:`<div class="ad-overlay">
         <div class="ad-sponsor">${sponsor}</div>
         <div class="ad-title">${title}</div>
         <button class="btn-sec ad-cta">${body}</button>
-      </div>
+      </div>`}
     </div>
   </div>`;
 }
@@ -606,8 +670,8 @@ function renderAdSlotCard(slot, placement='home'){
 function renderAdSlotEmpty(placement='home'){
   if(currentSession?.type!=='gm') return '';
   const meta=AD_SLOT_META[placement] || AD_SLOT_META.home;
-  return `<div class="ad-slot ad-slot-empty ${meta.className}" data-placement="${placement}">
-    <div class="ad-visual"><div class="ad-overlay"><div class="ad-sponsor">${meta.label}</div><div class="ad-title">${meta.empty}</div><small>Phase Ads-3: aquí irá click-to-upload directo.</small></div></div>
+  return `<div class="ad-slot ad-slot-empty ${meta.className} is-editable" data-placement="${placement}" onclick="handleAdSlotUpload('${placement}')" title="Subir imagen para ${meta.label}">
+    <div class="ad-visual"><div class="ad-overlay"><div class="ad-sponsor">${meta.label}</div><div class="ad-title">${meta.empty}</div><small>Click para subir imagen directa al slot.</small></div></div>
   </div>`;
 }
 
@@ -1618,12 +1682,21 @@ function renderNewsComments(comments=[]){
   return `<div class="media-comments">${comments.slice(0,3).map(c=>`<div class="media-comment"><b>${cleanPublicText(c.authorName||'Anónimo')}</b><span>${cleanPublicText(c.body||'')}</span><em>♥ ${Number(c.likes||0)}</em></div>`).join('')}</div>`;
 }
 
-function renderNewsAdPost(ad){
+function renderNewsAdPost(ad={}){
   const image=ad.imageUrl||'';
-    return `<article class="media-post source-corp media-ad-post slot-news">
-    <div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(ad.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · ${ad.placement||'news'}</p></div></div>
+  const meta=AD_SLOT_META.news;
+  const editable=(currentSession?.type==='gm')?' is-editable':'';
+  const click=(currentSession?.type==='gm')?' onclick="handleAdSlotUpload(\'news\')" title="Subir imagen para Noticias inline"':'';
+  if(ad.emptySlot){
+    return `<article class="media-post source-corp media-ad-post slot-news ad-slot-empty${editable}"${click}>
+      <div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${meta.label}</strong><span class="media-badge promoted">GM slot</span></div><p>Click-to-upload</p></div></div>
+      <div class="media-copy"><h2>${meta.empty}</h2><p>Click para subir una imagen directa al slot inline del Media Feed.</p></div>
+    </article>`;
+  }
+  return `<article class="media-post source-corp media-ad-post slot-news${editable}${ad.imageOnly?' image-only':''}"${click}>
+    ${ad.imageOnly&&image?`<div class="media-thumb corp"><img src="${image}" alt="${cleanPublicText(ad.headline||meta.label)}" onerror="this.style.display='none'"><span>AD</span><div class="ad-edit-pill gm-only">Cambiar imagen</div></div>`:`<div class="media-post-head"><div class="media-avatar corp">AD</div><div class="media-source-block"><div><strong>${cleanPublicText(ad.brand)}</strong><span class="media-badge promoted">Promoted</span></div><p>Sponsored · ${ad.placement||'news'}</p></div></div>
     <div class="media-copy"><h2>${cleanPublicText(ad.headline)}</h2>${ad.body?`<p>${cleanPublicText(ad.body)}</p>`:''}</div>
-    <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(ad.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(ad.brand)}</b><small>HeroIndex Partner</small></div></div>
+    <div class="media-thumb corp">${image?`<img src="${image}" alt="${cleanPublicText(ad.headline)}" onerror="this.style.display='none'">`:''}<span>AD</span><div><b>${cleanPublicText(ad.brand)}</b><small>HeroIndex Partner</small></div></div>`}
   </article>`;
 }
 
@@ -1651,7 +1724,7 @@ function renderNewsFeed(){
     Promise.all([commentsPromise, adsPromise]).then(([commentLists, ads])=>{
       const newsAds=ads.filter(ad=>ad.active!==false && ad.placement==='news');
       const posts=filtered.map((n,i)=>renderNewsItem(n,true,commentLists[i]||[]));
-      const adPosts=newsAds.map(renderNewsAdPost);
+      const adPosts=newsAds.length ? newsAds.map(renderNewsAdPost) : (viewSession.type==='gm' ? [renderNewsAdPost({placement:'news', emptySlot:true})] : []);
       const combined=adPosts.length ? [posts[0], ...adPosts, ...posts.slice(1)] : posts;
       feed.innerHTML=combined.join('');
     }).catch(error=>{
@@ -1735,9 +1808,16 @@ function createCMSNews(){
 function createCMSAd(){
   const session=currentSession||{type:'public'};
   if(session.type!=='gm') return toast('Solo GM puede crear anuncios');
-  const brand=cleanPublicText(document.getElementById('cms-ad-brand')?.value||'');
-  const headline=cleanPublicText(document.getElementById('cms-ad-headline')?.value||'');
-  if(!brand || !headline) return toast('Marca y titular son obligatorios');
+   const brandRaw=getCMSFieldValue('cms-ad-brand');
+  const headlineRaw=getCMSFieldValue('cms-ad-headline');
+  const brand=cleanPublicText(brandRaw);
+  const headline=cleanPublicText(headlineRaw);
+  if(!brand || !headline){
+    const msg=`Marca y titular son obligatorios. Detectado: marca=${brandRaw.length} caracteres, titular=${headlineRaw.length} caracteres.`;
+    cmsSetStatus(msg,'error');
+    toast('Marca y titular son obligatorios');
+    return;
+  }
   const fileInput=document.getElementById('cms-ad-image');
   const file=fileInput?.files?.[0]||null;
   const validation=validateCMSAdImage(file);

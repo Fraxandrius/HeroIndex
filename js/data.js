@@ -210,8 +210,12 @@ function normalizeCmsAd(ad={}) {
     body: ad.body || ad.cta || '',
     imageUrl: ad.imageUrl || ad.image || '',
     placement: ad.placement || 'home',
+    slotId: ad.slotId || '',
+    slotProfile: ad.slotProfile || '',
+    imageOnly: !!ad.imageOnly,
     active: ad.active !== false,
-    createdAt: ad.createdAt || new Date().toISOString()
+    createdAt: ad.createdAt || new Date().toISOString(),
+    updatedAt: ad.updatedAt || ad.createdAt || new Date().toISOString()
   };
 }
 
@@ -230,12 +234,29 @@ function loadAds() {
 function createAdContent(item) {
   if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para anuncios compartidos.'));
   const ref = db.ref('ads').push();
-  const payload = normalizeCmsAd({ ...item, id: ref.key, createdAt: new Date().toISOString() });
+  const payload = normalizeCmsAd({ ...item, id: ref.key, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
  console.info('[CMS] Saving ad to database path:', `ads/${ref.key}`);
   return ref.set(payload).then(() => {
     console.info('[CMS] Ad saved:', payload);
     return payload;
   });
+}
+
+function createAdSlotContent(placement='home', item={}) {
+  if (!db) return Promise.reject(new Error('Firebase Realtime Database no disponible para slots publicitarios.'));
+  const slotId = item.slotId || `${placement}-visual-slot`;
+  const adsRef = db.ref('ads');
+  return adsRef.once('value').then(snapshot => {
+    const updates = {};
+    normalizeDbList(snapshot.val()).forEach(ad => {
+      if (ad.active !== false && (ad.slotId === slotId || (!ad.slotId && ad.placement === placement && ad.imageOnly))) {
+        updates[`${ad.id}/active`] = false;
+        updates[`${ad.id}/updatedAt`] = new Date().toISOString();
+      }
+    });
+    if (Object.keys(updates).length) return adsRef.update(updates);
+    return null;
+  }).then(() => createAdContent({ ...item, placement, slotId, active: true, imageOnly: true }));
 }
 
 function normalizeCmsComment(c={}) {
