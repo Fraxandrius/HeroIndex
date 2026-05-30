@@ -1,33 +1,17 @@
-import { mockAdSlots, mockAdSlotsById } from '../data/mockAds.js'
+import AdSlot from '../components/ads/AdSlot.jsx'
 import { mockClips } from '../data/mockClips.js'
 import {
   mockFeaturedHero,
   mockHeroStories,
   mockTrendingHeroes,
 } from '../data/mockHeroes.js'
-import { mockNewsHighlights } from '../data/mockNews.js'
 import { mockSocialPosts } from '../data/mockSocialPosts.js'
 
-function AdSlot({ slot }) {
-  const { id, label } = slot
-  return (
-    <aside className="ad-slot" data-ad-slot={id} aria-label={`${label} ad slot`}>
-      <span>Mock ad slot</span>
-      <strong>{id}</strong>
-      <small>{label}</small>
-    </aside>
-  )
-}
-
 function Home() {
-    const inlineNewsPlacement = mockNewsHighlights.find(
-    (highlight) => highlight.adSlotId === mockAdSlots.newsInline.id,
-  )
-
   return (
- <div className="home-page">
+    <div className="home-page">
       <section className="story-rail" aria-label="Hero stories">
-         {mockHeroStories.map((story) => (
+        {mockHeroStories.map((story) => (
           <button className="story-card" key={story.id} type="button">
             <span className={`story-card__avatar story-card__avatar--${story.tone}`}>
               {story.name
@@ -41,17 +25,15 @@ function Home() {
         ))}
       </section>
 
-      <AdSlot slot={mockAdSlots.homeSponsor} />
-
       <div className="home-grid">
         <div className="home-main" aria-label="HeroIndex social feed">
           <section className="hero-feature">
             <div className="hero-feature__copy">
-               <p className="page-card__kicker">{mockFeaturedHero.kicker}</p>
+              <p className="page-card__kicker">{mockFeaturedHero.kicker}</p>
               <h2>{mockFeaturedHero.title}</h2>
               <p>{mockFeaturedHero.description}</p>
               <div className="hero-feature__actions" aria-label="Featured hero stats">
-                 {mockFeaturedHero.stats.map((stat) => (
+                {mockFeaturedHero.stats.map((stat) => (
                   <span key={stat}>{stat}</span>
                 ))}
               </div>
@@ -60,6 +42,8 @@ function Home() {
               <span className="hero-feature__sigil">{mockFeaturedHero.sigil}</span>
             </div>
           </section>
+
+          <AdSlot slotId="home-sponsor" />
 
           <section className="feed-panel">
             <div className="section-heading">
@@ -84,8 +68,8 @@ function Home() {
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
                   <footer>{item.metric}</footer>
-                  {item.inlineAdSlotId && inlineNewsPlacement ? (
-                    <AdSlot slot={mockAdSlotsById[item.inlineAdSlotId]} />
+                  {item.inlineAdSlotId ? (
+                    <AdSlot slotId={item.inlineAdSlotId} />
                   ) : null}
                 </div>
               </article>
@@ -100,7 +84,7 @@ function Home() {
               <h2>Rising now</h2>
             </div>
             <ol className="trending-list">
-               {mockTrendingHeroes.map((hero) => (
+              {mockTrendingHeroes.map((hero) => (
                 <li key={hero.id}>
                   <span>{hero.name}</span>
                   <strong>{hero.score}</strong>
@@ -110,7 +94,7 @@ function Home() {
             </ol>
           </section>
 
-           <AdSlot slot={mockAdSlots.sidebarRail} />
+          <AdSlot slotId="sidebar-rail" />
 
           <section className="side-panel">
             <div className="section-heading">
@@ -135,7 +119,7 @@ function Home() {
           </section>
         </aside>
       </div>
-    </div>    
+    </div>   
   )
 }
 
