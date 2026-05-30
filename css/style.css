@@ -1303,8 +1303,27 @@ body:not(.gm-active) .gm-card  { border-left: 1px solid var(--border) !important
   gap:14px;
 }
 @media (min-width:900px){
-  .home-shell{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  .home-shell{
+    grid-template-columns:minmax(0,1fr) minmax(280px,360px);
+    grid-template-areas:
+      "stories stories"
+      "featured sidead"
+      "sponsor sidead"
+      "feed ranking"
+      "feed clips"
+      "alerts alerts";
+    align-items:start;
+  }
   .home-shell .span2{grid-column:span 2;}
+  .stories-panel{grid-area:stories;}
+  .featured-panel{grid-area:featured;}
+  .home-sponsor-panel{grid-area:sponsor;}
+  .feed-panel{grid-area:feed;}
+  .sidebar-ad-panel{grid-area:sidead; position:sticky; top:18px;}
+  .rankings-panel{grid-area:ranking;}
+  .clips-panel{grid-area:clips;}
+  .public-alerts-panel{grid-area:alerts;}
+
 }
 .home-section-panel{
   position:relative;
@@ -3131,4 +3150,51 @@ body:not(.gm-active) .gm-post{
 }
 .content-manager-card [data-cms-panel] { display: none; }
 .content-manager-card [data-cms-panel].active { display: flex; }
-.cms-panel-divider { display: none; 
+.cms-panel-divider { display: none; }
+
+/* ── Phase Ads-5: persistent Home ad regions ──────────────── */
+.home-sponsor-panel,
+.sidebar-ad-panel { overflow: visible; }
+.home-ads,
+.home-sidebar-ads {
+  min-height: 1px;
+  pointer-events: auto;
+}
+.home-sponsor-panel .ad-slot,
+.sidebar-ad-panel .ad-slot {
+  cursor: default;
+}
+body.gm-active .home-sponsor-panel .ad-slot,
+body.gm-active .sidebar-ad-panel .ad-slot {
+  cursor: pointer;
+}
+.home-sponsor-panel .ad-slot.slot-home .ad-visual {
+  aspect-ratio: 16 / 9;
+  min-height: 180px;
+}
+.sidebar-ad-panel .ad-slot.slot-sidebar .ad-visual,
+.home-sidebar-ads .ad-slot.slot-sidebar .ad-visual {
+  aspect-ratio: 9 / 16;
+  min-height: 420px;
+}
+.sidebar-ad-panel .ad-slot-empty,
+.home-sponsor-panel .ad-slot-empty {
+  outline: 1px dashed rgba(255,214,102,.45);
+  outline-offset: -6px;
+}
+@media (max-width:899px){
+  .home-shell{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .home-sponsor-panel{order:3;}
+  .feed-panel{order:4;}
+  .sidebar-ad-panel{order:5;}
+  .rankings-panel{order:6;}
+  .clips-panel{order:7;}
+  .public-alerts-panel{order:8;}
+  .sidebar-ad-panel .ad-slot.slot-sidebar .ad-visual,
+  .home-sidebar-ads .ad-slot.slot-sidebar .ad-visual {
+    min-height: 320px;
+  }
+}
