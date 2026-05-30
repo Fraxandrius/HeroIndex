@@ -79,11 +79,25 @@
           <div id="home-stories" class="home-stories"></div>
         </section>
 
-        <section class="home-section-panel featured-panel span2" aria-label="Media destacada">
+        <section class="home-section-panel featured-panel home-main-panel" aria-label="Media destacada">
           <div id="featured-media"></div>
         </section>
 
-        <section class="home-section-panel feed-panel span2" aria-labelledby="home-feed-title">
+         <section class="home-section-panel sidebar-ad-panel home-sidebar-panel" aria-labelledby="home-sidebar-ad-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-sidebar-ad-title">Sponsor rail</span>
+          </div>
+          <aside id="home-sidebar-ads" class="home-sidebar-ads ad-slot-zone" aria-label="Anuncios Sidebar rail"></aside>
+        </section>
+
+        <section class="home-section-panel sponsor-panel home-sponsor-panel" aria-labelledby="home-sponsor-title">
+          <div class="home-section-head">
+            <span class="home-section-kicker" id="home-sponsor-title">Patrocinado</span>
+          </div>
+          <div id="home-ads" class="home-ads ad-slot-zone" aria-label="Anuncios Home sponsor"></div>
+        </section>
+
+        <section class="home-section-panel feed-panel home-main-panel" aria-labelledby="home-feed-title">
           <div class="home-section-head">
             <span class="home-section-kicker" id="home-feed-title">Feed social</span>
             <button class="home-section-link" onclick="showPage('noticias')">Abrir feed ›</button>
@@ -91,7 +105,7 @@
           <div id="home-news-feed" class="news-feed social-feed"></div>
         </section>
 
-        <section class="home-section-panel rankings-panel" aria-labelledby="home-ranking-title">
+         <section class="home-section-panel rankings-panel home-sidebar-panel" aria-labelledby="home-ranking-title">
           <div class="home-section-head">
             <span class="home-section-kicker" id="home-ranking-title">Héroes en tendencia</span>
             <button class="home-section-link" onclick="showPage('ranking')">Ver ranking ›</button>
@@ -99,7 +113,7 @@
           <div id="home-ranking" class="home-ranking-card trending-heroes"></div>
         </section>
 
-        <section class="home-section-panel clips-panel" aria-labelledby="home-clips-title">
+        <section class="home-section-panel clips-panel home-main-panel" aria-labelledby="home-clips-title">
           <div class="home-section-head">
             <span class="home-section-kicker" id="home-clips-title">Clips destacados</span>
           </div>

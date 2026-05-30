@@ -925,23 +925,37 @@ function requestAdsRenderRefresh(){
 }
 
 
+function setAdSlotPanelVisible(targetEl, visible=true){
+  const panel=targetEl?.closest('.home-section-panel');
+  if(panel) panel.style.display=visible ? '' : 'none';
+}
+
+function renderAdSlot(slotId='home-sponsor', targetEl=null, { fallbackHtml='' }={}){
+  if(!targetEl) return;
+  const canonicalSlotId=normalizeAdSlotId(slotId);
+  const gmMode=currentSession?.type==='gm' && gmActive;
+  console.info('[CMS] Rendering '+canonicalSlotId+' slot', { gmMode, loadedAds:loadedAds.length });
+  const ad=getActiveAdForSlot(loadedAds, canonicalSlotId);
+  if(ad) {
+    setAdSlotPanelVisible(targetEl,true);
+    targetEl.innerHTML=renderAdSlotCard(ad, canonicalSlotId);
+    return;
+  }
+  const emptyHtml=gmMode ? renderAdSlotEmpty(canonicalSlotId) : fallbackHtml;
+  setAdSlotPanelVisible(targetEl, !!emptyHtml);
+  targetEl.innerHTML=emptyHtml;
+}
+
 function renderHomeAds(){
   const homeEl=document.getElementById('home-ads');
   const sidebarEl=document.getElementById('home-sidebar-ads');
   if(!homeEl && !sidebarEl) return;
    const fallbackSlots=(typeof getHomeMediaSlots==='function')?getHomeMediaSlots():[];
-  requestAdsRenderRefresh();
-   const ads=loadedAds.length ? loadedAds : [];
-  const homeAd=getActiveAdForSlot(ads,'home-sponsor');
-  const sidebarAd=getActiveAdForSlot(ads,'sidebar-rail');
-  if(homeEl){
-    if(homeAd) homeEl.innerHTML=renderAdSlotCard(homeAd,'home-sponsor');
-    else if(currentSession?.type==='gm' && gmActive) homeEl.innerHTML=renderAdSlotEmpty('home-sponsor');
-    else homeEl.innerHTML=fallbackSlots.map(slot=>renderAdSlotCard({...slot, active:true},'home-sponsor')).join('');
-  }
-  if(sidebarEl){
-    sidebarEl.innerHTML=sidebarAd ? renderAdSlotCard(sidebarAd,'sidebar-rail') : renderAdSlotEmpty('sidebar-rail');
-  }
+  const fallbackHome=fallbackSlots.map(slot=>renderAdSlotCard({...slot, active:true},'home-sponsor')).join('');
+   requestAdsRenderRefresh();
+   console.info('[CMS] GM mode true / false:', !!(currentSession?.type==='gm' && gmActive));
+  renderAdSlot('home-sponsor', homeEl, { fallbackHtml:fallbackHome });
+  renderAdSlot('sidebar-rail', sidebarEl, { fallbackHtml:'' });
 }
 
 function renderMiniChart(hero){
