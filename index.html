@@ -110,7 +110,10 @@
           <div class="home-section-head">
             <span class="home-section-kicker" id="home-sponsor-title">Patrocinado</span>
           </div>
-          <div id="home-ads" class="home-ads"></div>
+          <div class="ad-slot-layout">
+            <div id="home-ads" class="home-ads ad-slot-zone" aria-label="Anuncios Home sponsor"></div>
+            <aside id="home-sidebar-ads" class="home-sidebar-ads ad-slot-zone" aria-label="Anuncios Sidebar rail"></aside>
+          </div>
         </section>
 
         <section class="home-section-panel public-alerts-panel span2" aria-labelledby="home-alerts-title">
@@ -383,7 +386,11 @@
                 <div class="fg full"><label>Título</label><input type="text" id="cms-news-title" placeholder="Nuevo clip de rescate domina el feed..."></div>
                 <div class="fg"><label>Fuente</label><select id="cms-news-source"><option value="heroindex">HeroIndex</option><option value="corp">Corporación</option><option value="oracle">ORÁCULO</option></select></div>
                 <div class="fg"><label>Categoría</label><select id="cms-news-category"><option value="comunicado">Comunicado</option><option value="operacion">Operación</option><option value="cobertura">Cobertura</option><option value="rumor">Rumor</option><option value="clasificado">Clasificado</option></select></div>
-                <div class="fg full"><label>Imagen noticia</label><input type="file" id="cms-news-image" accept="image/png,image/jpeg,image/webp,gif"></div>
+                    <div class="fg full"><label>Imagen noticia <span class="cms-required">opcional · máx. 3 MB</span></label><input type="file" id="cms-news-image" accept="image/png,image/jpeg,image/webp" onchange="previewCMSNewsImage(this)"></div>
+                <div class="cms-image-preview full" id="cms-news-preview">
+                  <div class="cms-image-preview-box"><span>Preview noticia</span></div>
+                  <p id="cms-news-image-help">Media cards usan formato 16:9. Deja el foco visual en el centro para que se adapte al Home y al Media Feed.</p>
+                </div>
                 <div class="fg full"><label>Versión pública</label><textarea id="cms-news-public" placeholder="Texto visible para público y jugadores..."></textarea></div>
                 <div class="fg full"><label>Versión corporativa</label><textarea id="cms-news-corp" placeholder="Ángulo corporativo opcional..."></textarea></div>
                 <div class="fg full"><label>Versión ORÁCULO (GM only)</label><textarea id="cms-news-oracle" placeholder="Capa clasificada solo para GM..."></textarea></div>
