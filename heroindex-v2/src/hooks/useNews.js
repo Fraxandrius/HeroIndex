@@ -3,11 +3,22 @@ import { mockNews } from '../data/mockNews.js'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 import { subscribeToNews } from '../services/newsService.js'
 
-function getNewsTimestamp(newsItem) {
-  const rawDate = newsItem.createdAt
-  const timestamp = rawDate ? Date.parse(rawDate) : 0
+function toTimestamp(value) {
+  if (!value) {
+    return 0
+  }
+
+  if (typeof value === 'number') {
+    return Number.isNaN(value) ? 0 : value
+  }
+
+  const timestamp = Date.parse(value)
 
   return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+function getNewsTimestamp(newsItem) {
+  return toTimestamp(newsItem.createdAt)
 }
 
 function sortNewsByNewest(firstNewsItem, secondNewsItem) {
