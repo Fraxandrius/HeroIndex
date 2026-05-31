@@ -215,7 +215,14 @@ function GMManagerMediaPreview({ label, url }) {
   return (
     <div className="gm-manager-file-preview">
       <span>{label}</span>
-      <img alt={label} src={url} />
+      <img
+        alt={label}
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.hidden = true
+        }}
+        src={url}
+      />
     </div>
   )
 }
@@ -889,7 +896,14 @@ const handleNewsFieldChange = (event) => {
             <a href={latestUploadedImageUrl} rel="noreferrer" target="_blank">
               Abrir imagen
             </a>
-            <img alt="Preview de imagen subida" src={latestUploadedImageUrl} />
+             <img
+              alt="Preview de imagen subida"
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.hidden = true
+              }}
+              src={latestUploadedImageUrl}
+            />
           </div>
         ) : null}
       </section>

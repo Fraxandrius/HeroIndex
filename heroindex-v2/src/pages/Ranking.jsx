@@ -1,6 +1,14 @@
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+}
+
 function Ranking() {
   const { loading: heroesLoading, rankingHeroes, source } = useHeroes()
   const {
@@ -21,17 +29,17 @@ function Ranking() {
           ? rankingHeroes.map((hero) => (
               <li key={hero.id}>
                 <span className="hero-ranking-list__avatar">
+                  <span>{getInitials(hero.name)}</span>
                   {hero.avatarUrl ? (
                     <img
-                      alt={hero.alias ? `${hero.alias} avatar` : `${hero.name} avatar`}
+                      alt={hero.alias ?? hero.name}
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
                       src={hero.avatarUrl}
                     />
-                  ) : (
-                    hero.name
-                      .split(' ')
-                      .map((part) => part[0])
-                      .join('')
-                  )}
+                  ) : null}
                 </span>
                 <span>{hero.name}</span>
                 <strong>{hero.approval}</strong>

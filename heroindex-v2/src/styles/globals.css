@@ -881,13 +881,24 @@ button {
   height: 4rem;
   justify-content: center;
   overflow: hidden;
+  position: relative;
   width: 4rem;
+}
+
+.profile-card__avatar span,
+.hero-ranking-list__avatar span,
+.corporation-card__logo span {
+  position: relative;
+  z-index: 1;
 }
 
 .profile-card__avatar img {
   height: 100%;
+  inset: 0;
   object-fit: cover;
+  position: absolute;
   width: 100%;
+  z-index: 2;
 }
 
 .profile-card__cover,
@@ -913,19 +924,7 @@ button {
   font-size: 1.35rem;
   line-height: 1.2;
   margin: 0.25rem 0 0.5rem;
-}
-
-.profile-card small {
-  color: #8ea0ce;
-  display: block;
-  font-weight: 700;
-  margin-top: 0.5rem;
-}
-
-.hero-ranking-list {
-  display: grid;
-  gap: 0.75rem;
-  list-style: none;
+@@ -929,111 +940,120 @@ button {
   margin: 1.5rem 0 0;
   padding: 0;
 }
@@ -951,13 +950,17 @@ button {
   height: 2.75rem;
   justify-content: center;
   overflow: hidden;
+  position: relative;
   width: 2.75rem;
 }
 
 .hero-ranking-list__avatar img {
   height: 100%;
+  inset: 0;
   object-fit: cover;
+  position: absolute;
   width: 100%;
+  z-index: 2;
 }
 
 .hero-ranking-list span {
@@ -1005,13 +1008,18 @@ button {
   height: 4.5rem;
   justify-content: center;
   overflow: hidden;
+  position: relative;
   width: 4.5rem;
 }
 
 .corporation-card__logo img {
   height: 100%;
-  object-fit: cover;
+  inset: 0;
+  object-fit: contain;
+  padding: 0.45rem;
+  position: absolute;
   width: 100%;
+  z-index: 2;
 }
 
 .corporation-card__cover {

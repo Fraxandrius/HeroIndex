@@ -18,8 +18,12 @@ function News() {
                 <p>{newsItem.body}</p>
                 {newsItem.imageUrl ? (
                   <img
-                    alt={newsItem.title ? `${newsItem.title} image` : 'HeroIndex news image'}
+                    alt={newsItem.title ?? 'HeroIndex news'}
                     className="news-list__image"
+                    loading="lazy"
+                    onError={(event) => {
+                      event.currentTarget.hidden = true
+                    }}
                     src={newsItem.imageUrl}
                   />
                 ) : null}

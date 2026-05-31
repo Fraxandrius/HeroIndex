@@ -1,5 +1,13 @@
 import { useCorporations } from '../hooks/useCorporations.js'
 
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+}
+
 function Corporations() {
   const { corporations, loading, source } = useCorporations()
 
@@ -13,20 +21,27 @@ function Corporations() {
           ? corporations.map((corporation) => (
               <article className="corporation-card" key={corporation.id}>
                 <div className="corporation-card__logo">
+                  <span>{getInitials(corporation.name)}</span>
                   {corporation.logoUrl ? (
-                    <img src={corporation.logoUrl} alt={`${corporation.name} logo`} />
-                  ) : (
-                    corporation.name
-                      .split(' ')
-                      .map((part) => part[0])
-                      .join('')
-                  )}
+                    <img
+                      src={corporation.logoUrl}
+                      alt={corporation.name}
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
+                    />
+                  ) : null}
                 </div>
                 <div>
                   {corporation.bannerUrl ? (
                     <img
-                      alt={`${corporation.name} cover`}
+                      alt={corporation.name}
                       className="corporation-card__cover"
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
                       src={corporation.bannerUrl}
                     />
                   ) : null}

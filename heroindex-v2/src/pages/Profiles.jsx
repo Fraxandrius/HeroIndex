@@ -1,6 +1,14 @@
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+}
+
 function Profiles() {
   const { heroes, loading: heroesLoading, source } = useHeroes()
   const {
@@ -21,23 +29,27 @@ function Profiles() {
           ? heroes.map((hero) => (
               <article className="profile-card" key={hero.id}>
                 <div className="profile-card__avatar">
+                  <span>{getInitials(hero.name)}</span>
                   {hero.avatarUrl ? (
                     <img
-                      alt={hero.alias ? `${hero.alias} avatar` : `${hero.name} avatar`}
+                      alt={hero.alias ?? hero.name}
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
                       src={hero.avatarUrl}
                     />
-                  ) : (
-                    hero.name
-                      .split(' ')
-                      .map((part) => part[0])
-                      .join('')
-                  )}
+                  ) : null}
                 </div>
                 <div>
                   {hero.bannerUrl ? (
                     <img
-                      alt={hero.alias ? `${hero.alias} cover` : `${hero.name} cover`}
+                      alt={hero.alias ?? hero.name}
                       className="profile-card__cover"
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
                       src={hero.bannerUrl}
                     />
                   ) : null}

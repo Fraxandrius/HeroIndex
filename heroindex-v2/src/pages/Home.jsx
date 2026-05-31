@@ -52,7 +52,7 @@ function Home() {
           <AdSlot slotId="home-sponsor" />
 
           <section className="feed-panel">
-            <div className="section-heading">
+      <div className="section-heading">
               <p className="page-card__kicker">News feed</p>
               <h2>Live from the HeroIndex newsroom</h2>
             </div>
@@ -75,10 +75,14 @@ function Home() {
                       <p className="feed-card__tag">{item.tag}</p>
                       <h3>{item.title}</h3>
                       <p>{item.body}</p>
-                       {item.imageUrl ? (
+                      {item.imageUrl ? (
                         <img
-                          alt={item.title ? `${item.title} image` : 'HeroIndex news image'}
+                          alt={item.title ?? 'HeroIndex news'}
                           className="feed-card__image"
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.hidden = true
+                          }}
                           src={item.imageUrl}
                         />
                       ) : null}
@@ -100,7 +104,7 @@ function Home() {
               <h2>Rising now</h2>
             </div>
             <ol className="trending-list">
-                {newsLoading ? <li>Loading...</li> : null}
+              {newsLoading ? <li>Loading...</li> : null}
               {!newsLoading
                 ? visibleTrendingNews.map((newsItem) => (
                     <li key={newsItem.id}>
