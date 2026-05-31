@@ -1234,6 +1234,7 @@ button {
 }
 
 .gm-manager-form input,
+.gm-manager-form select,
 .gm-manager-form textarea {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(151, 164, 205, 0.22);
@@ -1242,6 +1243,11 @@ button {
   font: inherit;
   padding: 0.75rem;
   width: 100%;
+}
+
+.gm-manager-form select option {
+  background: #0a1020;
+  color: #ffffff;
 }
 
 .gm-manager-form textarea {
@@ -1279,6 +1285,54 @@ button {
 .gm-manager-message--success {
   background: rgba(123, 241, 168, 0.12);
   color: #7bf1a8;
+}
+
+.gm-manager-upload-result {
+  background: rgba(7, 11, 23, 0.52);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.gm-manager-upload-result label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gm-manager-upload-result span {
+  color: #8ea0ce;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gm-manager-upload-result input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  font: inherit;
+  overflow: hidden;
+  padding: 0.75rem;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.gm-manager-upload-result a {
+  color: #68d8ff;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.gm-manager-upload-result img {
+  border-radius: 0.9rem;
+  max-height: 18rem;
+  max-width: 100%;
+  object-fit: contain;
+  width: fit-content;
 }
 
 .gm-manager-action:disabled {

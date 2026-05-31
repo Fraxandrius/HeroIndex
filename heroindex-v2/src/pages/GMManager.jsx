@@ -9,6 +9,7 @@ import {
 } from '../services/corporationsService.js'
 import { createHero, toggleHeroActive, updateHero } from '../services/heroesService.js'
 import { createNews, toggleNewsActive, updateNews } from '../services/newsService.js'
+import { uploadImage } from '../services/storageService.js'
 
 const emptyNewsForm = {
   active: true,
@@ -136,6 +137,8 @@ const statusFilters = [
   { id: 'inactive', label: 'Inactivos' },
 ]
 
+const imageFolderOptions = ['news', 'heroes', 'corporations', 'uploads']
+
 function getSearchValue(item, fields) {
   return fields
     .map((field) => item[field])
@@ -241,7 +244,14 @@ function GMManager() {
   const [toggleStatusMessage, setToggleStatusMessage] = useState('')
   const [toggleErrorMessage, setToggleErrorMessage] = useState('')
   const [togglingItemKey, setTogglingItemKey] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imageFolder, setImageFolder] = useState('uploads')
+  const [imageUploadError, setImageUploadError] = useState('')
+  const [imageUploadSuccess, setImageUploadSuccess] = useState('')
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState('')
   const detailRef = useRef(null)
+  const imageInputRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
   const {
@@ -263,6 +273,42 @@ function GMManager() {
   const closeDetail = () => {
     setSelectedType(null)
     setSelectedItem(null)
+  }
+
+  const handleImageFileChange = (event) => {
+    setImageFile(event.target.files?.[0] ?? null)
+    setImageUploadError('')
+    setImageUploadSuccess('')
+  }
+
+  const handleUploadImage = async (event) => {
+    event.preventDefault()
+
+    if (!imageFile) {
+      setImageUploadError('Selecciona una imagen antes de subirla.')
+      setImageUploadSuccess('')
+      return
+    }
+
+    setIsUploadingImage(true)
+    setImageUploadError('')
+    setImageUploadSuccess('')
+    setUploadedImageUrl('')
+
+    try {
+      const downloadURL = await uploadImage(imageFile, imageFolder)
+      setUploadedImageUrl(downloadURL)
+      setImageFile(null)
+      setImageUploadSuccess('Imagen subida correctamente.')
+
+      if (imageInputRef.current) {
+        imageInputRef.current.value = ''
+      }
+    } catch (error) {
+      setImageUploadError(error.message ?? String(error))
+    } finally {
+      setIsUploadingImage(false)
+    }
   }
 
   const handleToggleActive = async (type, item) => {
@@ -762,6 +808,65 @@ const handleNewsFieldChange = (event) => {
             loading={corporationsLoading}
           />
         </div>
+      </section>
+
+
+<section className="gm-manager-workspace">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Subir imagen</p>
+          <h3>Subir imagen</h3>
+          <p>Sube una imagen a Firebase Storage y copia su downloadURL para usarla manualmente.</p>
+        </div>
+        <form className="gm-manager-form" onSubmit={handleUploadImage}>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Carpeta</span>
+              <select
+                name="imageFolder"
+                onChange={(event) => setImageFolder(event.target.value)}
+                value={imageFolder}
+              >
+                {imageFolderOptions.map((folder) => (
+                  <option key={folder} value={folder}>
+                    {folder}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Imagen</span>
+              <input
+                accept="image/*"
+                onChange={handleImageFileChange}
+                ref={imageInputRef}
+                type="file"
+              />
+            </label>
+          </div>
+          {imageFile ? <p className="gm-manager-count">Archivo seleccionado: {imageFile.name}</p> : null}
+          {imageUploadError ? <p className="gm-manager-message gm-manager-message--error">{imageUploadError}</p> : null}
+          {imageUploadSuccess ? <p className="gm-manager-message gm-manager-message--success">{imageUploadSuccess}</p> : null}
+          <button className="gm-manager-action" disabled={isUploadingImage} type="submit">
+            {isUploadingImage ? 'Subiendo…' : 'Subir imagen'}
+          </button>
+        </form>
+        {uploadedImageUrl ? (
+          <div className="gm-manager-upload-result">
+            <label>
+              <span>Download URL</span>
+              <input
+                onFocus={(event) => event.target.select()}
+                readOnly
+                type="text"
+                value={uploadedImageUrl}
+              />
+            </label>
+            <a href={uploadedImageUrl} rel="noreferrer" target="_blank">
+              Abrir imagen
+            </a>
+            <img alt="Preview de imagen subida" src={uploadedImageUrl} />
+          </div>
+        ) : null}
       </section>
 
       <section className="gm-manager-workspace">
