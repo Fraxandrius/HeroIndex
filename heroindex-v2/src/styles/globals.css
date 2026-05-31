@@ -1350,6 +1350,47 @@ button {
   margin-top: 0;
 }
 
+.gm-manager-tools {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.gm-manager-search {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gm-manager-search span,
+.gm-manager-count {
+  color: #c6d2f2;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.gm-manager-search input {
+  background: rgba(7, 11, 23, 0.62);
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  font: inherit;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  width: 100%;
+}
+
+.gm-manager-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .gm-manager-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -1400,6 +1441,7 @@ button {
   }
 
   .gm-manager-tabs,
+  .gm-manager-filter,
   .gm-manager-table td:last-child {
     align-items: stretch;
     flex-direction: column;

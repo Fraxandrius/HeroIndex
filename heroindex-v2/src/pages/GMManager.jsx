@@ -130,6 +130,42 @@ function getDetailValue(value) {
   return String(value)
 }
 
+const statusFilters = [
+  { id: 'all', label: 'Todos' },
+  { id: 'active', label: 'Activos' },
+  { id: 'inactive', label: 'Inactivos' },
+]
+
+function getSearchValue(item, fields) {
+  return fields
+    .map((field) => item[field])
+    .filter((value) => value !== undefined && value !== null && value !== '')
+    .join(' ')
+    .toLowerCase()
+}
+
+function itemMatchesStatus(item, statusFilter) {
+  if (statusFilter === 'active') {
+    return item.active !== false
+  }
+
+  if (statusFilter === 'inactive') {
+    return item.active === false
+  }
+
+  return true
+}
+
+function filterReviewItems(items, searchQuery, statusFilter, fields) {
+  const query = searchQuery.trim().toLowerCase()
+
+  return items.filter((item) => {
+    const matchesText = query ? getSearchValue(item, fields).includes(query) : true
+
+    return matchesText && itemMatchesStatus(item, statusFilter)
+  })
+}
+
 function GMManagerSummary({ count, error, label, loading }) {
   const status = getStatus({ error, loading })
 
@@ -173,6 +209,8 @@ function GMManager() {
   const [selectedType, setSelectedType] = useState(null)
   const [activeCreatePanel, setActiveCreatePanel] = useState('news')
   const [activeReviewPanel, setActiveReviewPanel] = useState('news')
+  const [reviewSearch, setReviewSearch] = useState('')
+  const [reviewStatusFilter, setReviewStatusFilter] = useState('all')
   const [newsForm, setNewsForm] = useState(emptyNewsForm)
   const [newsFormError, setNewsFormError] = useState('')
   const [newsFormSuccess, setNewsFormSuccess] = useState('')
@@ -205,10 +243,11 @@ function GMManager() {
   const [togglingItemKey, setTogglingItemKey] = useState(null)
   const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
-  const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
+  const { error: heroesError, firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
   const {
     corporations,
     error: corporationsError,
+    firebaseCorporations,
     loading: corporationsLoading,
   } = useCorporations()
 
@@ -581,7 +620,6 @@ const handleNewsFieldChange = (event) => {
     }
   }
 
-  
   const handleEditCorporationFieldChange = (event) => {
     const { checked, name, type, value } = event.target
 
@@ -664,6 +702,29 @@ const handleNewsFieldChange = (event) => {
       setIsUpdatingCorporation(false)
     }
   }
+
+   const reviewHeroes = firebaseHeroes.length > 0 ? firebaseHeroes : heroes
+  const reviewCorporations =
+    firebaseCorporations.length > 0 ? firebaseCorporations : corporations
+  const filteredNews = filterReviewItems(feedNews, reviewSearch, reviewStatusFilter, [
+    'title',
+    'summary',
+    'category',
+    'layer',
+  ])
+  const filteredHeroes = filterReviewItems(reviewHeroes, reviewSearch, reviewStatusFilter, [
+    'name',
+    'alias',
+    'powerClass',
+    'corporationId',
+    'description',
+  ])
+  const filteredCorporations = filterReviewItems(
+    reviewCorporations,
+    reviewSearch,
+    reviewStatusFilter,
+    ['name', 'tagline', 'sector', 'country', 'description'],
+  )
 
   return (
     <section className="page-card gm-manager-page">
@@ -1055,6 +1116,28 @@ const handleNewsFieldChange = (event) => {
           <p>Consulta registros, abre el detalle y activa o desactiva contenido.</p>
         </div>
  {toggleErrorMessage ? <p className="gm-manager-message gm-manager-message--error">{toggleErrorMessage}</p> : null}
+      <div className="gm-manager-tools">
+          <label className="gm-manager-search">
+            <span>Buscar</span>
+            <input
+              onChange={(event) => setReviewSearch(event.target.value)}
+              placeholder="Buscar contenido por texto"
+              type="search"
+              value={reviewSearch}
+            />
+          </label>
+          <div className="gm-manager-filter" aria-label="Filtro por estado">
+            {statusFilters.map((filter) => (
+              <GMManagerTab
+                active={reviewStatusFilter === filter.id}
+                key={filter.id}
+                onClick={() => setReviewStatusFilter(filter.id)}
+              >
+                {filter.label}
+              </GMManagerTab>
+            ))}
+          </div>
+        </div>
       {toggleStatusMessage ? <p className="gm-manager-message gm-manager-message--success">{toggleStatusMessage}</p> : null}
        <div className="gm-manager-tabs" aria-label="Revisar contenido">
           <GMManagerTab
@@ -1168,6 +1251,8 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'news' ? (
       <GMManagerSection title="News">
+        <p className="gm-manager-count">Mostrando {filteredNews.length} de {feedNews.length}</p>
+        {filteredNews.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
@@ -1179,7 +1264,7 @@ const handleNewsFieldChange = (event) => {
             </tr>
           </thead>
           <tbody>
-            {feedNews.map((newsItem) => (
+            {filteredNews.map((newsItem) => (
               <tr key={newsItem.id}>
                 <td>{getValue(newsItem.title)}</td>
                 <td>{getValue(newsItem.category ?? newsItem.type)}</td>
@@ -1213,6 +1298,9 @@ const handleNewsFieldChange = (event) => {
             ))}
           </tbody>
         </table>
+         ) : (
+          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+        )}
       </GMManagerSection>
       ) : null}
          {editHeroSuccess ? <p className="gm-manager-message gm-manager-message--success">{editHeroSuccess}</p> : null}
@@ -1350,6 +1438,8 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'hero' ? (
       <GMManagerSection title="Heroes">
+          <p className="gm-manager-count">Mostrando {filteredHeroes.length} de {reviewHeroes.length}</p>
+        {filteredHeroes.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
@@ -1363,7 +1453,7 @@ const handleNewsFieldChange = (event) => {
             </tr>
           </thead>
           <tbody>
-            {heroes.map((hero) => (
+             {filteredHeroes.map((hero) => (
               <tr key={hero.id}>
                 <td>{getValue(hero.name)}</td>
                 <td>{getValue(hero.alias)}</td>
@@ -1399,6 +1489,9 @@ const handleNewsFieldChange = (event) => {
             ))}
           </tbody>
         </table>
+         ) : (
+          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+        )}
       </GMManagerSection>
  ) : null}
     {editCorporationSuccess ? <p className="gm-manager-message gm-manager-message--success">{editCorporationSuccess}</p> : null}
@@ -1526,6 +1619,8 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'corporation' ? (
       <GMManagerSection title="Corporations">
+        <p className="gm-manager-count">Mostrando {filteredCorporations.length} de {reviewCorporations.length}</p>
+        {filteredCorporations.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
@@ -1539,7 +1634,7 @@ const handleNewsFieldChange = (event) => {
             </tr>
           </thead>
           <tbody>
-            {corporations.map((corporation) => (
+            {filteredCorporations.map((corporation) => (
               <tr key={corporation.id}>
                 <td>{getValue(corporation.name)}</td>
                 <td>{getValue(corporation.sector)}</td>
@@ -1575,6 +1670,9 @@ const handleNewsFieldChange = (event) => {
             ))}
           </tbody>
         </table>
+        ) : (
+          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+        )}
       </GMManagerSection>
       ) : null}
       </section>
