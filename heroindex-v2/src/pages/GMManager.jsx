@@ -5,8 +5,9 @@ import { useNews } from '../hooks/useNews.js'
 import {
   createCorporation,
   toggleCorporationActive,
+  updateCorporation,
 } from '../services/corporationsService.js'
-import { createHero, toggleHeroActive } from '../services/heroesService.js'
+import { createHero, toggleHeroActive, updateHero } from '../services/heroesService.js'
 import { createNews, toggleNewsActive, updateNews } from '../services/newsService.js'
 
 const emptyNewsForm = {
@@ -45,6 +46,22 @@ const emptyHeroForm = {
   trustScore: '',
 }
 
+function getHeroFormValues(hero = {}) {
+  return {
+    active: hero.active ?? true,
+    alias: hero.alias ?? '',
+    approval: hero.approval ?? '',
+    avatarUrl: hero.avatarUrl ?? '',
+    bannerUrl: hero.bannerUrl ?? '',
+    corporationId: hero.corporationId ?? '',
+    description: hero.description ?? '',
+    name: hero.name ?? '',
+    powerClass: hero.powerClass ?? '',
+    powers: Array.isArray(hero.powers) ? hero.powers.join(', ') : hero.powers ?? '',
+    trustScore: hero.trustScore ?? '',
+  }
+}
+
 const emptyCorporationForm = {
   active: true,
   approval: '',
@@ -56,6 +73,21 @@ const emptyCorporationForm = {
   sector: '',
   tagline: '',
   trustScore: '',
+}
+
+function getCorporationFormValues(corporation = {}) {
+  return {
+    active: corporation.active ?? true,
+    approval: corporation.approval ?? '',
+    bannerUrl: corporation.bannerUrl ?? '',
+    country: corporation.country ?? '',
+    description: corporation.description ?? '',
+    logoUrl: corporation.logoUrl ?? '',
+    name: corporation.name ?? '',
+    sector: corporation.sector ?? '',
+    tagline: corporation.tagline ?? '',
+    trustScore: corporation.trustScore ?? '',
+  }
 }
 
 function getStatus({ error, loading }) {
@@ -154,10 +186,20 @@ function GMManager() {
   const [heroFormError, setHeroFormError] = useState('')
   const [heroFormSuccess, setHeroFormSuccess] = useState('')
   const [isCreatingHero, setIsCreatingHero] = useState(false)
+  const [editingHeroId, setEditingHeroId] = useState(null)
+  const [editHeroForm, setEditHeroForm] = useState(emptyHeroForm)
+  const [editHeroError, setEditHeroError] = useState('')
+  const [editHeroSuccess, setEditHeroSuccess] = useState('')
+  const [isUpdatingHero, setIsUpdatingHero] = useState(false)
   const [corporationForm, setCorporationForm] = useState(emptyCorporationForm)
   const [corporationFormError, setCorporationFormError] = useState('')
   const [corporationFormSuccess, setCorporationFormSuccess] = useState('')
   const [isCreatingCorporation, setIsCreatingCorporation] = useState(false)
+  const [editingCorporationId, setEditingCorporationId] = useState(null)
+  const [editCorporationForm, setEditCorporationForm] = useState(emptyCorporationForm)
+  const [editCorporationError, setEditCorporationError] = useState('')
+  const [editCorporationSuccess, setEditCorporationSuccess] = useState('')
+  const [isUpdatingCorporation, setIsUpdatingCorporation] = useState(false)
   const [toggleStatusMessage, setToggleStatusMessage] = useState('')
   const [toggleErrorMessage, setToggleErrorMessage] = useState('')
   const [togglingItemKey, setTogglingItemKey] = useState(null)
@@ -384,6 +426,93 @@ const handleNewsFieldChange = (event) => {
     }
   }
 
+  const handleEditHeroFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setEditHeroForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setEditHeroError('')
+    setEditHeroSuccess('')
+  }
+
+  const handleStartEditHero = (hero) => {
+    setEditingHeroId(hero.id)
+    setEditHeroForm(getHeroFormValues(hero))
+    setEditHeroError('')
+    setEditHeroSuccess('')
+    setActiveReviewPanel('hero')
+  }
+
+  const handleCancelEditHero = () => {
+    setEditingHeroId(null)
+    setEditHeroForm(emptyHeroForm)
+    setEditHeroError('')
+  }
+
+  const handleUpdateHero = async (event) => {
+    event.preventDefault()
+
+    if (!editHeroForm.name.trim() || !editHeroForm.powerClass.trim()) {
+      setEditHeroError('Name and powerClass are required.')
+      setEditHeroSuccess('')
+      return
+    }
+
+    const approval = String(editHeroForm.approval).trim()
+    const trustScore = String(editHeroForm.trustScore).trim()
+    const parsedApproval = approval === '' ? null : Number(approval)
+    const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+
+    if (
+      (approval !== '' && Number.isNaN(parsedApproval)) ||
+      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+    ) {
+      setEditHeroError('Approval and trustScore must be valid numbers.')
+      setEditHeroSuccess('')
+      return
+    }
+
+    const heroPayload = {
+      active: editHeroForm.active,
+      alias: editHeroForm.alias.trim(),
+      avatarUrl: editHeroForm.avatarUrl.trim(),
+      bannerUrl: editHeroForm.bannerUrl.trim(),
+      corporationId: editHeroForm.corporationId.trim(),
+      description: editHeroForm.description.trim(),
+      name: editHeroForm.name.trim(),
+      powerClass: editHeroForm.powerClass.trim(),
+      powers: editHeroForm.powers
+        .split(',')
+        .map((power) => power.trim())
+        .filter(Boolean),
+    }
+
+    if (approval !== '') {
+      heroPayload.approval = parsedApproval
+    }
+
+    if (trustScore !== '') {
+      heroPayload.trustScore = parsedTrustScore
+    }
+
+    setIsUpdatingHero(true)
+    setEditHeroError('')
+    setEditHeroSuccess('')
+
+    try {
+      await updateHero(editingHeroId, heroPayload)
+      setEditingHeroId(null)
+      setEditHeroForm(emptyHeroForm)
+      setEditHeroSuccess('Hero updated successfully.')
+    } catch (error) {
+      setEditHeroError(error.message ?? String(error))
+    } finally {
+      setIsUpdatingHero(false)
+    }
+  }
+
   const handleCorporationFieldChange = (event) => {
     const { checked, name, type, value } = event.target
 
@@ -449,6 +578,90 @@ const handleNewsFieldChange = (event) => {
       setCorporationFormError(error.message ?? String(error))
     } finally {
       setIsCreatingCorporation(false)
+    }
+  }
+
+  
+  const handleEditCorporationFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setEditCorporationForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setEditCorporationError('')
+    setEditCorporationSuccess('')
+  }
+
+  const handleStartEditCorporation = (corporation) => {
+    setEditingCorporationId(corporation.id)
+    setEditCorporationForm(getCorporationFormValues(corporation))
+    setEditCorporationError('')
+    setEditCorporationSuccess('')
+    setActiveReviewPanel('corporation')
+  }
+
+  const handleCancelEditCorporation = () => {
+    setEditingCorporationId(null)
+    setEditCorporationForm(emptyCorporationForm)
+    setEditCorporationError('')
+  }
+
+  const handleUpdateCorporation = async (event) => {
+    event.preventDefault()
+
+    if (!editCorporationForm.name.trim() || !editCorporationForm.sector.trim()) {
+      setEditCorporationError('Name and sector are required.')
+      setEditCorporationSuccess('')
+      return
+    }
+
+    const approval = String(editCorporationForm.approval).trim()
+    const trustScore = String(editCorporationForm.trustScore).trim()
+    const parsedApproval = approval === '' ? null : Number(approval)
+    const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+
+    if (
+      (approval !== '' && Number.isNaN(parsedApproval)) ||
+      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+    ) {
+      setEditCorporationError('Approval and trustScore must be valid numbers.')
+      setEditCorporationSuccess('')
+      return
+    }
+
+    const corporationPayload = {
+      active: editCorporationForm.active,
+      bannerUrl: editCorporationForm.bannerUrl.trim(),
+      country: editCorporationForm.country.trim(),
+      description: editCorporationForm.description.trim(),
+      logoUrl: editCorporationForm.logoUrl.trim(),
+      name: editCorporationForm.name.trim(),
+      sector: editCorporationForm.sector.trim(),
+      tagline: editCorporationForm.tagline.trim(),
+    }
+
+    if (approval !== '') {
+      corporationPayload.approval = parsedApproval
+    }
+
+    if (trustScore !== '') {
+      corporationPayload.trustScore = parsedTrustScore
+    }
+
+    setIsUpdatingCorporation(true)
+    setEditCorporationError('')
+    setEditCorporationSuccess('')
+
+    try {
+      await updateCorporation(editingCorporationId, corporationPayload)
+      setEditingCorporationId(null)
+      setEditCorporationForm(emptyCorporationForm)
+      setEditCorporationSuccess('Corporation updated successfully.')
+    } catch (error) {
+      setEditCorporationError(error.message ?? String(error))
+    } finally {
+      setIsUpdatingCorporation(false)
     }
   }
 
@@ -1001,7 +1214,140 @@ const handleNewsFieldChange = (event) => {
           </tbody>
         </table>
       </GMManagerSection>
-) : null}
+      ) : null}
+         {editHeroSuccess ? <p className="gm-manager-message gm-manager-message--success">{editHeroSuccess}</p> : null}
+        {editingHeroId ? (
+          <section className="gm-manager-create">
+            <div className="gm-manager-title">
+              <p className="page-card__kicker">Edit</p>
+              <h3>Editar Hero</h3>
+            </div>
+            <form className="gm-manager-form" onSubmit={handleUpdateHero}>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Name *</span>
+                  <input
+                    name="name"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.name}
+                  />
+                </label>
+                <label>
+                  <span>Alias</span>
+                  <input
+                    name="alias"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.alias}
+                  />
+                </label>
+              </div>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Corporation ID</span>
+                  <input
+                    name="corporationId"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.corporationId}
+                  />
+                </label>
+                <label>
+                  <span>Power Class *</span>
+                  <input
+                    name="powerClass"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.powerClass}
+                  />
+                </label>
+              </div>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Approval</span>
+                  <input
+                    name="approval"
+                    onChange={handleEditHeroFieldChange}
+                    type="number"
+                    value={editHeroForm.approval}
+                  />
+                </label>
+                <label>
+                  <span>Trust Score</span>
+                  <input
+                    name="trustScore"
+                    onChange={handleEditHeroFieldChange}
+                    type="number"
+                    value={editHeroForm.trustScore}
+                  />
+                </label>
+              </div>
+              <label>
+                <span>Description</span>
+                <textarea
+                  name="description"
+                  onChange={handleEditHeroFieldChange}
+                  rows="4"
+                  value={editHeroForm.description}
+                />
+              </label>
+              <label>
+                <span>Powers</span>
+                <input
+                  name="powers"
+                  onChange={handleEditHeroFieldChange}
+                  placeholder="Flight, strength, tactical analysis"
+                  type="text"
+                  value={editHeroForm.powers}
+                />
+              </label>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Avatar URL</span>
+                  <input
+                    name="avatarUrl"
+                    onChange={handleEditHeroFieldChange}
+                    type="url"
+                    value={editHeroForm.avatarUrl}
+                  />
+                </label>
+                <label>
+                  <span>Cover URL</span>
+                  <input
+                    name="bannerUrl"
+                    onChange={handleEditHeroFieldChange}
+                    type="url"
+                    value={editHeroForm.bannerUrl}
+                  />
+                </label>
+              </div>
+              <label className="gm-manager-check">
+                <input
+                  checked={editHeroForm.active}
+                  name="active"
+                  onChange={handleEditHeroFieldChange}
+                  type="checkbox"
+                />
+                <span>Active</span>
+              </label>
+              {editHeroError ? <p className="gm-manager-message gm-manager-message--error">{editHeroError}</p> : null}
+              <div className="gm-manager-actions">
+                <button className="gm-manager-action" disabled={isUpdatingHero} type="submit">
+                  {isUpdatingHero ? 'Saving…' : 'Guardar Hero'}
+                </button>
+                <button
+                  className="gm-manager-action"
+                  disabled={isUpdatingHero}
+                  onClick={handleCancelEditHero}
+                  type="button"
+                >
+                  Cancelar edición
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : null}
         {activeReviewPanel === 'hero' ? (
       <GMManagerSection title="Heroes">
         <table className="gm-manager-table">
@@ -1033,6 +1379,13 @@ const handleNewsFieldChange = (event) => {
                   >
                     Ver detalle
                   </button>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => handleStartEditHero(hero)}
+                    type="button"
+                  >
+                    Editar
+                  </button>
                    <button
                     className="gm-manager-action"
                     disabled={togglingItemKey === `hero-${hero.id}`}
@@ -1048,6 +1401,129 @@ const handleNewsFieldChange = (event) => {
         </table>
       </GMManagerSection>
  ) : null}
+    {editCorporationSuccess ? <p className="gm-manager-message gm-manager-message--success">{editCorporationSuccess}</p> : null}
+        {editingCorporationId ? (
+          <section className="gm-manager-create">
+            <div className="gm-manager-title">
+              <p className="page-card__kicker">Edit</p>
+              <h3>Editar Corporation</h3>
+            </div>
+            <form className="gm-manager-form" onSubmit={handleUpdateCorporation}>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Name *</span>
+                  <input
+                    name="name"
+                    onChange={handleEditCorporationFieldChange}
+                    type="text"
+                    value={editCorporationForm.name}
+                  />
+                </label>
+                <label>
+                  <span>Sector *</span>
+                  <input
+                    name="sector"
+                    onChange={handleEditCorporationFieldChange}
+                    type="text"
+                    value={editCorporationForm.sector}
+                  />
+                </label>
+              </div>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Tagline</span>
+                  <input
+                    name="tagline"
+                    onChange={handleEditCorporationFieldChange}
+                    type="text"
+                    value={editCorporationForm.tagline}
+                  />
+                </label>
+                <label>
+                  <span>Country</span>
+                  <input
+                    name="country"
+                    onChange={handleEditCorporationFieldChange}
+                    type="text"
+                    value={editCorporationForm.country}
+                  />
+                </label>
+              </div>
+              <label>
+                <span>Description</span>
+                <textarea
+                  name="description"
+                  onChange={handleEditCorporationFieldChange}
+                  rows="4"
+                  value={editCorporationForm.description}
+                />
+              </label>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Logo URL</span>
+                  <input
+                    name="logoUrl"
+                    onChange={handleEditCorporationFieldChange}
+                    type="url"
+                    value={editCorporationForm.logoUrl}
+                  />
+                </label>
+                <label>
+                  <span>Cover URL</span>
+                  <input
+                    name="bannerUrl"
+                    onChange={handleEditCorporationFieldChange}
+                    type="url"
+                    value={editCorporationForm.bannerUrl}
+                  />
+                </label>
+              </div>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Approval</span>
+                  <input
+                    name="approval"
+                    onChange={handleEditCorporationFieldChange}
+                    type="number"
+                    value={editCorporationForm.approval}
+                  />
+                </label>
+                <label>
+                  <span>Trust Score</span>
+                  <input
+                    name="trustScore"
+                    onChange={handleEditCorporationFieldChange}
+                    type="number"
+                    value={editCorporationForm.trustScore}
+                  />
+                </label>
+              </div>
+              <label className="gm-manager-check">
+                <input
+                  checked={editCorporationForm.active}
+                  name="active"
+                  onChange={handleEditCorporationFieldChange}
+                  type="checkbox"
+                />
+                <span>Active</span>
+              </label>
+              {editCorporationError ? <p className="gm-manager-message gm-manager-message--error">{editCorporationError}</p> : null}
+              <div className="gm-manager-actions">
+                <button className="gm-manager-action" disabled={isUpdatingCorporation} type="submit">
+                  {isUpdatingCorporation ? 'Saving…' : 'Guardar Corporation'}
+                </button>
+                <button
+                  className="gm-manager-action"
+                  disabled={isUpdatingCorporation}
+                  onClick={handleCancelEditCorporation}
+                  type="button"
+                >
+                  Cancelar edición
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : null}
         {activeReviewPanel === 'corporation' ? (
       <GMManagerSection title="Corporations">
         <table className="gm-manager-table">
@@ -1078,6 +1554,13 @@ const handleNewsFieldChange = (event) => {
                     type="button"
                   >
                     Ver detalle
+                  </button>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => handleStartEditCorporation(corporation)}
+                    type="button"
+                  >
+                    Editar
                   </button>
                   <button
                     className="gm-manager-action"

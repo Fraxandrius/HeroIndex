@@ -65,6 +65,21 @@ export async function createCorporation(corporationData) {
   }
 }
 
+export async function updateCorporation(corporationId, corporationData) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const itemRef = ref(database, `${CORPORATIONS_PATH}/${corporationId}`)
+
+  await update(itemRef, {
+    ...corporationData,
+    updatedAt: Date.now(),
+  })
+}
+
 export async function toggleCorporationActive(corporationId, currentActive) {
   const { database, isConfigured } = getFirebaseClient()
 

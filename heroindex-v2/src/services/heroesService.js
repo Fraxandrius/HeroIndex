@@ -41,6 +41,7 @@ export function subscribeToHeroes({ onData, onError }) {
   )
 }
 
+
 export async function createHero(heroData) {
   const { database, isConfigured } = getFirebaseClient()
 
@@ -63,6 +64,21 @@ export async function createHero(heroData) {
     id: heroRef.key,
     ...payload,
   }
+}
+
+export async function updateHero(heroId, heroData) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const itemRef = ref(database, `${HEROES_PATH}/${heroId}`)
+
+  await update(itemRef, {
+    ...heroData,
+    updatedAt: Date.now(),
+  })
 }
 
 export async function toggleHeroActive(heroId, currentActive) {
