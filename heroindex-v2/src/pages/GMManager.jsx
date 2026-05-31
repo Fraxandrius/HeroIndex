@@ -15,10 +15,16 @@ const emptyNewsForm = {
   active: true,
   body: '',
   category: '',
+  corporationIds: [],
+  heroIds: [],
   imageUrl: '',
   layer: '',
   summary: '',
   title: '',
+}
+
+function normalizeRelationIds(value) {
+  return Array.isArray(value) ? value.filter(Boolean).map(String) : []
 }
 
 function getNewsFormValues(newsItem = {}) {
@@ -26,6 +32,8 @@ function getNewsFormValues(newsItem = {}) {
     active: newsItem.active ?? true,
     body: newsItem.body ?? '',
     category: newsItem.category ?? '',
+    corporationIds: normalizeRelationIds(newsItem.corporationIds),
+    heroIds: normalizeRelationIds(newsItem.heroIds),
     imageUrl: newsItem.imageUrl ?? '',
     layer: newsItem.layer ?? '',
     summary: newsItem.summary ?? newsItem.body ?? '',
@@ -227,6 +235,32 @@ function GMManagerMediaPreview({ label, url }) {
   )
 }
 
+function GMManagerRelationSelector({ getLabel, items, onToggle, selectedIds, title }) {
+  const selectedSet = new Set(normalizeRelationIds(selectedIds))
+
+  return (
+    <fieldset className="gm-manager-relations">
+      <legend>{title}</legend>
+      {items.length > 0 ? (
+        <div className="gm-manager-relations__grid">
+          {items.map((item) => (
+            <label className="gm-manager-relations__option" key={item.id}>
+              <input
+                checked={selectedSet.has(String(item.id))}
+                onChange={() => onToggle(item.id)}
+                type="checkbox"
+              />
+              <span>{getLabel(item)}</span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <p className="gm-manager-empty">No hay registros disponibles para vincular.</p>
+      )}
+    </fieldset>
+  )
+}
+
 function GMManager() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
@@ -343,6 +377,22 @@ const handleUseLatestImage = (setForm, field) => {
     setImageUploadError('')
   }
 
+  const handleNewsRelationChange = (setForm, field, id) => {
+    const relationId = String(id)
+
+    setForm((currentForm) => {
+      const currentIds = normalizeRelationIds(currentForm[field])
+      const nextIds = currentIds.includes(relationId)
+        ? currentIds.filter((currentId) => currentId !== relationId)
+        : [...currentIds, relationId]
+
+      return {
+        ...currentForm,
+        [field]: nextIds,
+      }
+    })
+  }
+
   const handleToggleActive = async (type, item) => {
     const toggleHandlers = {
       corporation: toggleCorporationActive,
@@ -399,6 +449,8 @@ const handleNewsFieldChange = (event) => {
         active: newsForm.active,
         body: newsForm.body.trim(),
         category: newsForm.category.trim(),
+         corporationIds: normalizeRelationIds(newsForm.corporationIds),
+        heroIds: normalizeRelationIds(newsForm.heroIds),
         imageUrl: newsForm.imageUrl.trim(),
         layer: newsForm.layer.trim(),
         summary: newsForm.summary.trim(),
@@ -456,6 +508,8 @@ const handleNewsFieldChange = (event) => {
         active: editNewsForm.active,
         body: editNewsForm.body.trim(),
         category: editNewsForm.category.trim(),
+        corporationIds: normalizeRelationIds(editNewsForm.corporationIds),
+        heroIds: normalizeRelationIds(editNewsForm.heroIds),
         imageUrl: editNewsForm.imageUrl.trim(),
         layer: editNewsForm.layer.trim(),
         summary: editNewsForm.summary.trim(),
@@ -804,6 +858,10 @@ const handleNewsFieldChange = (event) => {
     ['name', 'tagline', 'sector', 'country', 'description'],
   )
   const canUseLatestImage = Boolean(latestUploadedImageUrl)
+  const getHeroRelationLabel = (hero) =>
+    hero.alias ? `${hero.name} · ${hero.alias}` : hero.name
+  const getCorporationRelationLabel = (corporation) =>
+    corporation.sector ? `${corporation.name} · ${corporation.sector}` : corporation.name
 
   return (
     <section className="page-card gm-manager-page">
@@ -1009,6 +1067,22 @@ const handleNewsFieldChange = (event) => {
             </button>
           </div>
           <GMManagerMediaPreview label="Preview de News" url={newsForm.imageUrl} />
+          <GMManagerRelationSelector
+            getLabel={getHeroRelationLabel}
+            items={reviewHeroes}
+            onToggle={(id) => handleNewsRelationChange(setNewsForm, 'heroIds', id)}
+            selectedIds={newsForm.heroIds}
+            title="Heroes vinculados"
+          />
+          <GMManagerRelationSelector
+            getLabel={getCorporationRelationLabel}
+            items={reviewCorporations}
+            onToggle={(id) =>
+              handleNewsRelationChange(setNewsForm, 'corporationIds', id)
+            }
+            selectedIds={newsForm.corporationIds}
+            title="Corporations vinculadas"
+          />
           <label className="gm-manager-check">
             <input
               checked={newsForm.active}
@@ -1433,6 +1507,22 @@ const handleNewsFieldChange = (event) => {
                 </button>
               </div>
               <GMManagerMediaPreview label="Preview de News" url={editNewsForm.imageUrl} />
+              <GMManagerRelationSelector
+                getLabel={getHeroRelationLabel}
+                items={reviewHeroes}
+                onToggle={(id) => handleNewsRelationChange(setEditNewsForm, 'heroIds', id)}
+                selectedIds={editNewsForm.heroIds}
+                title="Heroes vinculados"
+              />
+              <GMManagerRelationSelector
+                getLabel={getCorporationRelationLabel}
+                items={reviewCorporations}
+                onToggle={(id) =>
+                  handleNewsRelationChange(setEditNewsForm, 'corporationIds', id)
+                }
+                selectedIds={editNewsForm.corporationIds}
+                title="Corporations vinculadas"
+              />
               <label className="gm-manager-check">
                 <input
                   checked={editNewsForm.active}
@@ -1468,6 +1558,8 @@ const handleNewsFieldChange = (event) => {
             <tr>
               <th>Title</th>
               <th>Category / Type</th>
+              <th>Heroes</th>
+              <th>Corporations</th>
               <th>Active</th>
               <th>Created</th>
               <th>Actions</th>
@@ -1478,6 +1570,8 @@ const handleNewsFieldChange = (event) => {
               <tr key={newsItem.id}>
                 <td>{getValue(newsItem.title)}</td>
                 <td>{getValue(newsItem.category ?? newsItem.type)}</td>
+                <td>{normalizeRelationIds(newsItem.heroIds).length}</td>
+                <td>{normalizeRelationIds(newsItem.corporationIds).length}</td>
                 <td>{getValue(newsItem.active)}</td>
                 <td>{getValue(newsItem.createdAt)}</td>
                 <td>
