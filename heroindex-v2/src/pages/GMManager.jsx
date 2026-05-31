@@ -866,11 +866,11 @@ const handleNewsFieldChange = (event) => {
   return (
     <section className="page-card gm-manager-page">
       <div className="gm-manager-hero">
-        <p className="page-card__kicker">Internal</p>
+         <p className="page-card__kicker">ORÁCULO / Content Control</p>
         <h2>GM Manager</h2>
         <p>Panel interno de gestión de HeroIndex.</p>
         <p className="gm-manager-hero__note">
-          Herramienta interna para gestionar contenido público de HeroIndex.
+          ORÁCULO content control interface for managing public HeroIndex data.
         </p>
       </div>
       

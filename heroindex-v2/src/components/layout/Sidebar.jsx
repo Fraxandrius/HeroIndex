@@ -1,7 +1,7 @@
 const navSections = [
-  { id: 'public', label: 'HeroIndex', description: 'Public experience' },
-  { id: 'internal', label: 'Internal tools', description: 'Content operations' },
-  { id: 'oracle', label: 'ORÁCULO', description: 'GM-only mission layer' },
+ { id: 'public', label: 'HeroIndex', description: 'Public intelligence' },
+  { id: 'player', label: 'Player module', description: 'Progression resource' },
+  { id: 'oracle', label: 'ORÁCULO Layer', description: 'Restricted HeroIndex intelligence layer' },
 ]
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
@@ -30,7 +30,7 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
           }
 
           return (
-            <section className="sidebar__section" key={section.id}>
+             <section className={`sidebar__section sidebar__section--${section.id}`} key={section.id}>
               <div className="sidebar__section-header">
                 <span>{section.label}</span>
                 <small>{section.description}</small>

@@ -112,7 +112,15 @@ button {
   gap: 0.5rem;
 }
 
-.sidebar__section:last-child {
+
+.sidebar__section--player {
+  background: linear-gradient(135deg, rgba(98, 214, 255, 0.07), rgba(124, 92, 255, 0.08));
+  border: 1px solid rgba(98, 214, 255, 0.14);
+  border-radius: 1.15rem;
+  padding: 0.75rem;
+}
+
+.sidebar__section--oracle {
   background: linear-gradient(135deg, rgba(245, 190, 92, 0.1), rgba(98, 214, 255, 0.06));
   border: 1px solid rgba(245, 190, 92, 0.18);
   border-radius: 1.15rem;

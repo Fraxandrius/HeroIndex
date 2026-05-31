@@ -23,13 +23,13 @@ const routes = [
     navGroup: 'public',
   },
   { id: 'news', label: 'News', path: '/news', component: News, navGroup: 'public' },
-  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'public' },
+  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   {
     id: 'gm-manager',
     label: 'GM Manager',
     path: '/gm-manager',
     component: GMManager,
-    navGroup: 'internal',
+    navGroup: 'oracle',
   },
   {
     id: 'mission-calculator',
