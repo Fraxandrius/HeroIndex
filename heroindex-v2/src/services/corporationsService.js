@@ -1,4 +1,4 @@
-import { onValue, push, ref, set } from 'firebase/database'
+import { onValue, push, ref, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const CORPORATIONS_PATH = 'corporations'
@@ -63,4 +63,22 @@ export async function createCorporation(corporationData) {
     id: corporationRef.key,
     ...payload,
   }
+}
+
+export async function toggleCorporationActive(corporationId, currentActive) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const itemRef = ref(database, `${CORPORATIONS_PATH}/${corporationId}`)
+  const nextActive = !(currentActive ?? true)
+
+  await update(itemRef, {
+    active: nextActive,
+    updatedAt: Date.now(),
+  })
+
+  return nextActive
 }

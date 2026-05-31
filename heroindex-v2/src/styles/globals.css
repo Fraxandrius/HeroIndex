@@ -1285,3 +1285,158 @@ button {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+.gm-manager-hero {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.14), rgba(255, 210, 110, 0.08));
+  border: 1px solid rgba(104, 216, 255, 0.18);
+  border-radius: 1.5rem;
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.25rem;
+}
+
+.gm-manager-hero h2 {
+  margin: 0;
+}
+
+.gm-manager-hero p {
+  margin: 0;
+}
+
+.gm-manager-hero__note {
+  color: #d7def3;
+  max-width: 48rem;
+}
+
+.gm-manager-workspace {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1.5rem;
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+}
+
+.gm-manager-workspace--overview {
+  background: rgba(104, 216, 255, 0.045);
+}
+
+.gm-manager-workspace--detail {
+  border-color: rgba(255, 210, 110, 0.24);
+}
+
+.gm-manager-workspace__top {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gm-manager-workspace__top h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.gm-manager-workspace__top p:not(.page-card__kicker) {
+  color: #aebce3;
+  margin: 0;
+}
+
+.gm-manager-workspace .gm-manager-grid,
+.gm-manager-workspace .gm-manager-create,
+.gm-manager-workspace .gm-manager-section,
+.gm-manager-workspace .gm-manager-detail {
+  margin-top: 0;
+}
+
+.gm-manager-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.gm-manager-tab {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 999px;
+  color: #d7def3;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0.65rem 0.9rem;
+}
+
+.gm-manager-tab--active {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.24), rgba(255, 210, 110, 0.14));
+  border-color: rgba(104, 216, 255, 0.48);
+  color: #ffffff;
+}
+
+.gm-manager-table td:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gm-manager-empty {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(151, 164, 205, 0.28);
+  border-radius: 1rem;
+  color: #aebce3;
+  margin: 0;
+  padding: 1rem;
+}
+
+@media (max-width: 760px) {
+  .gm-manager-page {
+    padding: 1rem;
+  }
+
+  .gm-manager-hero,
+  .gm-manager-workspace {
+    border-radius: 1.15rem;
+    padding: 0.85rem;
+  }
+
+  .gm-manager-tabs,
+  .gm-manager-table td:last-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gm-manager-tab,
+  .gm-manager-action {
+    width: 100%;
+  }
+
+  .gm-manager-table-wrap {
+    overflow-x: visible;
+  }
+
+  .gm-manager-table,
+  .gm-manager-table thead,
+  .gm-manager-table tbody,
+  .gm-manager-table tr,
+  .gm-manager-table td {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .gm-manager-table thead {
+    display: none;
+  }
+
+  .gm-manager-table tr {
+    border: 1px solid rgba(151, 164, 205, 0.16);
+    border-radius: 1rem;
+    margin-bottom: 0.85rem;
+    padding: 0.65rem;
+  }
+
+  .gm-manager-table td {
+    border-top: 0;
+    padding: 0.45rem;
+  }
+}

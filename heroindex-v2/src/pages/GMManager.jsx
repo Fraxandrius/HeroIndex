@@ -2,9 +2,12 @@ import { useRef, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
-import { createCorporation } from '../services/corporationsService.js'
-import { createHero } from '../services/heroesService.js'
-import { createNews } from '../services/newsService.js'
+import {
+  createCorporation,
+  toggleCorporationActive,
+} from '../services/corporationsService.js'
+import { createHero, toggleHeroActive } from '../services/heroesService.js'
+import { createNews, toggleNewsActive } from '../services/newsService.js'
 
 const emptyNewsForm = {
   active: true,
@@ -108,9 +111,24 @@ function GMManagerSection({ children, title }) {
   )
 }
 
+function GMManagerTab({ active, children, onClick }) {
+  return (
+    <button
+      aria-pressed={active}
+      className={`gm-manager-tab${active ? ' gm-manager-tab--active' : ''}`}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  )
+}
+
 function GMManager() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
+  const [activeCreatePanel, setActiveCreatePanel] = useState('news')
+  const [activeReviewPanel, setActiveReviewPanel] = useState('news')
   const [newsForm, setNewsForm] = useState(emptyNewsForm)
   const [newsFormError, setNewsFormError] = useState('')
   const [newsFormSuccess, setNewsFormSuccess] = useState('')
@@ -123,6 +141,9 @@ function GMManager() {
   const [corporationFormError, setCorporationFormError] = useState('')
   const [corporationFormSuccess, setCorporationFormSuccess] = useState('')
   const [isCreatingCorporation, setIsCreatingCorporation] = useState(false)
+  const [toggleStatusMessage, setToggleStatusMessage] = useState('')
+  const [toggleErrorMessage, setToggleErrorMessage] = useState('')
+  const [togglingItemKey, setTogglingItemKey] = useState(null)
   const detailRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -145,6 +166,33 @@ function GMManager() {
     setSelectedType(null)
     setSelectedItem(null)
   }
+
+  const handleToggleActive = async (type, item) => {
+    const toggleHandlers = {
+      corporation: toggleCorporationActive,
+      hero: toggleHeroActive,
+      news: toggleNewsActive,
+    }
+    const toggleHandler = toggleHandlers[type]
+    const itemKey = `${type}-${item.id}`
+
+    setTogglingItemKey(itemKey)
+    setToggleStatusMessage('')
+    setToggleErrorMessage('')
+
+    try {
+      const nextActive = await toggleHandler(item.id, item.active)
+      setToggleStatusMessage(
+        `${type} ${nextActive ? 'activated' : 'deactivated'} successfully.`,
+      )
+    } catch (error) {
+      setToggleErrorMessage(error.message ?? String(error))
+    } finally {
+      setTogglingItemKey(null)
+    }
+  }
+
+  const getToggleLabel = (item) => (item.active === false ? 'Activar' : 'Desactivar')
 
 const handleNewsFieldChange = (event) => {
     const { checked, name, type, value } = event.target
@@ -261,7 +309,6 @@ const handleNewsFieldChange = (event) => {
     }
   }
 
-
   const handleCorporationFieldChange = (event) => {
     const { checked, name, type, value } = event.target
 
@@ -332,31 +379,70 @@ const handleNewsFieldChange = (event) => {
 
   return (
     <section className="page-card gm-manager-page">
-      <p className="page-card__kicker">Internal</p>
-      <h2>GM Manager</h2>
-      <p>Panel interno de gestión de HeroIndex.</p>
-
-      <div className="gm-manager-grid">
-        <GMManagerSummary
-          count={feedNews.length}
-          error={newsError}
-          label="News"
-          loading={newsLoading}
-        />
-        <GMManagerSummary
-          count={heroes.length}
-          error={heroesError}
-          label="Heroes"
-          loading={heroesLoading}
-        />
-        <GMManagerSummary
-          count={corporations.length}
-          error={corporationsError}
-          label="Corporations"
-          loading={corporationsLoading}
-        />
+      <div className="gm-manager-hero">
+        <p className="page-card__kicker">Internal</p>
+        <h2>GM Manager</h2>
+        <p>Panel interno de gestión de HeroIndex.</p>
+        <p className="gm-manager-hero__note">
+          Herramienta interna para gestionar contenido público de HeroIndex.
+        </p>
       </div>
       
+       <section className="gm-manager-workspace gm-manager-workspace--overview">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Overview</p>
+          <h3>Overview</h3>
+        </div>
+        <div className="gm-manager-grid">
+          <GMManagerSummary
+            count={feedNews.length}
+            error={newsError}
+            label="News"
+            loading={newsLoading}
+          />
+          <GMManagerSummary
+            count={heroes.length}
+            error={heroesError}
+            label="Heroes"
+            loading={heroesLoading}
+          />
+          <GMManagerSummary
+            count={corporations.length}
+            error={corporationsError}
+            label="Corporations"
+            loading={corporationsLoading}
+          />
+        </div>
+      </section>
+
+      <section className="gm-manager-workspace">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Crear contenido</p>
+          <h3>Crear contenido</h3>
+          <p>Elige un tipo de contenido y conserva el foco en un solo formulario.</p>
+        </div>
+        <div className="gm-manager-tabs" aria-label="Crear contenido">
+          <GMManagerTab
+            active={activeCreatePanel === 'news'}
+            onClick={() => setActiveCreatePanel('news')}
+          >
+            Crear News
+          </GMManagerTab>
+          <GMManagerTab
+            active={activeCreatePanel === 'hero'}
+            onClick={() => setActiveCreatePanel('hero')}
+          >
+            Crear Hero
+          </GMManagerTab>
+          <GMManagerTab
+            active={activeCreatePanel === 'corporation'}
+            onClick={() => setActiveCreatePanel('corporation')}
+          >
+            Crear Corporation
+          </GMManagerTab>
+        </div>
+        {activeCreatePanel === 'news' ? (
+
       <section className="gm-manager-create">
         <div className="gm-manager-title">
           <p className="page-card__kicker">Create</p>
@@ -435,7 +521,8 @@ const handleNewsFieldChange = (event) => {
           </button>
         </form>
       </section>
-
+) : null}
+        {activeCreatePanel === 'hero' ? (
 <section className="gm-manager-create">
         <div className="gm-manager-title">
           <p className="page-card__kicker">Create</p>
@@ -557,7 +644,8 @@ const handleNewsFieldChange = (event) => {
           </button>
         </form>
       </section>
-
+ ) : null}
+        {activeCreatePanel === 'corporation' ? (
  <section className="gm-manager-create">
         <div className="gm-manager-title">
           <p className="page-card__kicker">Create</p>
@@ -669,8 +757,181 @@ const handleNewsFieldChange = (event) => {
           </button>
         </form>
       </section>
+   ) : null}
+      </section>
 
-      {selectedItem && (
+<section className="gm-manager-workspace">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Revisar contenido</p>
+          <h3>Revisar contenido</h3>
+          <p>Consulta registros, abre el detalle y activa o desactiva contenido.</p>
+        </div>
+ {toggleErrorMessage ? <p className="gm-manager-message gm-manager-message--error">{toggleErrorMessage}</p> : null}
+      {toggleStatusMessage ? <p className="gm-manager-message gm-manager-message--success">{toggleStatusMessage}</p> : null}
+       <div className="gm-manager-tabs" aria-label="Revisar contenido">
+          <GMManagerTab
+            active={activeReviewPanel === 'news'}
+            onClick={() => setActiveReviewPanel('news')}
+          >
+            News
+          </GMManagerTab>
+          <GMManagerTab
+            active={activeReviewPanel === 'hero'}
+            onClick={() => setActiveReviewPanel('hero')}
+          >
+            Heroes
+          </GMManagerTab>
+          <GMManagerTab
+            active={activeReviewPanel === 'corporation'}
+            onClick={() => setActiveReviewPanel('corporation')}
+          >
+            Corporations
+          </GMManagerTab>
+        </div>
+        {activeReviewPanel === 'news' ? (
+      <GMManagerSection title="News">
+        <table className="gm-manager-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category / Type</th>
+              <th>Active</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {feedNews.map((newsItem) => (
+              <tr key={newsItem.id}>
+                <td>{getValue(newsItem.title)}</td>
+                <td>{getValue(newsItem.category ?? newsItem.type)}</td>
+                <td>{getValue(newsItem.active)}</td>
+                <td>{getValue(newsItem.createdAt)}</td>
+                <td>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => handleViewDetail('news', newsItem)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                   <button
+                    className="gm-manager-action"
+                    disabled={togglingItemKey === `news-${newsItem.id}`}
+                    onClick={() => handleToggleActive('news', newsItem)}
+                    type="button"
+                  >
+                    {togglingItemKey === `news-${newsItem.id}` ? 'Guardando…' : getToggleLabel(newsItem)}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </GMManagerSection>
+) : null}
+        {activeReviewPanel === 'hero' ? (
+      <GMManagerSection title="Heroes">
+        <table className="gm-manager-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Alias</th>
+              <th>Corporation</th>
+              <th>Approval</th>
+              <th>Trust</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {heroes.map((hero) => (
+              <tr key={hero.id}>
+                <td>{getValue(hero.name)}</td>
+                <td>{getValue(hero.alias)}</td>
+                <td>{getValue(hero.corporationId)}</td>
+                <td>{getValue(hero.approval)}</td>
+                <td>{getValue(hero.trustScore)}</td>
+                <td>{getValue(hero.active)}</td>
+                <td>
+                  <button
+                    className="gm-manager-action"
+                     onClick={() => handleViewDetail('hero', hero)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                   <button
+                    className="gm-manager-action"
+                    disabled={togglingItemKey === `hero-${hero.id}`}
+                    onClick={() => handleToggleActive('hero', hero)}
+                    type="button"
+                  >
+                    {togglingItemKey === `hero-${hero.id}` ? 'Guardando…' : getToggleLabel(hero)}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </GMManagerSection>
+ ) : null}
+        {activeReviewPanel === 'corporation' ? (
+      <GMManagerSection title="Corporations">
+        <table className="gm-manager-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Sector</th>
+              <th>Country</th>
+              <th>Approval</th>
+              <th>Trust</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {corporations.map((corporation) => (
+              <tr key={corporation.id}>
+                <td>{getValue(corporation.name)}</td>
+                <td>{getValue(corporation.sector)}</td>
+                <td>{getValue(corporation.country)}</td>
+                <td>{getValue(corporation.approval)}</td>
+                <td>{getValue(corporation.trustScore)}</td>
+                <td>{getValue(corporation.active)}</td>
+                 <td>
+                  <button
+                    className="gm-manager-action"
+                     onClick={() => handleViewDetail('corporation', corporation)}
+                    type="button"
+                  >
+                    Ver detalle
+                  </button>
+                  <button
+                    className="gm-manager-action"
+                    disabled={togglingItemKey === `corporation-${corporation.id}`}
+                    onClick={() => handleToggleActive('corporation', corporation)}
+                    type="button"
+                  >
+                    {togglingItemKey === `corporation-${corporation.id}` ? 'Guardando…' : getToggleLabel(corporation)}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </GMManagerSection>
+      ) : null}
+      </section>
+
+      <section className="gm-manager-workspace gm-manager-workspace--detail">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Detalle seleccionado</p>
+          <h3>Detalle seleccionado</h3>
+          <p>Abre un registro desde Revisar contenido para inspeccionar todos sus campos.</p>
+        </div>
+        {selectedItem ? (
+
         <aside className="gm-manager-detail" aria-label="Detalle" ref={detailRef}>
           <div className="gm-manager-detail__top">
             <div>
@@ -703,114 +964,10 @@ const handleNewsFieldChange = (event) => {
             ))}
           </dl>
         </aside>
-      )}
-
-      <GMManagerSection title="News">
-        <table className="gm-manager-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category / Type</th>
-              <th>Active</th>
-              <th>Created</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {feedNews.map((newsItem) => (
-              <tr key={newsItem.id}>
-                <td>{getValue(newsItem.title)}</td>
-                <td>{getValue(newsItem.category ?? newsItem.type)}</td>
-                <td>{getValue(newsItem.active)}</td>
-                <td>{getValue(newsItem.createdAt)}</td>
-                <td>
-                  <button
-                    className="gm-manager-action"
-                    onClick={() => handleViewDetail('news', newsItem)}
-                    type="button"
-                  >
-                    Ver detalle
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </GMManagerSection>
-
-      <GMManagerSection title="Heroes">
-        <table className="gm-manager-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Alias</th>
-              <th>Corporation</th>
-              <th>Approval</th>
-              <th>Trust</th>
-              <th>Active</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {heroes.map((hero) => (
-              <tr key={hero.id}>
-                <td>{getValue(hero.name)}</td>
-                <td>{getValue(hero.alias)}</td>
-                <td>{getValue(hero.corporationId)}</td>
-                <td>{getValue(hero.approval)}</td>
-                <td>{getValue(hero.trustScore)}</td>
-                <td>{getValue(hero.active)}</td>
-                <td>
-                  <button
-                    className="gm-manager-action"
-                     onClick={() => handleViewDetail('hero', hero)}
-                    type="button"
-                  >
-                    Ver detalle
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </GMManagerSection>
-
-      <GMManagerSection title="Corporations">
-        <table className="gm-manager-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Sector</th>
-              <th>Country</th>
-              <th>Approval</th>
-              <th>Trust</th>
-              <th>Active</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {corporations.map((corporation) => (
-              <tr key={corporation.id}>
-                <td>{getValue(corporation.name)}</td>
-                <td>{getValue(corporation.sector)}</td>
-                <td>{getValue(corporation.country)}</td>
-                <td>{getValue(corporation.approval)}</td>
-                <td>{getValue(corporation.trustScore)}</td>
-                <td>{getValue(corporation.active)}</td>
-                 <td>
-                  <button
-                    className="gm-manager-action"
-                     onClick={() => handleViewDetail('corporation', corporation)}
-                    type="button"
-                  >
-                    Ver detalle
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </GMManagerSection>
+        ) : (
+          <p className="gm-manager-empty">Selecciona “Ver detalle” en una fila para revisar el registro completo.</p>
+        )}
+      </section>
     </section>
   )
 }

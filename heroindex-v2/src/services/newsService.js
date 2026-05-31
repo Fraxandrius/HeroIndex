@@ -1,4 +1,4 @@
-import { onValue, push, ref, set } from 'firebase/database'
+import { onValue, push, ref, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const NEWS_PATH = 'news'
@@ -63,4 +63,22 @@ export async function createNews(newsData) {
     id: newsRef.key,
     ...payload,
   }
+}
+
+export async function toggleNewsActive(newsId, currentActive) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const itemRef = ref(database, `${NEWS_PATH}/${newsId}`)
+  const nextActive = !(currentActive ?? true)
+
+  await update(itemRef, {
+    active: nextActive,
+    updatedAt: Date.now(),
+  })
+
+  return nextActive
 }
