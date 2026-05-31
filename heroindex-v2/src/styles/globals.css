@@ -933,6 +933,67 @@ profile-card h3 {
   margin-top: 0.5rem;
 }
 
+.profile-news,
+.corporation-news {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.profile-news__list,
+.corporation-news__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.profile-news__item,
+.corporation-news__item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
+  padding: 0.75rem;
+}
+
+.profile-news__item img,
+.corporation-news__item img {
+  aspect-ratio: 16 / 10;
+  border-radius: 0.75rem;
+  height: 100%;
+  max-width: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.profile-news__item span,
+.corporation-news__item span {
+  color: #68d8ff;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.profile-news__item strong,
+.corporation-news__item strong {
+  color: #ffffff;
+  display: block;
+}
+
+.profile-news__item p,
+.profile-news__empty,
+.corporation-news__item p,
+.corporation-news__empty {
+  color: #aeb8d8;
+  margin: 0;
+}
+
 .hero-ranking-list {
   display: grid;
   gap: 0.75rem;
@@ -1088,7 +1149,9 @@ profile-card h3 {
 @media (max-width: 760px) {
   .profile-card,
   .corporation-card,
-  .hero-ranking-list li {
+  .hero-ranking-list li,
+  .profile-news__item,
+  .corporation-news__item {
     grid-template-columns: 1fr;
   }
 
