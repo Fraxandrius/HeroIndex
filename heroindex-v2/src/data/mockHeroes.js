@@ -4,6 +4,7 @@ export const mockHeroes = [
     name: 'Nova Sentinel',
     corporationId: 'aegis-dynamics',
     approval: 98.7,
+    rankingPoints: 128,
     powerClass: 'S',
     description:
       'Skyline guardian known for rapid evacuation routes and high-trust patrol coordination.',
@@ -18,6 +19,7 @@ export const mockHeroes = [
     name: 'Onyx Vale',
     corporationId: 'umbra-works',
     approval: 96.2,
+    rankingPoints: 116,
     powerClass: 'A',
     description:
       'Shadow-step specialist with a clean record against rogue drone swarms and stealth incursions.',
@@ -32,6 +34,7 @@ export const mockHeroes = [
     name: 'Sol Archer',
     corporationId: 'helios-league',
     approval: 94.8,
+    rankingPoints: 104,
     powerClass: 'A',
     description:
       'Solar marksman specializing in long-range rescue cover and precision containment.',
@@ -46,6 +49,7 @@ export const mockHeroes = [
     name: 'Echo Riot',
     corporationId: 'sonic-front',
     approval: 91.5,
+    rankingPoints: 92,
     powerClass: 'B',
     description:
       'Crowd-control tactician whose resonance shields are trending after waterfront response drills.',

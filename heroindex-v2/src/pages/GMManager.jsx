@@ -52,6 +52,7 @@ const emptyHeroForm = {
   name: '',
   powerClass: '',
   powers: '',
+  rankingPoints: '',
   trustScore: '',
 }
 
@@ -67,6 +68,7 @@ function getHeroFormValues(hero = {}) {
     name: hero.name ?? '',
     powerClass: hero.powerClass ?? '',
     powers: Array.isArray(hero.powers) ? hero.powers.join(', ') : hero.powers ?? '',
+    rankingPoints: hero.rankingPoints ?? '',
     trustScore: hero.trustScore ?? '',
   }
 }
@@ -547,14 +549,17 @@ const handleNewsFieldChange = (event) => {
 
     const approval = heroForm.approval.trim()
     const trustScore = heroForm.trustScore.trim()
+    const rankingPoints = heroForm.rankingPoints.trim()
     const parsedApproval = approval === '' ? null : Number(approval)
     const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+    const parsedRankingPoints = rankingPoints === '' ? 0 : Number(rankingPoints)
 
     if (
       (approval !== '' && Number.isNaN(parsedApproval)) ||
-      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+      (trustScore !== '' && Number.isNaN(parsedTrustScore)) ||
+      Number.isNaN(parsedRankingPoints)
     ) {
-      setHeroFormError('Approval and trustScore must be valid numbers.')
+      setHeroFormError('Approval, trustScore, and rankingPoints must be valid numbers.')
       setHeroFormSuccess('')
       return
     }
@@ -568,6 +573,7 @@ const handleNewsFieldChange = (event) => {
       description: heroForm.description.trim(),
       name: heroForm.name.trim(),
       powerClass: heroForm.powerClass.trim(),
+      rankingPoints: parsedRankingPoints,
       powers: heroForm.powers
         .split(',')
         .map((power) => power.trim())
@@ -633,14 +639,17 @@ const handleNewsFieldChange = (event) => {
 
     const approval = String(editHeroForm.approval).trim()
     const trustScore = String(editHeroForm.trustScore).trim()
+    const rankingPoints = String(editHeroForm.rankingPoints).trim()
     const parsedApproval = approval === '' ? null : Number(approval)
     const parsedTrustScore = trustScore === '' ? null : Number(trustScore)
+    const parsedRankingPoints = rankingPoints === '' ? 0 : Number(rankingPoints)
 
     if (
       (approval !== '' && Number.isNaN(parsedApproval)) ||
-      (trustScore !== '' && Number.isNaN(parsedTrustScore))
+      (trustScore !== '' && Number.isNaN(parsedTrustScore)) ||
+      Number.isNaN(parsedRankingPoints)
     ) {
-      setEditHeroError('Approval and trustScore must be valid numbers.')
+      setEditHeroError('Approval, trustScore, and rankingPoints must be valid numbers.')
       setEditHeroSuccess('')
       return
     }
@@ -654,6 +663,7 @@ const handleNewsFieldChange = (event) => {
       description: editHeroForm.description.trim(),
       name: editHeroForm.name.trim(),
       powerClass: editHeroForm.powerClass.trim(),
+        rankingPoints: parsedRankingPoints,
       powers: editHeroForm.powers
         .split(',')
         .map((power) => power.trim())
@@ -1166,6 +1176,15 @@ const handleNewsFieldChange = (event) => {
                 value={heroForm.trustScore}
               />
             </label>
+             <label>
+              <span>Puntos de ranking</span>
+              <input
+                name="rankingPoints"
+                onChange={handleHeroFieldChange}
+                type="number"
+                value={heroForm.rankingPoints}
+              />
+            </label>
           </div>
           <label>
             <span>Description</span>
@@ -1674,6 +1693,15 @@ const handleNewsFieldChange = (event) => {
                     value={editHeroForm.trustScore}
                   />
                 </label>
+                 <label>
+                  <span>Puntos de ranking</span>
+                  <input
+                    name="rankingPoints"
+                    onChange={handleEditHeroFieldChange}
+                    type="number"
+                    value={editHeroForm.rankingPoints}
+                  />
+                </label>
               </div>
               <label>
                 <span>Description</span>
@@ -1774,6 +1802,7 @@ const handleNewsFieldChange = (event) => {
               <th>Corporation</th>
               <th>Approval</th>
               <th>Trust</th>
+              <th>Puntos</th>
               <th>Active</th>
               <th>Actions</th>
             </tr>
@@ -1786,6 +1815,7 @@ const handleNewsFieldChange = (event) => {
                 <td>{getValue(hero.corporationId)}</td>
                 <td>{getValue(hero.approval)}</td>
                 <td>{getValue(hero.trustScore)}</td>
+                <td>{getValue(hero.rankingPoints)}</td>
                 <td>{getValue(hero.active)}</td>
                 <td>
                   <button
@@ -1977,6 +2007,7 @@ const handleNewsFieldChange = (event) => {
               <th>Country</th>
               <th>Approval</th>
               <th>Trust</th>
+              <th>Puntos</th>
               <th>Active</th>
               <th>Actions</th>
             </tr>

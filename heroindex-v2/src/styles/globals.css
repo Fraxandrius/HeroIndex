@@ -1944,8 +1944,9 @@ profile-card h3 {
 
 .mission-calculator-page {
   display: grid;
-  gap: 1.4rem;
-  max-width: 1100px;
+ gap: 1.6rem;
+  max-width: min(1520px, 100%);
+  width: 100%;
 }
 
 .mission-calculator-hero {
@@ -2011,9 +2012,9 @@ profile-card h3 {
   border: 1px solid rgba(245, 190, 92, 0.28);
   border-radius: 1.35rem;
   display: grid;
-  gap: 1.1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 1.25rem;
+  gap: 1.2rem;
+  grid-template-columns: minmax(14rem, 1fr);
+  padding: 1.35rem;
 }
 
 .mission-calculator-result h3,
@@ -2029,7 +2030,7 @@ profile-card h3 {
   border-radius: 1.1rem;
   display: grid;
   justify-items: center;
-  min-width: 10rem;
+  min-width: 0;
   padding: 1rem;
 }
 
@@ -2053,7 +2054,7 @@ profile-card h3 {
 .mission-calculator-summary {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   margin: 0;
 }
 
@@ -2089,7 +2090,7 @@ profile-card h3 {
 .mission-calculator-breakdown dl {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
   margin: 0;
 }
 
@@ -2121,10 +2122,10 @@ profile-card h3 {
   border: 1px solid rgba(245, 190, 92, 0.22);
   border-radius: 1.2rem;
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
   grid-column: 1 / -1;
-  grid-template-columns: auto minmax(0, 1fr) minmax(0, 2fr);
-  padding: 1rem;
+  grid-template-columns: auto minmax(12rem, 0.75fr) minmax(0, 2fr);
+  padding: 1.1rem;
 }
 
 .mission-calculator-context img,
@@ -2155,9 +2156,16 @@ profile-card h3 {
 
 .mission-calculator-context dl {
   display: grid;
-  gap: 0.6rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   margin: 0;
+}
+
+.mission-calculator-context dl div {
+  background: rgba(7, 12, 25, 0.52);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 0.85rem;
+  padding: 0.7rem;
 }
 
 .mission-calculator-context dt {
@@ -2226,7 +2234,7 @@ profile-card h3 {
   border-radius: 1rem;
   display: grid;
   gap: 0.8rem;
-  grid-template-columns: minmax(12rem, 1fr) auto minmax(10rem, auto) auto minmax(9rem, auto);
+  grid-template-columns: minmax(12rem, 1fr) auto minmax(10rem, auto) auto minmax(9rem, auto) minmax(11rem, auto) minmax(13rem, auto);
   padding: 0.9rem;
 }
 
@@ -2297,8 +2305,8 @@ profile-card h3 {
 .mission-calculator-layout {
   align-items: start;
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr);
+  gap: 1.35rem;
+  grid-template-columns: minmax(0, 1.45fr) minmax(24rem, 0.8fr);
 }
 
 .mission-calculator-side-panel {
@@ -2324,4 +2332,22 @@ profile-card h3 {
   .mission-calculator-side-panel {
     position: static;
   }
+}
+
+.mission-calculator-history__applied {
+  color: #aeb8d8;
+  display: grid;
+  font-size: 0.82rem;
+  gap: 0.15rem;
+}
+
+.mission-calculator-history__applied span:first-child {
+  color: #bdefff;
+  font-weight: 800;
+}
+
+.mission-calculator-history__applied small,
+.mission-calculator-history__hint {
+  color: #8796c3;
+  font-size: 0.78rem;
 }

@@ -9,13 +9,38 @@ function getInitials(name = '') {
     .join('')
 }
 
+function getNumericValue(value) {
+  const numberValue = Number(value ?? 0)
+
+  return Number.isNaN(numberValue) ? 0 : numberValue
+}
+
+function sortHeroesByRankingValue(firstHero, secondHero) {
+  const rankingDifference =
+    getNumericValue(secondHero.rankingPoints) - getNumericValue(firstHero.rankingPoints)
+
+  if (rankingDifference !== 0) {
+    return rankingDifference
+  }
+
+  const trustDifference = getNumericValue(secondHero.trustScore) - getNumericValue(firstHero.trustScore)
+
+  if (trustDifference !== 0) {
+    return trustDifference
+  }
+
+  return getNumericValue(secondHero.approval) - getNumericValue(firstHero.approval)
+}
+
 function Ranking() {
-  const { loading: heroesLoading, rankingHeroes, source } = useHeroes()
+  const { heroes, loading: heroesLoading, source } = useHeroes()
   const {
     getCorporationById,
     loading: corporationsLoading,
     source: corporationsSource,
   } = useCorporations()
+
+  const rankedHeroes = [...heroes].sort(sortHeroesByRankingValue)
 
   return (
     <section className="page-card ranking-page">
@@ -23,10 +48,11 @@ function Ranking() {
         Leaderboard · {source} heroes · {corporationsSource} corporations
       </p>
       <h2>Ranking</h2>
+      <p>Valor HeroIndex: puntos de ranking mediáticos y comerciales. No son Karma.</p>
       <ol className="hero-ranking-list">
         {heroesLoading || corporationsLoading ? <li>Loading...</li> : null}
         {!heroesLoading && !corporationsLoading
-          ? rankingHeroes.map((hero) => (
+          ? rankedHeroes.map((hero) => (
               <li key={hero.id}>
                 <span className="hero-ranking-list__avatar">
                   <span>{getInitials(hero.name)}</span>
@@ -42,8 +68,10 @@ function Ranking() {
                   ) : null}
                 </span>
                 <span>{hero.name}</span>
-                <strong>{hero.approval}</strong>
+                <strong>{getNumericValue(hero.rankingPoints)} puntos</strong>
                 <small>{hero.powerClass}</small>
+                <small>Aprobación: {getNumericValue(hero.approval)}</small>
+                <small>Confianza: {getNumericValue(hero.trustScore)}</small>
                 <em>
                   {getCorporationById(hero.corporationId)?.name ?? hero.corporationId}
                 </em>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useHeroes } from '../hooks/useHeroes.js'
 import {
+  applyMissionCalculationToHero,
   createMissionCalculation,
   subscribeToMissionCalculations,
   updateMissionCalculationStatus,
@@ -229,6 +230,7 @@ function MissionCalculator() {
   const [statusMessage, setStatusMessage] = useState(null)
   const [statusError, setStatusError] = useState(null)
   const [updatingStatusId, setUpdatingStatusId] = useState(null)
+  const [applyingAssessmentId, setApplyingAssessmentId] = useState(null)
   const activeHeroes = heroes.filter((hero) => hero.active !== false)
   const selectedHero =
     formState.selectedHeroId === 'manual'
@@ -298,6 +300,8 @@ function MissionCalculator() {
         classification: result.classification,
         inputs: result.inputs,
         breakdown: result.breakdown,
+         applied: false,
+        appliedAt: null,
         status: 'draft',
       })
       setSaveMessage('Evaluación ORÁCULO guardada como borrador.')
@@ -320,6 +324,23 @@ function MissionCalculator() {
       setStatusError(error)
     } finally {
       setUpdatingStatusId(null)
+    }
+  }
+
+   const handleApplyAssessment = async (item) => {
+    setApplyingAssessmentId(item.id)
+    setStatusError(null)
+    setStatusMessage(null)
+
+    try {
+      const nextRankingPoints = await applyMissionCalculationToHero(item)
+      setStatusMessage(
+        `Evaluación aplicada al ranking. Nuevo valor HeroIndex: ${nextRankingPoints}. Karma no cambia.`,
+      )
+    } catch (error) {
+      setStatusError(error)
+    } finally {
+      setApplyingAssessmentId(null)
     }
   }
 
@@ -393,6 +414,30 @@ function MissionCalculator() {
         </button>
       </>
     )
+  }
+
+  const renderApplyAction = (item) => {
+    const status = item.status || 'draft'
+    const isApplying = applyingAssessmentId === item.id
+
+    if (item.applied === true) {
+      return <span className="mission-calculator-message">Aplicado al ranking</span>
+    }
+
+    if (status === 'approved' && item.heroId) {
+      return (
+        <button
+          className="gm-manager-action"
+          disabled={isApplying}
+          onClick={() => handleApplyAssessment(item)}
+          type="button"
+        >
+          {isApplying ? 'Aplicando...' : 'Aplicar al ranking'}
+        </button>
+      )
+    }
+
+    return <span className="mission-calculator-history__hint">Requiere aprobación y héroe vinculado.</span>
   }
 
   const handleReset = () => {
@@ -716,8 +761,19 @@ function MissionCalculator() {
                 <time dateTime={item.createdAt ? new Date(item.createdAt).toISOString() : undefined}>
                   {formatDate(item.createdAt)}
                 </time>
+                    <div className="mission-calculator-history__applied">
+                  {item.applied ? (
+                    <>
+                      <span>Aplicado al ranking</span>
+                      <small>{item.appliedAt ? formatDate(item.appliedAt) : '—'}</small>
+                    </>
+                  ) : (
+                    <span>Pendiente de aplicación</span>
+                  )}
+                </div>
                 <div className="mission-calculator-history__actions">
                   {renderStatusActions(item)}
+                  {renderApplyAction(item)}
                 </div>
               </article>
             ))}
