@@ -1440,3 +1440,16 @@ button {
     padding: 0.45rem;
   }
 }
+
+.gm-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+@media (max-width: 760px) {
+  .gm-manager-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

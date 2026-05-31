@@ -7,7 +7,7 @@ import {
   toggleCorporationActive,
 } from '../services/corporationsService.js'
 import { createHero, toggleHeroActive } from '../services/heroesService.js'
-import { createNews, toggleNewsActive } from '../services/newsService.js'
+import { createNews, toggleNewsActive, updateNews } from '../services/newsService.js'
 
 const emptyNewsForm = {
   active: true,
@@ -17,6 +17,18 @@ const emptyNewsForm = {
   layer: '',
   summary: '',
   title: '',
+}
+
+function getNewsFormValues(newsItem = {}) {
+  return {
+    active: newsItem.active ?? true,
+    body: newsItem.body ?? '',
+    category: newsItem.category ?? '',
+    imageUrl: newsItem.imageUrl ?? '',
+    layer: newsItem.layer ?? '',
+    summary: newsItem.summary ?? newsItem.body ?? '',
+    title: newsItem.title ?? '',
+  }
 }
 
 const emptyHeroForm = {
@@ -133,6 +145,11 @@ function GMManager() {
   const [newsFormError, setNewsFormError] = useState('')
   const [newsFormSuccess, setNewsFormSuccess] = useState('')
   const [isCreatingNews, setIsCreatingNews] = useState(false)
+  const [editingNewsId, setEditingNewsId] = useState(null)
+  const [editNewsForm, setEditNewsForm] = useState(emptyNewsForm)
+  const [editNewsError, setEditNewsError] = useState('')
+  const [editNewsSuccess, setEditNewsSuccess] = useState('')
+  const [isUpdatingNews, setIsUpdatingNews] = useState(false)
   const [heroForm, setHeroForm] = useState(emptyHeroForm)
   const [heroFormError, setHeroFormError] = useState('')
   const [heroFormSuccess, setHeroFormSuccess] = useState('')
@@ -234,6 +251,64 @@ const handleNewsFieldChange = (event) => {
       setNewsFormError(error.message ?? String(error))
     } finally {
       setIsCreatingNews(false)
+    }
+  }
+
+  const handleEditNewsFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setEditNewsForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setEditNewsError('')
+    setEditNewsSuccess('')
+  }
+
+  const handleStartEditNews = (newsItem) => {
+    setEditingNewsId(newsItem.id)
+    setEditNewsForm(getNewsFormValues(newsItem))
+    setEditNewsError('')
+    setEditNewsSuccess('')
+    setActiveReviewPanel('news')
+  }
+
+  const handleCancelEditNews = () => {
+    setEditingNewsId(null)
+    setEditNewsForm(emptyNewsForm)
+    setEditNewsError('')
+  }
+
+  const handleUpdateNews = async (event) => {
+    event.preventDefault()
+
+    if (!editNewsForm.title.trim() || !editNewsForm.summary.trim()) {
+      setEditNewsError('Title and summary are required.')
+      setEditNewsSuccess('')
+      return
+    }
+
+    setIsUpdatingNews(true)
+    setEditNewsError('')
+    setEditNewsSuccess('')
+
+    try {
+      await updateNews(editingNewsId, {
+        active: editNewsForm.active,
+        body: editNewsForm.body.trim(),
+        category: editNewsForm.category.trim(),
+        imageUrl: editNewsForm.imageUrl.trim(),
+        layer: editNewsForm.layer.trim(),
+        summary: editNewsForm.summary.trim(),
+        title: editNewsForm.title.trim(),
+      })
+      setEditingNewsId(null)
+      setEditNewsForm(emptyNewsForm)
+      setEditNewsSuccess('News updated successfully.')
+    } catch (error) {
+      setEditNewsError(error.message ?? String(error))
+    } finally {
+      setIsUpdatingNews(false)
     }
   }
 
@@ -788,6 +863,96 @@ const handleNewsFieldChange = (event) => {
             Corporations
           </GMManagerTab>
         </div>
+          {editNewsSuccess ? <p className="gm-manager-message gm-manager-message--success">{editNewsSuccess}</p> : null}
+        {editingNewsId ? (
+          <section className="gm-manager-create">
+            <div className="gm-manager-title">
+              <p className="page-card__kicker">Edit</p>
+              <h3>Editar News</h3>
+            </div>
+            <form className="gm-manager-form" onSubmit={handleUpdateNews}>
+              <label>
+                <span>Title *</span>
+                <input
+                  name="title"
+                  onChange={handleEditNewsFieldChange}
+                  type="text"
+                  value={editNewsForm.title}
+                />
+              </label>
+              <label>
+                <span>Summary *</span>
+                <textarea
+                  name="summary"
+                  onChange={handleEditNewsFieldChange}
+                  rows="3"
+                  value={editNewsForm.summary}
+                />
+              </label>
+              <label>
+                <span>Body</span>
+                <textarea
+                  name="body"
+                  onChange={handleEditNewsFieldChange}
+                  rows="4"
+                  value={editNewsForm.body}
+                />
+              </label>
+              <div className="gm-manager-form__grid">
+                <label>
+                  <span>Category</span>
+                  <input
+                    name="category"
+                    onChange={handleEditNewsFieldChange}
+                    type="text"
+                    value={editNewsForm.category}
+                  />
+                </label>
+                <label>
+                  <span>Layer</span>
+                  <input
+                    name="layer"
+                    onChange={handleEditNewsFieldChange}
+                    type="text"
+                    value={editNewsForm.layer}
+                  />
+                </label>
+              </div>
+              <label>
+                <span>Image URL</span>
+                <input
+                  name="imageUrl"
+                  onChange={handleEditNewsFieldChange}
+                  type="url"
+                  value={editNewsForm.imageUrl}
+                />
+              </label>
+              <label className="gm-manager-check">
+                <input
+                  checked={editNewsForm.active}
+                  name="active"
+                  onChange={handleEditNewsFieldChange}
+                  type="checkbox"
+                />
+                <span>Active</span>
+              </label>
+              {editNewsError ? <p className="gm-manager-message gm-manager-message--error">{editNewsError}</p> : null}
+              <div className="gm-manager-actions">
+                <button className="gm-manager-action" disabled={isUpdatingNews} type="submit">
+                  {isUpdatingNews ? 'Saving…' : 'Guardar News'}
+                </button>
+                <button
+                  className="gm-manager-action"
+                  disabled={isUpdatingNews}
+                  onClick={handleCancelEditNews}
+                  type="button"
+                >
+                  Cancelar edición
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : null}
         {activeReviewPanel === 'news' ? (
       <GMManagerSection title="News">
         <table className="gm-manager-table">
@@ -814,6 +979,13 @@ const handleNewsFieldChange = (event) => {
                     type="button"
                   >
                     Ver detalle
+                  </button>
+                   <button
+                    className="gm-manager-action"
+                    onClick={() => handleStartEditNews(newsItem)}
+                    type="button"
+                  >
+                    Editar
                   </button>
                    <button
                     className="gm-manager-action"

@@ -65,6 +65,21 @@ export async function createNews(newsData) {
   }
 }
 
+export async function updateNews(newsId, newsData) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const itemRef = ref(database, `${NEWS_PATH}/${newsId}`)
+
+  await update(itemRef, {
+    ...newsData,
+    updatedAt: Date.now(),
+  })
+}
+
 export async function toggleNewsActive(newsId, currentActive) {
   const { database, isConfigured } = getFirebaseClient()
 
