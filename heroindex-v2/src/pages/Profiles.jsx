@@ -20,9 +20,12 @@ function Profiles() {
         {!heroesLoading && !corporationsLoading
           ? heroes.map((hero) => (
               <article className="profile-card" key={hero.id}>
-                <div className="profile-card__avatar" aria-hidden="true">
+                <div className="profile-card__avatar">
                   {hero.avatarUrl ? (
-                    <img src={hero.avatarUrl} alt="" />
+                    <img
+                      alt={hero.alias ? `${hero.alias} avatar` : `${hero.name} avatar`}
+                      src={hero.avatarUrl}
+                    />
                   ) : (
                     hero.name
                       .split(' ')
@@ -31,6 +34,13 @@ function Profiles() {
                   )}
                 </div>
                 <div>
+                  {hero.bannerUrl ? (
+                    <img
+                      alt={hero.alias ? `${hero.alias} cover` : `${hero.name} cover`}
+                      className="profile-card__cover"
+                      src={hero.bannerUrl}
+                    />
+                  ) : null}
                   <p className="page-card__kicker">{hero.powerClass}</p>
                   <h3>{hero.name}</h3>
                   <p>{hero.description}</p>

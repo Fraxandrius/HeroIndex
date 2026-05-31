@@ -20,6 +20,19 @@ function Ranking() {
         {!heroesLoading && !corporationsLoading
           ? rankingHeroes.map((hero) => (
               <li key={hero.id}>
+                <span className="hero-ranking-list__avatar">
+                  {hero.avatarUrl ? (
+                    <img
+                      alt={hero.alias ? `${hero.alias} avatar` : `${hero.name} avatar`}
+                      src={hero.avatarUrl}
+                    />
+                  ) : (
+                    hero.name
+                      .split(' ')
+                      .map((part) => part[0])
+                      .join('')
+                  )}
+                </span>
                 <span>{hero.name}</span>
                 <strong>{hero.approval}</strong>
                 <small>{hero.powerClass}</small>

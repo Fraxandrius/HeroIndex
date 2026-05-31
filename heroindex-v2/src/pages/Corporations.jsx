@@ -12,9 +12,9 @@ function Corporations() {
         {!loading
           ? corporations.map((corporation) => (
               <article className="corporation-card" key={corporation.id}>
-                <div className="corporation-card__logo" aria-hidden="true">
+                <div className="corporation-card__logo">
                   {corporation.logoUrl ? (
-                    <img src={corporation.logoUrl} alt="" />
+                    <img src={corporation.logoUrl} alt={`${corporation.name} logo`} />
                   ) : (
                     corporation.name
                       .split(' ')
@@ -23,6 +23,13 @@ function Corporations() {
                   )}
                 </div>
                 <div>
+                  {corporation.bannerUrl ? (
+                    <img
+                      alt={`${corporation.name} cover`}
+                      className="corporation-card__cover"
+                      src={corporation.bannerUrl}
+                    />
+                  ) : null}
                   <p className="page-card__kicker">{corporation.sector}</p>
                   <h3>{corporation.name}</h3>
                   <strong>{corporation.tagline}</strong>
