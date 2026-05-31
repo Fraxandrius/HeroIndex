@@ -207,6 +207,19 @@ function GMManagerTab({ active, children, onClick }) {
   )
 }
 
+function GMManagerMediaPreview({ label, url }) {
+  if (!url) {
+    return null
+  }
+
+  return (
+    <div className="gm-manager-file-preview">
+      <span>{label}</span>
+      <img alt={label} src={url} />
+    </div>
+  )
+}
+
 function GMManager() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
@@ -249,7 +262,7 @@ function GMManager() {
   const [imageUploadError, setImageUploadError] = useState('')
   const [imageUploadSuccess, setImageUploadSuccess] = useState('')
   const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const [uploadedImageUrl, setUploadedImageUrl] = useState('')
+  const [latestUploadedImageUrl, setLatestUploadedImageUrl] = useState('')
   const detailRef = useRef(null)
   const imageInputRef = useRef(null)
   const { error: newsError, feedNews, loading: newsLoading } = useNews()
@@ -293,11 +306,10 @@ function GMManager() {
     setIsUploadingImage(true)
     setImageUploadError('')
     setImageUploadSuccess('')
-    setUploadedImageUrl('')
 
     try {
       const downloadURL = await uploadImage(imageFile, imageFolder)
-      setUploadedImageUrl(downloadURL)
+      setLatestUploadedImageUrl(downloadURL)
       setImageFile(null)
       setImageUploadSuccess('Imagen subida correctamente.')
 
@@ -309,6 +321,19 @@ function GMManager() {
     } finally {
       setIsUploadingImage(false)
     }
+  }
+
+const handleUseLatestImage = (setForm, field) => {
+    if (!latestUploadedImageUrl) {
+      setImageUploadError('Sube una imagen antes de usarla en un formulario.')
+      return
+    }
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      [field]: latestUploadedImageUrl,
+    }))
+    setImageUploadError('')
   }
 
   const handleToggleActive = async (type, item) => {
@@ -771,6 +796,7 @@ const handleNewsFieldChange = (event) => {
     reviewStatusFilter,
     ['name', 'tagline', 'sector', 'country', 'description'],
   )
+  const canUseLatestImage = Boolean(latestUploadedImageUrl)
 
   return (
     <section className="page-card gm-manager-page">
@@ -809,7 +835,6 @@ const handleNewsFieldChange = (event) => {
           />
         </div>
       </section>
-
 
 <section className="gm-manager-workspace">
         <div className="gm-manager-workspace__top">
@@ -850,21 +875,21 @@ const handleNewsFieldChange = (event) => {
             {isUploadingImage ? 'Subiendo…' : 'Subir imagen'}
           </button>
         </form>
-        {uploadedImageUrl ? (
-          <div className="gm-manager-upload-result">
+        {latestUploadedImageUrl ? (
+          <div className="gm-manager-file-result">
             <label>
               <span>Download URL</span>
               <input
                 onFocus={(event) => event.target.select()}
                 readOnly
                 type="text"
-                value={uploadedImageUrl}
+                  value={latestUploadedImageUrl}
               />
             </label>
-            <a href={uploadedImageUrl} rel="noreferrer" target="_blank">
+            <a href={latestUploadedImageUrl} rel="noreferrer" target="_blank">
               Abrir imagen
             </a>
-            <img alt="Preview de imagen subida" src={uploadedImageUrl} />
+            <img alt="Preview de imagen subida" src={latestUploadedImageUrl} />
           </div>
         ) : null}
       </section>
@@ -959,6 +984,17 @@ const handleNewsFieldChange = (event) => {
               value={newsForm.imageUrl}
             />
           </label>
+          <div className="gm-manager-file-actions">
+            <button
+              className="gm-manager-action"
+              disabled={!canUseLatestImage}
+              onClick={() => handleUseLatestImage(setNewsForm, 'imageUrl')}
+              type="button"
+            >
+              Usar última imagen subida
+            </button>
+          </div>
+          <GMManagerMediaPreview label="Preview de News" url={newsForm.imageUrl} />
           <label className="gm-manager-check">
             <input
               checked={newsForm.active}
@@ -1082,6 +1118,28 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
           </div>
+            <div className="gm-manager-file-actions">
+            <button
+              className="gm-manager-action"
+              disabled={!canUseLatestImage}
+              onClick={() => handleUseLatestImage(setHeroForm, 'avatarUrl')}
+              type="button"
+            >
+              Usar última imagen como avatar
+            </button>
+            <button
+              className="gm-manager-action"
+              disabled={!canUseLatestImage}
+              onClick={() => handleUseLatestImage(setHeroForm, 'bannerUrl')}
+              type="button"
+            >
+              Usar última imagen como portada
+            </button>
+          </div>
+          <div className="gm-manager-file-previews">
+            <GMManagerMediaPreview label="Preview de avatar" url={heroForm.avatarUrl} />
+            <GMManagerMediaPreview label="Preview de portada" url={heroForm.bannerUrl} />
+          </div>
           <label className="gm-manager-check">
             <input
               checked={heroForm.active}
@@ -1174,6 +1232,28 @@ const handleNewsFieldChange = (event) => {
                 value={corporationForm.bannerUrl}
               />
             </label>
+          </div>
+           <div className="gm-manager-file-actions">
+            <button
+              className="gm-manager-action"
+              disabled={!canUseLatestImage}
+              onClick={() => handleUseLatestImage(setCorporationForm, 'logoUrl')}
+              type="button"
+            >
+              Usar última imagen como logo
+            </button>
+            <button
+              className="gm-manager-action"
+              disabled={!canUseLatestImage}
+              onClick={() => handleUseLatestImage(setCorporationForm, 'bannerUrl')}
+              type="button"
+            >
+              Usar última imagen como portada
+            </button>
+          </div>
+          <div className="gm-manager-file-previews">
+            <GMManagerMediaPreview label="Preview de logo" url={corporationForm.logoUrl} />
+            <GMManagerMediaPreview label="Preview de portada" url={corporationForm.bannerUrl} />
           </div>
           <div className="gm-manager-form__grid">
             <label>
@@ -1328,6 +1408,17 @@ const handleNewsFieldChange = (event) => {
                   value={editNewsForm.imageUrl}
                 />
               </label>
+               <div className="gm-manager-file-actions">
+                <button
+                  className="gm-manager-action"
+                  disabled={!canUseLatestImage}
+                  onClick={() => handleUseLatestImage(setEditNewsForm, 'imageUrl')}
+                  type="button"
+                >
+                  Usar última imagen subida
+                </button>
+              </div>
+              <GMManagerMediaPreview label="Preview de News" url={editNewsForm.imageUrl} />
               <label className="gm-manager-check">
                 <input
                   checked={editNewsForm.active}
@@ -1515,6 +1606,28 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
               </div>
+                <div className="gm-manager-file-actions">
+                <button
+                  className="gm-manager-action"
+                  disabled={!canUseLatestImage}
+                  onClick={() => handleUseLatestImage(setEditHeroForm, 'avatarUrl')}
+                  type="button"
+                >
+                  Usar última imagen como avatar
+                </button>
+                <button
+                  className="gm-manager-action"
+                  disabled={!canUseLatestImage}
+                  onClick={() => handleUseLatestImage(setEditHeroForm, 'bannerUrl')}
+                  type="button"
+                >
+                  Usar última imagen como portada
+                </button>
+              </div>
+              <div className="gm-manager-file-previews">
+                <GMManagerMediaPreview label="Preview de avatar" url={editHeroForm.avatarUrl} />
+                <GMManagerMediaPreview label="Preview de portada" url={editHeroForm.bannerUrl} />
+              </div>
               <label className="gm-manager-check">
                 <input
                   checked={editHeroForm.active}
@@ -1675,6 +1788,28 @@ const handleNewsFieldChange = (event) => {
                     value={editCorporationForm.bannerUrl}
                   />
                 </label>
+              </div>
+               <div className="gm-manager-file-actions">
+                <button
+                  className="gm-manager-action"
+                  disabled={!canUseLatestImage}
+                  onClick={() => handleUseLatestImage(setEditCorporationForm, 'logoUrl')}
+                  type="button"
+                >
+                  Usar última imagen como logo
+                </button>
+                <button
+                  className="gm-manager-action"
+                  disabled={!canUseLatestImage}
+                  onClick={() => handleUseLatestImage(setEditCorporationForm, 'bannerUrl')}
+                  type="button"
+                >
+                  Usar última imagen como portada
+                </button>
+              </div>
+              <div className="gm-manager-file-previews">
+                <GMManagerMediaPreview label="Preview de logo" url={editCorporationForm.logoUrl} />
+                <GMManagerMediaPreview label="Preview de portada" url={editCorporationForm.bannerUrl} />
               </div>
               <div className="gm-manager-form__grid">
                 <label>

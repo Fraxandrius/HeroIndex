@@ -624,6 +624,23 @@ button {
   margin: 0;
 }
 
+.feed-card__image,
+.news-list__image {
+  border: 1px solid rgba(151, 164, 205, 0.18);
+  border-radius: 1rem;
+  display: block;
+  height: auto;
+  max-height: 24rem;
+  max-width: 100%;
+  object-fit: cover;
+  overflow: hidden;
+  width: 100%;
+}
+
+.feed-card__image {
+  aspect-ratio: 16 / 9;
+}
+
 .feed-card footer {
   color: #c6d2f2;
   font-weight: 700;
@@ -828,6 +845,10 @@ button {
 .news-list__item footer {
   color: #c6d2f2;
   font-weight: 700;
+}
+
+.news-list__image {
+  aspect-ratio: 21 / 9;
 }
 
 .profiles-page,
@@ -1287,7 +1308,7 @@ button {
   color: #7bf1a8;
 }
 
-.gm-manager-upload-result {
+.gm-manager-file-result {
   background: rgba(7, 11, 23, 0.52);
   border: 1px solid rgba(104, 216, 255, 0.22);
   border-radius: 1rem;
@@ -1296,12 +1317,12 @@ button {
   padding: 1rem;
 }
 
-.gm-manager-upload-result label {
+.gm-manager-file-result label {
   display: grid;
   gap: 0.35rem;
 }
 
-.gm-manager-upload-result span {
+.gm-manager-file-result span {
   color: #8ea0ce;
   font-size: 0.78rem;
   font-weight: 800;
@@ -1309,7 +1330,7 @@ button {
   text-transform: uppercase;
 }
 
-.gm-manager-upload-result input {
+.gm-manager-file-result input {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(151, 164, 205, 0.22);
   border-radius: 0.85rem;
@@ -1321,15 +1342,52 @@ button {
   width: 100%;
 }
 
-.gm-manager-upload-result a {
+.gm-manager-file-result a {
   color: #68d8ff;
   font-weight: 900;
   overflow-wrap: anywhere;
 }
 
-.gm-manager-upload-result img {
+.gm-manager-file-result img {
   border-radius: 0.9rem;
   max-height: 18rem;
+  max-width: 100%;
+  object-fit: contain;
+  width: fit-content;
+}
+
+.gm-manager-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.gm-manager-file-previews {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.gm-manager-file-preview {
+  background: rgba(7, 11, 23, 0.42);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+}
+
+.gm-manager-file-preview span {
+  color: #8ea0ce;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gm-manager-file-preview img {
+  border-radius: 0.75rem;
+  max-height: 12rem;
   max-width: 100%;
   object-fit: contain;
   width: fit-content;

@@ -16,6 +16,13 @@ function News() {
                 <p className="feed-card__tag">{newsItem.tag}</p>
                 <h3>{newsItem.title}</h3>
                 <p>{newsItem.body}</p>
+                {newsItem.imageUrl ? (
+                  <img
+                    alt={newsItem.title ? `${newsItem.title} image` : 'HeroIndex news image'}
+                    className="news-list__image"
+                    src={newsItem.imageUrl}
+                  />
+                ) : null}
                 <footer>
                   {newsItem.source} · {newsItem.time}
                 </footer>

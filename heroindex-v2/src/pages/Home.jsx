@@ -75,6 +75,13 @@ function Home() {
                       <p className="feed-card__tag">{item.tag}</p>
                       <h3>{item.title}</h3>
                       <p>{item.body}</p>
+                       {item.imageUrl ? (
+                        <img
+                          alt={item.title ? `${item.title} image` : 'HeroIndex news image'}
+                          className="feed-card__image"
+                          src={item.imageUrl}
+                        />
+                      ) : null}
                       <footer>{item.metric}</footer>
                       {item.inlinePlacementSlotId ? (
                         <AdSlot slotId={item.inlinePlacementSlotId} />
