@@ -1,3 +1,10 @@
+function shouldShowRuntimeStatus() {
+  return (
+    import.meta.env.VITE_DEBUG_BROADCAST === 'true' ||
+    import.meta.env.VITE_DEBUG_ADS === 'true'
+  )
+}
+
 function TopBar({ currentSection }) {
   return (
     <header className="topbar">
@@ -5,9 +12,11 @@ function TopBar({ currentSection }) {
         <span className="topbar__eyebrow">HeroIndex v2</span>
         <h1>{currentSection}</h1>
       </div>
-      <div className="topbar__status" role="status">
-        Firebase pending
-      </div>
+      {shouldShowRuntimeStatus() ? (
+        <div className="topbar__status" role="status">
+          Debug mode active
+        </div>
+      ) : null}
     </header>
   )
 }

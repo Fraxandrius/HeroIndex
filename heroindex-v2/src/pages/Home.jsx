@@ -1,65 +1,138 @@
 import AdSlot from '../components/ads/AdSlot.jsx'
-import { mockClips } from '../data/mockClips.js'
-import {
-  mockFeaturedHero,
-  mockHeroStories,
-} from '../data/mockHeroes.js'
 import { useCorporations } from '../hooks/useCorporations.js'
+import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+}
+
+function getNewsSummary(newsItem) {
+  return newsItem.summary ?? newsItem.body ?? 'HeroIndex newsroom update.'
+}
+
+function getScore(value) {
+  const score = Number(value ?? 0)
+
+  return Number.isNaN(score) ? 0 : score
+}
 
 function Home() {
   const { feedNews, loading: newsLoading, trendingNews } = useNews()
-  const { corporations, loading: corporationsLoading } = useCorporations()
+  const {
+    corporations,
+    getCorporationById,
+    loading: corporationsLoading,
+  } = useCorporations()
+  const { loading: heroesLoading, rankingHeroes } = useHeroes()
   const visibleFeedNews = feedNews.filter((item) => item.active !== false)
+  const topStory = visibleFeedNews[0] ?? null
+  const recentNews =
+    visibleFeedNews.length > 3 ? visibleFeedNews.slice(1, 6) : visibleFeedNews.slice(0, 5)
   const visibleTrendingNews = trendingNews.filter((item) => item.active !== false)
-  const featuredCorporations = corporations.slice(0, 3)
-  
+  const featuredHeroes = rankingHeroes.slice(0, 5)
+  const featuredCorporations = [...corporations]
+    .sort(
+      (firstCorporation, secondCorporation) =>
+        getScore(secondCorporation.trustScore ?? secondCorporation.approval) -
+        getScore(firstCorporation.trustScore ?? firstCorporation.approval),
+    )
+    .slice(0, 3)
+
   return (
     <div className="home-page">
-      <section className="story-rail" aria-label="Hero stories">
-        {mockHeroStories.map((story) => (
-          <button className="story-card" key={story.id} type="button">
-            <span className={`story-card__avatar story-card__avatar--${story.tone}`}>
-              {story.name
-                .split(' ')
-                .map((part) => part[0])
-                .join('')}
-            </span>
-            <strong>{story.name}</strong>
-            <small>{story.ring}</small>
-          </button>
-        ))}
+      <section className="story-rail" aria-label="Featured heroes">
+        {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
+        {!heroesLoading && !corporationsLoading
+          ? featuredHeroes.map((hero) => {
+              const corporationName =
+                getCorporationById(hero.corporationId)?.name ?? hero.corporationId
+
+              return (
+                <article className="story-card" key={hero.id}>
+                  <span className="story-card__avatar">
+                    <span>{getInitials(hero.name)}</span>
+                    {hero.avatarUrl ? (
+                      <img
+                        alt={hero.alias ?? hero.name}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true
+                        }}
+                        src={hero.avatarUrl}
+                      />
+                    ) : null}
+                  </span>
+                  <strong>{hero.name}</strong>
+                  {hero.alias ? <small>{hero.alias}</small> : null}
+                  <small>
+                    {corporationName} · {hero.approval ?? hero.trustScore ?? 0}
+                  </small>
+                </article>
+              )
+            })
+          : null}
       </section>
 
       <div className="home-grid">
         <div className="home-main" aria-label="HeroIndex news feed">
           <section className="hero-feature">
-            <div className="hero-feature__copy">
-              <p className="page-card__kicker">{mockFeaturedHero.kicker}</p>
-              <h2>{mockFeaturedHero.title}</h2>
-              <p>{mockFeaturedHero.description}</p>
-              <div className="hero-feature__actions" aria-label="Featured hero stats">
-                {mockFeaturedHero.stats.map((stat) => (
-                  <span key={stat}>{stat}</span>
-                ))}
+            {newsLoading ? <p>Loading...</p> : null}
+            {!newsLoading && topStory ? (
+              <>
+                <div className="hero-feature__copy">
+                  <p className="page-card__kicker">
+                    {topStory.category ?? topStory.layer ?? topStory.tag}
+                  </p>
+                  <h2>{topStory.title}</h2>
+                  <p>{getNewsSummary(topStory)}</p>
+                  <div className="hero-feature__actions" aria-label="Featured news metadata">
+                    <span>{topStory.source}</span>
+                    <span>{topStory.time}</span>
+                    <span>{topStory.metric}</span>
+                  </div>
+                </div>
+                <div className="hero-feature__poster" aria-hidden={!topStory.imageUrl}>
+                  {topStory.imageUrl ? (
+                    <img
+                      alt={topStory.title ?? 'HeroIndex news'}
+                      className="hero-feature__image"
+                      loading="eager"
+                      onError={(event) => {
+                        event.currentTarget.hidden = true
+                      }}
+                      src={topStory.imageUrl}
+                    />
+                  ) : (
+                    <span className="hero-feature__sigil">HI</span>
+                  )}
+                </div>
+              </>
+            ) : null}
+            {!newsLoading && !topStory ? (
+              <div className="hero-feature__copy">
+                <p className="page-card__kicker">HeroIndex</p>
+                <h2>No active newsroom updates yet</h2>
+                <p>Fresh HeroIndex coverage will appear here when it goes live.</p>
               </div>
-            </div>
-            <div className="hero-feature__poster" aria-hidden="true">
-              <span className="hero-feature__sigil">{mockFeaturedHero.sigil}</span>
-            </div>
+            ) : null}
           </section>
 
           <AdSlot slotId="home-sponsor" />
 
           <section className="feed-panel">
-      <div className="section-heading">
+            <div className="section-heading">
               <p className="page-card__kicker">News feed</p>
-              <h2>Live from the HeroIndex newsroom</h2>
+              <h2>Latest HeroIndex coverage</h2>
             </div>
 
             {newsLoading ? <p>Loading...</p> : null}
             {!newsLoading
-              ? visibleFeedNews.map((item) => (
+              ? recentNews.map((item, index) => (
                   <article className="feed-card" key={item.id}>
                     <div className="feed-card__avatar" aria-hidden="true">
                       {item.author[0]}
@@ -72,9 +145,9 @@ function Home() {
                         </div>
                         <time>{item.time}</time>
                       </header>
-                      <p className="feed-card__tag">{item.tag}</p>
+                      <p className="feed-card__tag">{item.category ?? item.layer ?? item.tag}</p>
                       <h3>{item.title}</h3>
-                      <p>{item.body}</p>
+                      <p>{getNewsSummary(item)}</p>
                       {item.imageUrl ? (
                         <img
                           alt={item.title ?? 'HeroIndex news'}
@@ -90,10 +163,14 @@ function Home() {
                       {item.inlinePlacementSlotId ? (
                         <AdSlot slotId={item.inlinePlacementSlotId} />
                       ) : null}
+                      {index === 1 && !item.inlinePlacementSlotId ? (
+                        <AdSlot slotId="news-inline" />
+                      ) : null}
                     </div>
                   </article>
                 ))
               : null}
+            {!newsLoading && recentNews.length === 0 ? <p>No recent active news yet.</p> : null}
           </section>
         </div>
 
@@ -119,6 +196,42 @@ function Home() {
 
           <AdSlot slotId="sidebar-rail" />
 
+          <section className="side-panel">
+            <div className="section-heading">
+              <p className="page-card__kicker">Hero watch</p>
+              <h2>Top approval</h2>
+            </div>
+            <div className="home-hero-list">
+              {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
+              {!heroesLoading && !corporationsLoading
+                ? featuredHeroes.slice(0, 3).map((hero) => (
+                    <article className="home-hero-card" key={hero.id}>
+                      <span className="home-hero-card__avatar">
+                        <span>{getInitials(hero.name)}</span>
+                        {hero.avatarUrl ? (
+                          <img
+                            alt={hero.alias ?? hero.name}
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.hidden = true
+                            }}
+                            src={hero.avatarUrl}
+                          />
+                        ) : null}
+                      </span>
+                      <div>
+                        <strong>{hero.name}</strong>
+                        {hero.alias ? <span>{hero.alias}</span> : null}
+                        <small>
+                          {getCorporationById(hero.corporationId)?.name ?? hero.corporationId} ·{' '}
+                          {hero.approval ?? hero.trustScore ?? 0}
+                        </small>
+                      </div>
+                    </article>
+                  ))
+                : null}
+            </div>
+          </section>
 
           <section className="side-panel">
             <div className="section-heading">
@@ -130,40 +243,32 @@ function Home() {
               {!corporationsLoading
                 ? featuredCorporations.map((corporation) => (
                     <article className="corporation-mini-card" key={corporation.id}>
-                      <strong>{corporation.name}</strong>
-                      <span>{corporation.sector}</span>
-                      <small>
-                        {corporation.country} · {corporation.approval} approval ·{' '}
-                        {corporation.trustScore} trust
-                      </small>
+                      <span className="corporation-mini-card__logo">
+                        <span>{getInitials(corporation.name)}</span>
+                        {corporation.logoUrl ? (
+                          <img
+                            alt={corporation.name}
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.hidden = true
+                            }}
+                            src={corporation.logoUrl}
+                          />
+                        ) : null}
+                      </span>
+                      <div>
+                        <strong>{corporation.name}</strong>
+                        <span>{corporation.sector}</span>
+                        <small>
+                          {corporation.tagline} · {corporation.trustScore ?? corporation.approval} trust
+                        </small>
+                      </div>
                     </article>
                   ))
                 : null}
             </div>
           </section>
-
-          <section className="side-panel">
-            <div className="section-heading">
-              <p className="page-card__kicker">Featured clips</p>
-              <h2>Watch next</h2>
-            </div>
-            <div className="clips-list">
-              {mockClips.map((clip) => (
-                <article className="clip-card" key={clip.id}>
-                  <div className="clip-card__thumb" aria-hidden="true">
-                    ▶
-                  </div>
-                  <div>
-                    <strong>{clip.title}</strong>
-                    <span>
-                      {clip.duration} · {clip.views} views
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        </aside>
+</aside>
       </div>
     </div>
   )

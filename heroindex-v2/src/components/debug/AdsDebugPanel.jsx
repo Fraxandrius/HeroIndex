@@ -6,15 +6,10 @@ function formatBoolean(value) {
 }
 
 function shouldShowAdsDebugPanel() {
-  if (import.meta.env.DEV === true) {
-    return true
-  }
-
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  return new URLSearchParams(window.location.search).get('debugAds') === '1'
+    return (
+    import.meta.env.VITE_DEBUG_BROADCAST === 'true' ||
+    import.meta.env.VITE_DEBUG_ADS === 'true'
+  )
 }
 
 function getSlotDomState(slotId) {

@@ -1,4 +1,12 @@
+const navSections = [
+  { id: 'public', label: 'HeroIndex', description: 'Public experience' },
+  { id: 'internal', label: 'Internal tools', description: 'Content operations' },
+  { id: 'oracle', label: 'ORÁCULO', description: 'GM-only mission layer' },
+]
+
 function Sidebar({ activeRouteId, onNavigate, routes }) {
+  const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
+
   return (
     <aside className="sidebar" aria-label="HeroIndex navigation">
       <div className="sidebar__brand">
@@ -12,17 +20,38 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
       </div>
 
       <nav className="sidebar__nav">
-        {routes.map((route) => (
-          <button
-            aria-current={activeRouteId === route.id ? 'page' : undefined}
-            className="sidebar__link"
-            key={route.id}
-            onClick={() => onNavigate(route.id)}
-            type="button"
-          >
-            {route.label}
-          </button>
-        ))}
+        {navSections.map((section) => {
+          const sectionRoutes = visibleRoutes.filter(
+            (route) => (route.navGroup ?? 'public') === section.id,
+          )
+
+          if (sectionRoutes.length === 0) {
+            return null
+          }
+
+          return (
+            <section className="sidebar__section" key={section.id}>
+              <div className="sidebar__section-header">
+                <span>{section.label}</span>
+                <small>{section.description}</small>
+              </div>
+
+              <div className="sidebar__section-links">
+                {sectionRoutes.map((route) => (
+                  <button
+                    aria-current={activeRouteId === route.id ? 'page' : undefined}
+                    className="sidebar__link"
+                    key={route.id}
+                    onClick={() => onNavigate(route.id)}
+                    type="button"
+                  >
+                    {route.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )
+        })}
       </nav>
     </aside>
   )

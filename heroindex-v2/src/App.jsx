@@ -12,25 +12,39 @@ import Profiles from './pages/Profiles.jsx'
 import Ranking from './pages/Ranking.jsx'
 
 const routes = [
-  { id: 'home', label: 'Home', path: '/', component: Home },
-  { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking },
-  { id: 'profiles', label: 'Profiles', path: '/profiles', component: Profiles },
+  { id: 'home', label: 'Home', path: '/', component: Home, navGroup: 'public' },
+  { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
+  { id: 'profiles', label: 'Profiles', path: '/profiles', component: Profiles, navGroup: 'public' },
   {
     id: 'corporations',
     label: 'Corporations',
     path: '/corporations',
     component: Corporations,
+    navGroup: 'public',
   },
-  { id: 'news', label: 'News', path: '/news', component: News },
+  { id: 'news', label: 'News', path: '/news', component: News, navGroup: 'public' },
+  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'public' },
+  {
+    id: 'gm-manager',
+    label: 'GM Manager',
+    path: '/gm-manager',
+    component: GMManager,
+    navGroup: 'internal',
+  },
   {
     id: 'mission-calculator',
     label: 'Mission Calculator',
     path: '/mission-calculator',
     component: MissionCalculator,
+    navGroup: 'oracle',
   },
-  { id: 'karma', label: 'Karma', path: '/karma', component: Karma },
-  { id: 'gm-manager', label: 'GM Manager', path: '/gm-manager', component: GMManager },
-  { id: 'gm-panel', label: 'GM Panel', path: '/gm-panel', component: GMPanel },
+  {
+    id: 'gm-panel',
+    label: 'GM Panel',
+    path: '/gm-panel',
+    component: GMPanel,
+    hiddenFromNav: true,
+  },
 ]
 
 function App() {
