@@ -2253,3 +2253,75 @@ profile-card h3 {
     grid-template-columns: 1fr;
   }
 }
+
+.mission-calculator-history__note {
+  background: rgba(245, 190, 92, 0.08);
+  border: 1px solid rgba(245, 190, 92, 0.18);
+  border-radius: 0.95rem;
+  padding: 0.8rem;
+}
+
+.mission-calculator-history__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.mission-calculator-status {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  justify-content: center;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 0.65rem;
+  text-transform: uppercase;
+}
+
+.mission-calculator-status--draft {
+  background: rgba(151, 164, 205, 0.14);
+  color: #d7def3;
+}
+
+.mission-calculator-status--approved {
+  background: rgba(117, 255, 188, 0.14);
+  color: #95ffd0;
+}
+
+.mission-calculator-status--rejected {
+  background: rgba(255, 120, 150, 0.14);
+  color: #ffb4c8;
+}
+
+.mission-calculator-layout {
+  align-items: start;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr);
+}
+
+.mission-calculator-side-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+.mission-calculator-factor small {
+  color: #8f9ec7;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.mission-calculator-result--empty {
+  min-height: 20rem;
+}
+
+@media (max-width: 1080px) {
+  .mission-calculator-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-calculator-side-panel {
+    position: static;
+  }
+}

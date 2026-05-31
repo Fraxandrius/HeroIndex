@@ -1,7 +1,8 @@
-import { onValue, push, ref, set } from 'firebase/database'
+import { onValue, push, ref, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const MISSION_CALCULATIONS_PATH = 'missionCalculations'
+const VALID_MISSION_CALCULATION_STATUSES = ['draft', 'approved', 'rejected']
 
 function normalizeMissionCalculation(id, calculation) {
   return {
@@ -64,4 +65,26 @@ export function subscribeToMissionCalculations(callback, onError) {
       onError?.(error)
     },
   )
+}
+
+
+export async function updateMissionCalculationStatus(calculationId, status) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!VALID_MISSION_CALCULATION_STATUSES.includes(status)) {
+    throw new Error(`Invalid mission calculation status: ${status}`)
+  }
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  const calculationRef = ref(database, `${MISSION_CALCULATIONS_PATH}/${calculationId}`)
+
+  await update(calculationRef, {
+    status,
+    updatedAt: Date.now(),
+  })
+
+  return status
 }
