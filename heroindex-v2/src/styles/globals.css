@@ -1941,3 +1941,167 @@ profile-card h3 {
     flex-direction: column;
   }
 }
+
+.mission-calculator-page {
+  display: grid;
+  gap: 1.4rem;
+  max-width: 1100px;
+}
+
+.mission-calculator-hero {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mission-calculator-hero__subtitle {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.mission-calculator-form {
+  background: rgba(9, 16, 32, 0.56);
+  border: 1px solid rgba(151, 164, 205, 0.18);
+  border-radius: 1.35rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 1.25rem;
+}
+
+.mission-calculator-form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.mission-calculator-form label span {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mission-calculator-form input,
+.mission-calculator-form select {
+  background: rgba(7, 12, 25, 0.9);
+  border: 1px solid rgba(151, 164, 205, 0.24);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  min-width: 0;
+  padding: 0.82rem 0.9rem;
+}
+
+.mission-calculator-form select option {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.mission-calculator-actions {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  grid-column: 1 / -1;
+}
+
+.mission-calculator-result {
+  background:
+    linear-gradient(135deg, rgba(245, 190, 92, 0.12), rgba(98, 214, 255, 0.08)),
+    rgba(9, 16, 32, 0.76);
+  border: 1px solid rgba(245, 190, 92, 0.28);
+  border-radius: 1.35rem;
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 1.25rem;
+}
+
+.mission-calculator-result h3,
+.mission-calculator-breakdown h4 {
+  color: #ffffff;
+  margin: 0;
+}
+
+.mission-calculator-result__score {
+  align-items: center;
+  background: rgba(245, 190, 92, 0.14);
+  border: 1px solid rgba(245, 190, 92, 0.3);
+  border-radius: 1.1rem;
+  display: grid;
+  justify-items: center;
+  min-width: 10rem;
+  padding: 1rem;
+}
+
+.mission-calculator-result__score span {
+  color: #ffe2a1;
+  font-size: clamp(2.3rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.mission-calculator-result__score small {
+  color: #d7def3;
+  text-align: center;
+}
+
+.mission-calculator-summary,
+.mission-calculator-breakdown {
+  grid-column: 1 / -1;
+}
+
+.mission-calculator-summary {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.mission-calculator-summary div,
+.mission-calculator-breakdown dl div {
+  background: rgba(7, 12, 25, 0.58);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 0.95rem;
+  padding: 0.85rem;
+}
+
+.mission-calculator-summary dt,
+.mission-calculator-breakdown dt {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mission-calculator-summary dd,
+.mission-calculator-breakdown dd {
+  color: #ffffff;
+  margin: 0.2rem 0 0;
+  word-break: break-word;
+}
+
+.mission-calculator-breakdown {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.mission-calculator-breakdown dl {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+@media (max-width: 920px) {
+  .mission-calculator-form,
+  .mission-calculator-result,
+  .mission-calculator-summary,
+  .mission-calculator-breakdown dl {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-calculator-result__score {
+    width: 100%;
+  }
+}
