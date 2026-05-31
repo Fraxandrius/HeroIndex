@@ -56,9 +56,11 @@ function getActiveCorporations(corporations) {
 function createCorporationsState({ firebaseCorporations, error = null, loading = false }) {
   const normalizedFirebaseCorporations = firebaseCorporations ?? []
   const hasFirebaseCorporations = normalizedFirebaseCorporations.length > 0
-  const sourceCorporations = hasFirebaseCorporations
-    ? normalizedFirebaseCorporations
-    : mockCorporations
+  const sourceCorporations = loading
+    ? []
+    : hasFirebaseCorporations
+      ? normalizedFirebaseCorporations
+      : mockCorporations
   const corporations = getActiveCorporations(sourceCorporations)
     .map(normalizeCorporationForUi)
     .sort(sortCorporationsByApproval)
@@ -69,6 +71,7 @@ function createCorporationsState({ firebaseCorporations, error = null, loading =
     loading,
     firebaseCorporations: normalizedFirebaseCorporations,
     source: hasFirebaseCorporations ? 'firebase' : 'mock',
+    source: loading ? 'loading' : hasFirebaseCorporations ? 'firebase' : 'mock',
   }
 }
 

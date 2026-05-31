@@ -8,8 +8,8 @@ import { useCorporations } from '../hooks/useCorporations.js'
 import { useNews } from '../hooks/useNews.js'
 
 function Home() {
-  const { feedNews, trendingNews } = useNews()
-  const { corporations } = useCorporations()
+  const { feedNews, loading: newsLoading, trendingNews } = useNews()
+  const { corporations, loading: corporationsLoading } = useCorporations()
   const visibleFeedNews = feedNews.filter((item) => item.active !== false)
   const visibleTrendingNews = trendingNews.filter((item) => item.active !== false)
   const featuredCorporations = corporations.slice(0, 3)
@@ -57,29 +57,32 @@ function Home() {
               <h2>Live from the HeroIndex newsroom</h2>
             </div>
 
-            {feedNews.map((item) => (
-              <article className="feed-card" key={item.id}>
-                <div className="feed-card__avatar" aria-hidden="true">
-                  {item.author[0]}
-                </div>
-                <div className="feed-card__body">
-                  <header>
-                    <div>
-                      <strong>{item.author}</strong>
-                      <span>{item.handle}</span>
+            {newsLoading ? <p>Loading...</p> : null}
+            {!newsLoading
+              ? visibleFeedNews.map((item) => (
+                  <article className="feed-card" key={item.id}>
+                    <div className="feed-card__avatar" aria-hidden="true">
+                      {item.author[0]}
                     </div>
-                    <time>{item.time}</time>
-                  </header>
-                  <p className="feed-card__tag">{item.tag}</p>
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
-                  <footer>{item.metric}</footer>
-                  {item.inlinePlacementSlotId ? (
-                    <AdSlot slotId={item.inlinePlacementSlotId} />
-                  ) : null}
-                </div>
-              </article>
-            ))}
+                    <div className="feed-card__body">
+                      <header>
+                        <div>
+                          <strong>{item.author}</strong>
+                          <span>{item.handle}</span>
+                        </div>
+                        <time>{item.time}</time>
+                      </header>
+                      <p className="feed-card__tag">{item.tag}</p>
+                      <h3>{item.title}</h3>
+                      <p>{item.body}</p>
+                      <footer>{item.metric}</footer>
+                      {item.inlinePlacementSlotId ? (
+                        <AdSlot slotId={item.inlinePlacementSlotId} />
+                      ) : null}
+                    </div>
+                  </article>
+                ))
+              : null}
           </section>
         </div>
 
@@ -90,13 +93,16 @@ function Home() {
               <h2>Rising now</h2>
             </div>
             <ol className="trending-list">
-               {visibleTrendingNews.map((newsItem) => (
-                <li key={newsItem.id}>
-                  <span>{newsItem.title}</span>
-                  <strong>{newsItem.metric}</strong>
-                  <small>{newsItem.movement}</small>
-                </li>
-              ))}
+                {newsLoading ? <li>Loading...</li> : null}
+              {!newsLoading
+                ? visibleTrendingNews.map((newsItem) => (
+                    <li key={newsItem.id}>
+                      <span>{newsItem.title}</span>
+                      <strong>{newsItem.metric}</strong>
+                      <small>{newsItem.movement}</small>
+                    </li>
+                  ))
+                : null}
             </ol>
           </section>
 
@@ -109,16 +115,19 @@ function Home() {
               <h2>Trusted operators</h2>
             </div>
             <div className="corporation-mini-list">
-              {featuredCorporations.map((corporation) => (
-                <article className="corporation-mini-card" key={corporation.id}>
-                  <strong>{corporation.name}</strong>
-                  <span>{corporation.sector}</span>
-                  <small>
-                    {corporation.country} · {corporation.approval} approval ·{' '}
-                    {corporation.trustScore} trust
-                  </small>
-                </article>
-              ))}
+              {corporationsLoading ? <p>Loading...</p> : null}
+              {!corporationsLoading
+                ? featuredCorporations.map((corporation) => (
+                    <article className="corporation-mini-card" key={corporation.id}>
+                      <strong>{corporation.name}</strong>
+                      <span>{corporation.sector}</span>
+                      <small>
+                        {corporation.country} · {corporation.approval} approval ·{' '}
+                        {corporation.trustScore} trust
+                      </small>
+                    </article>
+                  ))
+                : null}
             </div>
           </section>
 

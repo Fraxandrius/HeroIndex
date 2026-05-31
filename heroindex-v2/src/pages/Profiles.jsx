@@ -2,8 +2,12 @@ import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 
 function Profiles() {
-  const { heroes, source } = useHeroes()
-  const { getCorporationById, source: corporationsSource } = useCorporations()
+  const { heroes, loading: heroesLoading, source } = useHeroes()
+  const {
+    getCorporationById,
+    loading: corporationsLoading,
+    source: corporationsSource,
+  } = useCorporations()
 
   return (
     <section className="page-card profiles-page">
@@ -12,28 +16,31 @@ function Profiles() {
       </p>
       <h2>Profiles</h2>
       <div className="profiles-list">
-        {heroes.map((hero) => (
-          <article className="profile-card" key={hero.id}>
-            <div className="profile-card__avatar" aria-hidden="true">
-              {hero.avatarUrl ? (
-                <img src={hero.avatarUrl} alt="" />
-              ) : (
-                hero.name
-                  .split(' ')
-                  .map((part) => part[0])
-                  .join('')
-              )}
-            </div>
-            <div>
-              <p className="page-card__kicker">{hero.powerClass}</p>
-              <h3>{hero.name}</h3>
-              <p>{hero.description}</p>
-               <small>
-                {getCorporationById(hero.corporationId)?.name ?? hero.corporationId}
-              </small>
-            </div>
-          </article>
-        ))}
+        {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
+        {!heroesLoading && !corporationsLoading
+          ? heroes.map((hero) => (
+              <article className="profile-card" key={hero.id}>
+                <div className="profile-card__avatar" aria-hidden="true">
+                  {hero.avatarUrl ? (
+                    <img src={hero.avatarUrl} alt="" />
+                  ) : (
+                    hero.name
+                      .split(' ')
+                      .map((part) => part[0])
+                      .join('')
+                  )}
+                </div>
+                <div>
+                  <p className="page-card__kicker">{hero.powerClass}</p>
+                  <h3>{hero.name}</h3>
+                  <p>{hero.description}</p>
+                  <small>
+                    {getCorporationById(hero.corporationId)?.name ?? hero.corporationId}
+                  </small>
+                </div>
+              </article>
+            ))
+          : null}
       </div>
     </section>
   )

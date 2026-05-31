@@ -45,7 +45,7 @@ function getActiveHeroes(heroes) {
 function createHeroesState({ firebaseHeroes, error = null, loading = false }) {
   const normalizedFirebaseHeroes = firebaseHeroes ?? []
   const hasFirebaseHeroes = normalizedFirebaseHeroes.length > 0
-  const sourceHeroes = hasFirebaseHeroes ? normalizedFirebaseHeroes : mockHeroes
+  const sourceHeroes = loading ? [] : hasFirebaseHeroes ? normalizedFirebaseHeroes : mockHeroes
   const heroes = getActiveHeroes(sourceHeroes).map(normalizeHeroForUi)
 
   return {
@@ -53,7 +53,7 @@ function createHeroesState({ firebaseHeroes, error = null, loading = false }) {
     loading,
     firebaseHeroes: normalizedFirebaseHeroes,
     heroes,
-    source: hasFirebaseHeroes ? 'firebase' : 'mock',
+    source: loading ? 'loading' : hasFirebaseHeroes ? 'firebase' : 'mock',
   }
 }
 

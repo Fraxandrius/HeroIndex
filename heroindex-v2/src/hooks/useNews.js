@@ -95,15 +95,15 @@ function getErrorMessage(error) {
 function createNewsState({ firebaseNews, error = null, loading = false }) {
   const normalizedFirebaseNews = firebaseNews ?? []
   const hasFirebaseNews = normalizedFirebaseNews.length > 0
-  const activeNews = hasFirebaseNews ? normalizedFirebaseNews : mockNews
-  const newsItems = activeNews.map(normalizeNewsForUi).sort(sortNewsByNewest)
+  const sourceNews = loading ? [] : hasFirebaseNews ? normalizedFirebaseNews : mockNews
+  const newsItems = sourceNews.map(normalizeNewsForUi).sort(sortNewsByNewest)
 
   return {
     error,
     loading,
     firebaseNews: normalizedFirebaseNews,
     newsItems,
-    source: hasFirebaseNews ? 'firebase' : 'mock',
+    source: loading ? 'loading' : hasFirebaseNews ? 'firebase' : 'mock',
   }
 }
 
