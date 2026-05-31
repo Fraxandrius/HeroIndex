@@ -2,7 +2,7 @@ import { useNews } from '../hooks/useNews.js'
 
 function News() {
   const { feedNews, source } = useNews()
-
+const visibleNews = feedNews.filter((item) => item.active !== false)
   console.log('feedNews', feedNews)
 
   return (
@@ -10,7 +10,7 @@ function News() {
       <p className="page-card__kicker">Updates · {source}</p>
       <h2>News</h2>
       <div className="news-list">
-        {feedNews.map((newsItem) => (
+        {visibleNews.map((newsItem) => (
           <article className="news-list__item" key={newsItem.id}>
             <p className="feed-card__tag">{newsItem.tag}</p>
             <h3>{newsItem.title}</h3>

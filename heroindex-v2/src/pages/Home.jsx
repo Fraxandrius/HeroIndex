@@ -10,8 +10,10 @@ import { useNews } from '../hooks/useNews.js'
 function Home() {
   const { feedNews, trendingNews } = useNews()
   const { corporations } = useCorporations()
+  const visibleFeedNews = feedNews.filter((item) => item.active !== false)
+  const visibleTrendingNews = trendingNews.filter((item) => item.active !== false)
   const featuredCorporations = corporations.slice(0, 3)
-
+  
   return (
     <div className="home-page">
       <section className="story-rail" aria-label="Hero stories">
@@ -88,7 +90,7 @@ function Home() {
               <h2>Rising now</h2>
             </div>
             <ol className="trending-list">
-              {trendingNews.map((newsItem) => (
+               {visibleTrendingNews.map((newsItem) => (
                 <li key={newsItem.id}>
                   <span>{newsItem.title}</span>
                   <strong>{newsItem.metric}</strong>
