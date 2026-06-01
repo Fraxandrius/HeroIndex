@@ -213,6 +213,7 @@ function getSheetPayload(formState = {}) {
   return {
     realName: formState.realName ?? '',
     role: formState.role ?? '',
+    ownerId: formState.ownerId ?? '',
     isNpc: Boolean(formState.isNpc),
     attributes: Object.fromEntries(
       attributeKeys.map((key) => [key, getNumericValue(formState.attributes?.[key] ?? 1)]),
@@ -245,6 +246,22 @@ function renderListValue(value) {
       ))}
     </div>
   )
+}
+
+function getSheetOwnershipStatus(sheet = {}) {
+  if (!sheet.ownerId) return 'Sin propietario'
+
+  return sheet.isNpc ? 'NPC' : 'Jugador'
+}
+
+function getAttributeScale(value) {
+  const normalizedValue = Math.min(10, Math.max(0, getNumericValue(value)))
+
+  return `${normalizedValue * 10}%`
+}
+
+function renderTextValue(value) {
+  return value ? String(value) : '—'
 }
 
 function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
@@ -548,8 +565,12 @@ const [characterSheet, setCharacterSheet] = useState(null)
             ) : null}
 
             {!characterSheet ? (
-              <div className="oraculo-character-sheet__empty">
-                <p>No existe hoja privada RPG para este héroe.</p>
+                       <div className="oraculo-character-sheet__empty oraculo-character-sheet__empty--classified">
+                <div>
+                  <span className="oraculo-character-sheet__stamp">Ficha clasificada no registrada</span>
+                  <h4>No existe hoja privada RPG para este héroe.</h4>
+                  <p>ORÁCULO puede generar una hoja base para iniciar seguimiento RPG privado.</p>
+                </div>
                 <button
                   className="oraculo-character-sheet__action"
                   disabled={isCreatingCharacterSheet}
@@ -563,121 +584,183 @@ const [characterSheet, setCharacterSheet] = useState(null)
 
             {displaySheet && !isEditingCharacterSheet ? (
               <div className="oraculo-character-sheet__summary">
-                <dl className="oraculo-character-sheet__identity">
-                  <div>
-                    <dt>Nombre real</dt>
-                    <dd>{displaySheet.realName || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Tipo</dt>
-                    <dd>{displaySheet.isNpc ? 'NPC' : 'Jugador'}</dd>
-                  </div>
-                  <div>
-                    <dt>Rol</dt>
-                    <dd>{displaySheet.role || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Karma</dt>
-                    <dd>{getNumericValue(displaySheet.karma)}</dd>
-                  </div>
-                  <div>
-                    <dt>Health</dt>
-                    <dd>{getNumericValue(displaySheet.health)}</dd>
-                  </div>
-                  <div>
-                    <dt>Resolve</dt>
-                    <dd>{getNumericValue(displaySheet.resolve)}</dd>
-                  </div>
-                </dl>
-                <div className="oraculo-character-sheet__attributes">
-                  {attributeKeys.map((attribute) => (
-                    <div key={attribute}>
-                      <span>{attributeLabels[attribute]}</span>
-                      <strong>{getNumericValue(displaySheet.attributes?.[attribute])}</strong>
-                    </div>
-                  ))}
+                <div className="oraculo-character-sheet__timestamps">
+                  <span>Creada: {displaySheet.createdAt ? formatDate(displaySheet.createdAt) : 'Fecha pendiente'}</span>
+                  <span>Última actualización: {displaySheet.updatedAt ? formatDate(displaySheet.updatedAt) : 'Fecha pendiente'}</span>
                 </div>
-                <dl className="oraculo-character-sheet__details">
-                  <div>
-                    <dt>Powers</dt>
-                    <dd>{renderListValue(displaySheet.powers)}</dd>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>01</span>
+                    <h4>Identidad privada</h4>
                   </div>
-                  <div>
-                    <dt>Talents</dt>
-                    <dd>{renderListValue(displaySheet.talents)}</dd>
+                  <dl className="oraculo-character-sheet__identity">
+                    <div>
+                      <dt>Nombre real</dt>
+                      <dd>{displaySheet.realName || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Rol</dt>
+                      <dd>{displaySheet.role || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Tipo</dt>
+                      <dd>{displaySheet.isNpc ? 'NPC' : 'Jugador'}</dd>
+                    </div>
+                    <div>
+                      <dt>Owner ID</dt>
+                      <dd>{displaySheet.ownerId || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Estado de hoja</dt>
+                      <dd>{getSheetOwnershipStatus(displaySheet)}</dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>02</span>
+                    <h4>Atributos</h4>
                   </div>
-                  <div>
-                    <dt>Drawbacks</dt>
-                    <dd>{renderListValue(displaySheet.drawbacks)}</dd>
+                <div className="oraculo-character-sheet__attributes">
+                    {attributeKeys.map((attribute) => (
+                      <div key={attribute} className="oraculo-character-sheet__attribute-card">
+                        <span>{attributeLabels[attribute]}</span>
+                        <strong>{getNumericValue(displaySheet.attributes?.[attribute])}</strong>
+                        <div className="oraculo-character-sheet__attribute-scale" aria-hidden="true">
+                          <i style={{ '--attribute-level': getAttributeScale(displaySheet.attributes?.[attribute]) }} />
+                        </div>
+                        <small>Escala 1–10</small>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <dt>Resources</dt>
-                    <dd>{displaySheet.resources || '—'}</dd>
+                  </section>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>03</span>
+                    <h4>Recursos de juego</h4>
                   </div>
-                  <div>
-                    <dt>Gear</dt>
-                    <dd>{displaySheet.gear || '—'}</dd>
+                  <p className="oraculo-character-sheet__privacy-note">Karma es progresión RPG. No modifica el Ranking HeroIndex.</p>
+                  <dl className="oraculo-character-sheet__identity">
+                    <div>
+                      <dt>Health</dt>
+                      <dd>{getNumericValue(displaySheet.health)}</dd>
+                    </div>
+                    <div>
+                      <dt>Resolve</dt>
+                      <dd>{getNumericValue(displaySheet.resolve)}</dd>
+                    </div>
+                    <div>
+                      <dt>Karma</dt>
+                      <dd>{getNumericValue(displaySheet.karma)}</dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>04</span>
+                    <h4>Poderes y rasgos</h4>
                   </div>
-                  <div>
-                    <dt>Reputation</dt>
-                    <dd>{displaySheet.reputation || '—'}</dd>
+                  <dl className="oraculo-character-sheet__details">
+                    <div>
+                      <dt>Powers</dt>
+                      <dd>{renderListValue(displaySheet.powers)}</dd>
+                    </div>
+                    <div>
+                      <dt>Talents</dt>
+                      <dd>{renderListValue(displaySheet.talents)}</dd>
+                    </div>
+                    <div>
+                      <dt>Drawbacks</dt>
+                      <dd>{renderListValue(displaySheet.drawbacks)}</dd>
+                    </div>
+                    <div>
+                      <dt>Flags</dt>
+                      <dd>{renderListValue(displaySheet.flags)}</dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>05</span>
+                    <h4>Perfil narrativo</h4>
                   </div>
-                  <div>
-                    <dt>Personality</dt>
-                    <dd>{displaySheet.personality || '—'}</dd>
+                  <dl className="oraculo-character-sheet__details">
+                    <div>
+                      <dt>Resources</dt>
+                      <dd>{renderTextValue(displaySheet.resources)}</dd>
+                    </div>
+                    <div>
+                      <dt>Gear</dt>
+                      <dd>{renderTextValue(displaySheet.gear)}</dd>
+                    </div>
+                    <div>
+                      <dt>Reputation</dt>
+                      <dd>{renderTextValue(displaySheet.reputation)}</dd>
+                    </div>
+                    <div>
+                      <dt>Personality</dt>
+                      <dd>{renderTextValue(displaySheet.personality)}</dd>
+                    </div>
+                    <div>
+                      <dt>Relationships</dt>
+                      <dd>{renderTextValue(displaySheet.relationships)}</dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="oraculo-character-sheet__block oraculo-character-sheet__block--notes">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>06</span>
+                    <h4>Notas ORÁCULO</h4>
                   </div>
-                  <div>
-                    <dt>Relationships</dt>
-                    <dd>{displaySheet.relationships || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Flags</dt>
-                    <dd>{renderListValue(displaySheet.flags)}</dd>
-                  </div>
-                  <div>
-                    <dt>Notas GM</dt>
-                    <dd>{displaySheet.gmNotes || '—'}</dd>
-                  </div>
-                </dl>
+                <p className="oraculo-character-sheet__privacy-note">Notas internas del GM/ORÁCULO. No aparecen en perfiles públicos.</p>
+                  <p className="oraculo-character-sheet__notes">{renderTextValue(displaySheet.gmNotes)}</p>
+                </section>
               </div>
             ) : null}
 
             {isEditingCharacterSheet ? (
               <form className="oraculo-character-sheet__form" onSubmit={handleSaveCharacterSheet}>
-                <div className="oraculo-character-sheet__form-grid">
-                  <label>
-                    <span>Nombre real</span>
-                    <input name="realName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.realName} />
-                  </label>
-                  <label>
-                    <span>Rol</span>
-                    <input name="role" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.role} />
-                  </label>
-                  <label className="oraculo-character-sheet__checkbox">
-                    <input
-                      checked={characterSheetForm.isNpc}
-                      name="isNpc"
-                      onChange={handleCharacterSheetFieldChange}
-                      type="checkbox"
-                    />
-                    <span>Es NPC</span>
-                  </label>
-                  <label>
-                    <span>Karma</span>
-                    <input name="karma" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.karma} />
-                  </label>
-                  <label>
-                    <span>Health</span>
-                    <input name="health" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.health} />
-                  </label>
-                  <label>
-                    <span>Resolve</span>
-                    <input name="resolve" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.resolve} />
-                  </label>
-                </div>
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>01</span>
+                    <h4>Identidad privada</h4>
+                  </div>
+                  <div className="oraculo-character-sheet__form-grid">
+                    <label>
+                      <span>Nombre real</span>
+                      <input name="realName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.realName} />
+                    </label>
+                    <label>
+                      <span>Rol</span>
+                      <input name="role" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.role} />
+                    </label>
+                    <label>
+                      <span>Owner ID</span>
+                      <input name="ownerId" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.ownerId} />
+                    </label>
+                    <label className="oraculo-character-sheet__checkbox">
+                      <input
+                        checked={characterSheetForm.isNpc}
+                        name="isNpc"
+                        onChange={handleCharacterSheetFieldChange}
+                        type="checkbox"
+                      />
+                      <span>Es NPC</span>
+                    </label>
+                  </div>
+                </section>
 
-                <fieldset className="oraculo-character-sheet__fieldset">
-                  <legend>Atributos</legend>
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>02</span>
+                    <h4>Atributos</h4>
+                  </div>
                   <div className="oraculo-character-sheet__attributes-edit">
                     {attributeKeys.map((attribute) => (
                       <label key={attribute}>
@@ -693,37 +776,82 @@ const [characterSheet, setCharacterSheet] = useState(null)
                       </label>
                     ))}
                   </div>
-                </fieldset>
+                </section>
 
-                <div className="oraculo-character-sheet__form-grid">
-                  {listFields.map((field) => (
-                    <label key={field}>
-                      <span>{field === 'powers' ? 'Powers' : field === 'talents' ? 'Talents' : field === 'drawbacks' ? 'Drawbacks' : 'Flags'}</span>
-                      <input
-                        name={field}
-                        onChange={handleCharacterSheetFieldChange}
-                        placeholder="Separado por comas"
-                        value={characterSheetForm[field]}
-                      />
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>03</span>
+                    <h4>Recursos de juego</h4>
+                  </div>
+                  <p className="oraculo-character-sheet__privacy-note">Karma es progresión RPG. No modifica el Ranking HeroIndex.</p>
+                  <div className="oraculo-character-sheet__form-grid">
+                    <label>
+                      <span>Health</span>
+                      <input name="health" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.health} />
                     </label>
-                  ))}
-                </div>
+                     <label>
+                      <span>Resolve</span>
+                      <input name="resolve" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.resolve} />
+                    </label>
+ <label>
+                      <span>Karma</span>
+                      <input name="karma" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.karma} />
+                    </label>
+                  </div>
+                </section>
 
-                <div className="oraculo-character-sheet__text-grid">
-                  {[
-                    ['resources', 'Resources'],
-                    ['gear', 'Gear'],
-                    ['reputation', 'Reputation'],
-                    ['personality', 'Personality'],
-                    ['relationships', 'Relationships'],
-                    ['gmNotes', 'Notas GM'],
-                  ].map(([field, label]) => (
-                    <label key={field}>
-                      <span>{label}</span>
-                      <textarea name={field} onChange={handleCharacterSheetFieldChange} value={characterSheetForm[field]} />
-                    </label>
-                  ))}
-                </div>
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>04</span>
+                    <h4>Poderes y rasgos</h4>
+                  </div>
+                  <div className="oraculo-character-sheet__form-grid">
+                    {listFields.map((field) => (
+                      <label key={field}>
+                        <span>{field === 'powers' ? 'Powers' : field === 'talents' ? 'Talents' : field === 'drawbacks' ? 'Drawbacks' : 'Flags'}</span>
+                        <input
+                          name={field}
+                          onChange={handleCharacterSheetFieldChange}
+                          placeholder="Separado por comas"
+                          value={characterSheetForm[field]}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="oraculo-character-sheet__block">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>05</span>
+                    <h4>Perfil narrativo</h4>
+                  </div>
+                  <div className="oraculo-character-sheet__text-grid">
+                    {[
+                      ['resources', 'Resources'],
+                      ['gear', 'Gear'],
+                      ['reputation', 'Reputation'],
+                      ['personality', 'Personality'],
+                      ['relationships', 'Relationships'],
+                    ].map(([field, label]) => (
+                      <label key={field}>
+                        <span>{label}</span>
+                        <textarea name={field} onChange={handleCharacterSheetFieldChange} value={characterSheetForm[field]} />
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="oraculo-character-sheet__block oraculo-character-sheet__block--notes">
+                  <div className="oraculo-character-sheet__block-title">
+                    <span>06</span>
+                    <h4>Notas ORÁCULO</h4>
+                  </div>
+                  <p className="oraculo-character-sheet__privacy-note">Notas internas del GM/ORÁCULO. No aparecen en perfiles públicos.</p>
+                  <label>
+                    <span>Notas GM</span>
+                    <textarea name="gmNotes" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.gmNotes} />
+                  </label>
+                </section>
 
                 <div className="oraculo-character-sheet__form-actions">
                   <button className="oraculo-character-sheet__action" disabled={isSavingCharacterSheet} type="submit">
@@ -740,6 +868,7 @@ const [characterSheet, setCharacterSheet] = useState(null)
                 </div>
               </form>
             ) : null}
+            
           </section>
 
           <section className="oraculo-dossier-panel">
