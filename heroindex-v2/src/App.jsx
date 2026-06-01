@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import AdsDebugPanel from './components/debug/AdsDebugPanel.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Corporations from './pages/Corporations.jsx'
 import GMManager from './pages/GMManager.jsx'
@@ -10,6 +9,7 @@ import Karma from './pages/Karma.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
 import MyProfile from './pages/MyProfile.jsx'
 import News from './pages/News.jsx'
+import OraculoBroadcasts from './pages/OraculoBroadcasts.jsx'
 import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
@@ -23,6 +23,14 @@ const routes = [
   { id: 'home', label: 'Inicio', path: '/', component: Home, navGroup: 'public' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
   { id: 'profiles', label: 'Perfiles', path: '/profiles', component: Profiles, navGroup: 'public' },
+   { id: 'news', label: 'Noticias', path: '/news', component: News, navGroup: 'public' },
+  {
+    id: 'corporations',
+    label: 'Corporaciones',
+    path: '/corporations',
+    component: Corporations,
+    navGroup: 'public',
+  },
   {
     id: 'hero-profile',
     label: 'Perfil HeroIndex',
@@ -31,22 +39,21 @@ const routes = [
     hiddenFromNav: true,
     navGroup: 'public',
   },
-  {
-    id: 'corporations',
-    label: 'Corporaciones',
-    path: '/corporations',
-    component: Corporations,
-    navGroup: 'public',
-  },
-  { id: 'news', label: 'Noticias', path: '/news', component: News, navGroup: 'public' },
   { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
   {
-    id: 'oraculo-campaign-log',
-    label: 'Registro de Campaña',
-    path: '/oraculo/campaign-log',
-    component: OraculoCampaignLog,
+     id: 'gm-manager',
+    label: 'GM Manager',
+    path: '/gm-manager',
+    component: GMManager,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'mission-calculator',
+    label: 'Calculadora de misión',
+    path: '/mission-calculator',
+    component: MissionCalculator,
     navGroup: 'oracle',
   },
   {
@@ -54,6 +61,20 @@ const routes = [
     label: 'Gestor de Karma',
     path: '/oraculo/karma-manager',
     component: OraculoKarmaManager,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-broadcasts',
+    label: 'Señales públicas',
+    path: '/oraculo/broadcasts',
+    component: OraculoBroadcasts,
+    navGroup: 'oracle',
+  },
+   {
+    id: 'oraculo-campaign-log',
+    label: 'Registro de Campaña',
+    path: '/oraculo/campaign-log',
+    component: OraculoCampaignLog,
     navGroup: 'oracle',
   },
   {
@@ -76,20 +97,6 @@ const routes = [
     path: '/oraculo/heroes/:heroId',
     component: OraculoHeroDossier,
     hiddenFromNav: true,
-    navGroup: 'oracle',
-  },
-  {
-    id: 'gm-manager',
-    label: 'GM Manager',
-    path: '/gm-manager',
-    component: GMManager,
-    navGroup: 'oracle',
-  },
-  {
-    id: 'mission-calculator',
-    label: 'Calculadora de misión',
-    path: '/mission-calculator',
-    component: MissionCalculator,
     navGroup: 'oracle',
   },
   {
@@ -154,7 +161,6 @@ function App() {
       onNavigate={handleNavigate}
     >
       <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
-      <AdsDebugPanel />
     </AppShell>
   )
 }

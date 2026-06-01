@@ -1,4 +1,5 @@
-import AdSlot from '../components/ads/AdSlot.jsx'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -53,6 +54,10 @@ function Home({ onNavigate }) {
   return (
     <div className="home-page">
        <section className="story-rail" aria-label="Héroes destacados">
+        <article className="story-card story-card--statement">
+          <strong>HeroIndex</strong>
+          <small>La red que conecta a la ciudadanía con los héroes que protegen el mañana.</small>
+        </article>
         {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
         {!heroesLoading && !corporationsLoading
           ? featuredHeroes.map((hero) => {
@@ -89,7 +94,7 @@ function Home({ onNavigate }) {
 
       <div className="home-grid">
         <div className="home-main" aria-label="Feed de noticias HeroIndex">
-          <section className="hero-feature">
+          <InlineVisualSlot className="hero-feature" page="home" section="Portada HeroIndex" slotId="home-hero-visual">
              {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading && topStory ? (
               <>
@@ -129,9 +134,15 @@ function Home({ onNavigate }) {
                 <p>La cobertura pública de HeroIndex aparecerá aquí cuando esté disponible.</p>
               </div>
             ) : null}
-          </section>
+           </InlineVisualSlot>
 
-          <AdSlot slotId="home-sponsor" />
+ <InlineVisualSlot className="home-visual-signal hi-card hi-card-public" page="home" section="Mensaje institucional" slotId="home-signal-visual">
+            <p className="page-card__kicker">Mensaje institucional</p>
+            <h3>Héroes registrados. Protección visible. Confianza certificada.</h3>
+            <p>Cobertura verificada para una ciudadanía más segura y conectada con la red oficial de protección HeroIndex.</p>
+           </InlineVisualSlot>
+
+           <BroadcastSlot className="home-broadcast-channel" placement="home-feature" variant="feature" />
 
           <section className="feed-panel">
             <div className="section-heading">
@@ -169,17 +180,14 @@ function Home({ onNavigate }) {
                         />
                       ) : null}
                       <footer>{item.metric}</footer>
-                      {item.inlinePlacementSlotId ? (
-                        <AdSlot slotId={item.inlinePlacementSlotId} />
-                      ) : null}
-                      {index === 1 && !item.inlinePlacementSlotId ? (
-                        <AdSlot slotId="news-inline" />
+                      {index === 1 ? (
+                        <BroadcastSlot className="home-feed-signal" placement="home-feed" variant="inline" />
                       ) : null}
                     </div>
                   </article>
                 ))
               : null}
-            {!newsLoading && recentNews.length === 0 ? <p>Sin noticias activas recientes.</p> : null}
+             {!newsLoading && recentNews.length === 0 ? <p>No hay noticias activas por el momento.</p> : null}
           </section>
         </div>
 
@@ -203,7 +211,7 @@ function Home({ onNavigate }) {
             </ol>
           </section>
 
-          <AdSlot slotId="sidebar-rail" />
+          <BroadcastSlot className="home-rail-signal" placement="home-rail" variant="rail" />
 
           <section className="side-panel">
             <div className="section-heading">

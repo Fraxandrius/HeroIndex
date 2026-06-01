@@ -1,8 +1,5 @@
 function shouldShowRuntimeStatus() {
-  return (
-    import.meta.env.VITE_DEBUG_BROADCAST === 'true' ||
-    import.meta.env.VITE_DEBUG_ADS === 'true'
-  )
+return import.meta.env.VITE_DEBUG_BROADCAST === 'true'
 }
 
 function TopBar({ currentSection }) {
@@ -14,7 +11,7 @@ function TopBar({ currentSection }) {
       </div>
       {shouldShowRuntimeStatus() ? (
         <div className="topbar__status" role="status">
-          Debug mode active
+          Modo de diagnóstico activo
         </div>
       ) : null}
     </header>

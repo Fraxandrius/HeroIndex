@@ -7,7 +7,7 @@ The files in this directory centralize temporary mock data used by the visual Ho
 - `mockHeroes.js` provides temporary hero story rail entries, the Home feature hero, and trending hero rankings.
 - `mockSocialPosts.js` provides temporary social feed posts for the Home timeline.
 - `mockClips.js` provides temporary featured clip cards.
-- `mockAds.js` provides fallback ad slot metadata and active creative content for `home-sponsor`, `sidebar-rail`, and `news-inline` while Ads reads from Firebase are optional.
+-  Las señales públicas se gestionan desde `/broadcasts` y se muestran como canales visuales institucionales.
 - `mockNews.js` provides temporary editorial/news metadata that helps document where inline news-related placements will live later.
 
 ## Future Firebase fields
@@ -28,7 +28,7 @@ The expected collection routes are:
 - `/heroes`
 - `/news`
 - `/corporations`
-- `/ads`
+- `/broadcasts`
 - `/socialPosts`
 
 News now reads from `/news` with `mockNews.js` as fallback. Corporations now read from `/corporations` with `mockCorporations.js` as fallback. The other routes remain documented for future integration.

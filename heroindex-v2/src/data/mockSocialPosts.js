@@ -18,7 +18,7 @@ export const mockSocialPosts = [
     body: 'A clean shadow-step sequence is trending across tactical breakdown channels today.',
     metric: '8.2K reposts',
     tag: 'Clip Drop',
-    inlineAdSlotId: 'news-inline',
+    inlineBroadcastSlotId: 'news-inline',
   },
   {
     id: 'feed-3',

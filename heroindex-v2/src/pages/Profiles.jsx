@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -176,7 +178,9 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
   const loading = heroesLoading || corporationsLoading || newsLoading
   const error = heroesError || corporationsError
 
-   const handleDeleteHero = async (hero) => {
+    const handleDeleteHero = async (hero, event) => {
+    event?.stopPropagation()
+
     if (!window.confirm('Eliminar héroe público. Esta acción no se puede deshacer.')) return
 
     setDeletingHeroId(hero.id)
@@ -192,19 +196,43 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
     }
   }
 
+   const openHeroProfile = (heroId) => {
+    onNavigate?.('hero-profile', { heroId })
+  }
+
+  const handleProfileCardKeyDown = (event, heroId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      openHeroProfile(heroId)
+    }
+  }
+
   return (
     <section className="page-card profiles-page profiles-page--catalog">
       <header className="profiles-hero">
         <p className="page-card__kicker">Catálogo público HeroIndex</p>
         <h2>Perfiles HeroIndex</h2>
         <p className="profiles-hero__subtitle">
-          Explora héroes registrados, trayectorias públicas y actividad destacada.
+          Explora héroes verificados dentro del ecosistema HeroIndex.
         </p>
         <p>
-          HeroIndex reúne perfiles públicos de héroes activos, afiliaciones verificadas y
-          señales de reconocimiento ciudadano.
+           Perfiles activos de protección, respuesta y presencia pública para una ciudadanía que confía
+          en figuras registradas, visibles y certificadas
         </p>
       </header>
+
+<InlineVisualSlot
+        className="profiles-feature-visual hi-card hi-card-public"
+        page="profiles"
+        section="Señal de perfiles verificados"
+        slotId="profiles-feature-visual"
+      >
+        <p className="page-card__kicker">Red de protección</p>
+        <h3>Conoce a las figuras que sostienen la nueva era heroica.</h3>
+        <p>Perfiles verificados, presencia pública confiable y cobertura HeroIndex para una ciudadanía más segura.</p>
+      </InlineVisualSlot>
+
+ <BroadcastSlot className="profiles-broadcast-channel" placement="profiles-feature" variant="feature" />
 
       <section className="profiles-controls" aria-label="Filtros de perfiles">
         <div className="profiles-filter-tabs" role="tablist" aria-label="Tipo de perfil">
@@ -272,10 +300,20 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
             const displayName = getHeroDisplayName(hero)
             const corporationName = getCorporationName(hero, getCorporationById)
             const publicPowers = getPublicPowers(hero)
+             const visiblePowers = publicPowers.slice(0, 3)
+            const hiddenPowerCount = Math.max(0, publicPowers.length - visiblePowers.length)
             const relatedNewsCount = getRelatedNewsCount(hero.id, feedNews)
 
             return (
-              <article className="profile-public-card" key={hero.id}>
+               <article
+                aria-label={`Abrir perfil público de ${displayName}`}
+                className="profile-public-card profile-public-card--interactive"
+                key={hero.id}
+                onClick={() => openHeroProfile(hero.id)}
+                onKeyDown={(event) => handleProfileCardKeyDown(event, hero.id)}
+                role="link"
+                tabIndex={0}
+              >
                 <div className="profile-public-card__cover">
                   {hero.bannerUrl ? (
                     <img
@@ -324,9 +362,10 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
 
                   {publicPowers.length > 0 ? (
                     <div className="profile-public-card__powers">
-                      {publicPowers.slice(0, 4).map((power) => (
+                       {visiblePowers.map((power) => (
                         <span key={power}>{power}</span>
                       ))}
+                      {hiddenPowerCount > 0 ? <span>+{hiddenPowerCount} más</span> : null}
                     </div>
                   ) : null}
 
@@ -336,18 +375,12 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
                       : `${relatedNewsCount} noticias relacionadas`}
                   </p>
 
-                  <button
-                    className="hero-profile-link"
-                    onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
-                    type="button"
-                  >
-                    Ver perfil
-                  </button>
+                  <span className="profile-public-card__open-indicator">Abrir perfil →</span>
                    {isOraculoMode ? (
                     <button
                       className="hero-profile-link hero-profile-link--internal"
                       disabled={deletingHeroId === hero.id}
-                      onClick={() => handleDeleteHero(hero)}
+                      onClick={(event) => handleDeleteHero(hero, event)}
                       type="button"
                     >
                       {deletingHeroId === hero.id ? 'Eliminando...' : 'Eliminar'}

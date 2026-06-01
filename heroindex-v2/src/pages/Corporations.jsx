@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useNews } from '../hooks/useNews.js'
 import { deleteCorporation } from '../services/corporationsService.js'
@@ -73,8 +75,12 @@ function Corporations() {
 
   return (
     <section className="page-card corporations-page">
-      <p className="page-card__kicker">Corporaciones · {source}</p>
-      <h2>Corporaciones HeroIndex</h2>
+        <InlineVisualSlot className="corporations-hero hi-card hi-card-public" page="corporations" section="Cabecera de corporaciones" slotId="corporations-feature-visual">
+        <p className="page-card__kicker">Afiliación certificada · {source}</p>
+        <h2>Corporaciones HeroIndex</h2>
+        <p>Organizaciones afiliadas que impulsan la nueva era de protección heroica: infraestructura, innovación y liderazgo al servicio de la ciudadanía.</p>
+      </InlineVisualSlot>
+      <BroadcastSlot className="corporations-broadcast-channel" placement="corporations-feature" variant="feature" />
             {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="corporations-list">
         {loading || newsLoading ? <p>Cargando corporaciones HeroIndex...</p> : null}
@@ -160,6 +166,7 @@ function Corporations() {
                       ) : (
                         <p className="corporation-news__empty">Sin noticias relacionadas.</p>
                       )}
+                      </section>
                        {isOraculoMode ? (
                       <button
                         disabled={deletingCorporationId === corporation.id}
@@ -169,7 +176,9 @@ function Corporations() {
                         {deletingCorporationId === corporation.id ? 'Eliminando...' : 'Eliminar corporación'}
                       </button>
                     ) : null}
-                    </section>
+                    {visibleCorporations.indexOf(corporation) === 1 ? (
+                      <BroadcastSlot className="corporations-grid-signal" placement="corporations-grid" variant="inline" />
+                    ) : null}
                   </div>
                 </article>
               )

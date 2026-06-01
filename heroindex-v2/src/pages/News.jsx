@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useNews } from '../hooks/useNews.js'
 import { deleteNews } from '../services/newsService.js'
 
@@ -28,12 +30,16 @@ function News() {
 
   return (
     <section className="page-card news-page">
-      <p className="page-card__kicker">Actualizaciones · {source}</p>
-      <h2>Noticias HeroIndex</h2>
+        <InlineVisualSlot className="news-hero hi-card hi-card-public" page="news" section="Cabecera de noticias" slotId="news-feature-visual">
+        <p className="page-card__kicker">Cobertura verificada · {source}</p>
+        <h2>Noticias HeroIndex</h2>
+        <p>Cobertura verificada de intervenciones, alertas y eventos heroicos relevantes para una ciudadanía protegida.</p>
+      </InlineVisualSlot>
+      <BroadcastSlot className="news-broadcast-channel" placement="news-feature" variant="feature" />
       {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="news-list">
         {loading ? <p>Cargando noticias HeroIndex...</p> : null}
-        {!loading && visibleNews.length === 0 ? <p>Sin noticias activas disponibles.</p> : null}
+        {!loading && visibleNews.length === 0 ? <p>No hay noticias activas por el momento.</p> : null}
         {!loading
           ? visibleNews.map((newsItem) => (
               <article className="news-list__item" key={newsItem.id}>
@@ -58,6 +64,9 @@ function News() {
                   <button disabled={deletingNewsId === newsItem.id} onClick={() => handleDeleteNews(newsItem)} type="button">
                     {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar noticia'}
                   </button>
+                ) : null}
+                {visibleNews.indexOf(newsItem) === 1 ? (
+                  <BroadcastSlot className="news-feed-signal" placement="news-feed" variant="inline" />
                 ) : null}
               </article>
             ))

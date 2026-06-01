@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -250,9 +252,15 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
 <div className="hero-profile-layout">
         <main className="hero-profile-main">
           <section className="hero-profile-section hero-profile-section--lead">
-            <p className="page-card__kicker">Biografía pública</p>
+             <p className="page-card__kicker">Presencia heroica confiable</p>
             <p>{publicBio}</p>
           </section>
+
+<InlineVisualSlot className="hero-profile-section hero-profile-visual-signal" page="hero-profile" section="Canal verificado de perfil" slotId="hero-profile-feature-visual">
+            <p className="page-card__kicker">Canal verificado</p>
+            <h3>Perfil verificado por HeroIndex</h3>
+            <p>Actividad destacada dentro del ecosistema HeroIndex y cobertura pública asociada para una ciudadanía más segura.</p>
+          </InlineVisualSlot>
 
           <section className="hero-profile-section">
             <p className="page-card__kicker">Poderes visibles</p>
@@ -335,6 +343,13 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
             </p>
           </section>
           
+          <BroadcastSlot
+            className="hero-profile-rail-signal"
+            heroId={hero.id}
+            placement="hero-profile-rail"
+            variant="rail"
+          />
+
           {isOraculoMode ? (
             <section className="hero-profile-panel hero-profile-oraculo-overlay">
               <p className="page-card__kicker">Modo ORÁCULO activo</p>

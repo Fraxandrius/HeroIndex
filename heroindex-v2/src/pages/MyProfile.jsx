@@ -364,7 +364,7 @@ function MyProfile({ onNavigate }) {
             <span className="section-kicker">Módulo de jugador</span>
             <h2>Mi Perfil</h2>
             <p className="my-profile-hero__subtitle">
-               Gestiona tu identidad heroica, tu presentación pública y tu hoja de personaje.
+               Tu identidad pública, tu progreso y tu ficha privada en un solo lugar.
             </p>
             <p>
               Los datos públicos definen cómo apareces en HeroIndex. La hoja privada contiene tu

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
+import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 
@@ -227,17 +229,28 @@ function Ranking({ onNavigate }) {
       ? 'No hay resultados nacionales disponibles para los filtros actuales.'
       : 'No hay resultados para los filtros actuales.'
 
+      const openHeroProfile = (heroId) => {
+    onNavigate?.('hero-profile', { heroId })
+  }
+
+  const handleRankingCardKeyDown = (event, heroId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      openHeroProfile(heroId)
+    }
+  }
+
   return (
     <section className="page-card ranking-page">
       <header className="ranking-hero">
         <p className="page-card__kicker">Índice oficial HeroIndex</p>
         <h2>Ranking HeroIndex</h2>
         <p className="ranking-hero__subtitle">
-          El índice oficial de reconocimiento heroico, actividad destacada y presencia pública.
+           El índice oficial de figuras heroicas reconocidas por su trayectoria, presencia pública y compromiso con la protección ciudadana.
         </p>
         <p>
-          HeroIndex reúne señales públicas de actividad, respuesta e impacto ciudadano para destacar
-          a los héroes que inspiran mayor confianza en el ecosistema heroico.
+         La excelencia heroica, organizada para una ciudadanía más segura mediante señales públicas verificadas
+          y presencia heroica confiable.
         </p>
       </header>
 
@@ -330,8 +343,17 @@ function Ranking({ onNavigate }) {
 
                   return (
                     <article
-                      className={index === 0 ? 'ranking-top-card ranking-top-card--leader' : 'ranking-top-card'}
+                      aria-label={`Abrir perfil público de ${displayName}`}
+                      className={
+                        index === 0
+                          ? 'ranking-top-card ranking-top-card--leader ranking-top-card--interactive'
+                          : 'ranking-top-card ranking-top-card--interactive'
+                      }
                       key={hero.id}
+                      onClick={() => openHeroProfile(hero.id)}
+                      onKeyDown={(event) => handleRankingCardKeyDown(event, hero.id)}
+                      role="link"
+                      tabIndex={0}
                     >
                       <span className="ranking-position">#{index + 1}</span>
                       <HeroAvatar hero={hero} name={displayName} size={index === 0 ? 'large' : 'default'} />
@@ -345,13 +367,7 @@ function Ranking({ onNavigate }) {
                         <RankingMetric label="Puntos HeroIndex" value={getNumericValue(hero.rankingPoints)} />
                         <RankingMetric label="Aprobación ciudadana" value={getNumericValue(hero.approval)} />
                       </dl>
-                      <button
-                        className="hero-profile-link"
-                        onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
-                        type="button"
-                      >
-                        Ver perfil
-                      </button>
+                      <span className="ranking-top-card__open-indicator">Abrir perfil →</span>
                     </article>
                   )
                 })}
@@ -360,6 +376,18 @@ function Ranking({ onNavigate }) {
           ) : (
             <p className="ranking-state">{emptyMessage}</p>
           )}
+
+          {rankedHeroes.length > 0 ? (
+            <InlineVisualSlot className="ranking-visual-signal hi-card hi-card-public" page="ranking" section="Señal destacada de ranking" slotId="ranking-feature-visual">
+              <p className="page-card__kicker">Señal destacada</p>
+              <h3>Héroes verificados dentro del estándar HeroIndex</h3>
+              <p>Posicionamiento actualizado según señales públicas de actividad heroica y compromiso con la protección moderna.</p>
+            </InlineVisualSlot>
+          ) : null}
+
+{rankedHeroes.length > 0 ? (
+            <BroadcastSlot className="ranking-broadcast-channel" placement="ranking-feature" variant="feature" />
+          ) : null}
 
           {rankedHeroes.length > 0 ? (
             <section className="ranking-list-section">

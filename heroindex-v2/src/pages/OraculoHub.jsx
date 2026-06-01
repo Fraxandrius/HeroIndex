@@ -248,6 +248,11 @@ function OraculoHub({ onNavigate }) {
     karmaTransactionsLoading
   const error = heroesError || corporationsError || newsError || missionCalculationsError || campaignLogsError
   const quickLinks = [
+        {
+      description: 'Crear y revisar señales públicas institucionales.',
+      label: 'Señales públicas',
+      routeId: 'oraculo-broadcasts',
+    },
     {
       description: 'Registrar sesiones, misiones y consecuencias narrativas.',
       label: 'Registro de Campaña',
