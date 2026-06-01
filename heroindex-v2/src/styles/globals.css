@@ -3485,3 +3485,177 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.oraculo-dossier-state--success {
+  border-color: rgba(104, 216, 255, 0.26);
+  color: #bdefff;
+}
+
+.oraculo-dossier-panel__header {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.oraculo-character-sheet {
+  border-color: rgba(245, 190, 92, 0.24);
+}
+
+.oraculo-character-sheet__action {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.18), rgba(245, 190, 92, 0.14));
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.68rem 0.95rem;
+  width: fit-content;
+}
+
+.oraculo-character-sheet__action:hover:not(:disabled) {
+  border-color: rgba(245, 190, 92, 0.48);
+  transform: translateY(-1px);
+}
+
+.oraculo-character-sheet__action:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.oraculo-character-sheet__action--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(151, 164, 205, 0.2);
+}
+
+.oraculo-character-sheet__empty,
+.oraculo-character-sheet__summary,
+.oraculo-character-sheet__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.oraculo-character-sheet__identity,
+.oraculo-character-sheet__details,
+.oraculo-character-sheet__form-grid,
+.oraculo-character-sheet__text-grid,
+.oraculo-character-sheet__attributes-edit {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.oraculo-character-sheet__identity,
+.oraculo-character-sheet__form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.oraculo-character-sheet__details {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.oraculo-character-sheet__attributes,
+.oraculo-character-sheet__attributes-edit {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.oraculo-character-sheet__identity div,
+.oraculo-character-sheet__details div,
+.oraculo-character-sheet__attributes div,
+.oraculo-character-sheet__fieldset {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  padding: 0.85rem;
+}
+
+.oraculo-character-sheet__identity dt,
+.oraculo-character-sheet__details dt,
+.oraculo-character-sheet__attributes span,
+.oraculo-character-sheet__form label span,
+.oraculo-character-sheet__fieldset legend {
+  color: #8edfff;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.oraculo-character-sheet__identity dd,
+.oraculo-character-sheet__details dd,
+.oraculo-character-sheet__attributes strong {
+  color: #ffffff;
+  font-weight: 950;
+  margin: 0.25rem 0 0;
+}
+
+.oraculo-character-sheet__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.oraculo-character-sheet__chips span {
+  background: rgba(104, 216, 255, 0.12);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 999px;
+  color: #bdefff;
+  font-size: 0.74rem;
+  font-weight: 850;
+  padding: 0.32rem 0.52rem;
+}
+
+.oraculo-character-sheet__form label,
+.oraculo-character-sheet__attributes-edit label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.oraculo-character-sheet__form input,
+.oraculo-character-sheet__form textarea {
+  background: rgba(7, 12, 25, 0.88);
+  border: 1px solid rgba(151, 164, 205, 0.24);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  min-width: 0;
+  padding: 0.78rem 0.85rem;
+}
+
+.oraculo-character-sheet__form textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.oraculo-character-sheet__checkbox {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 0.85rem;
+  display: flex !important;
+  gap: 0.55rem;
+  padding: 0.78rem 0.85rem;
+}
+
+.oraculo-character-sheet__checkbox input {
+  width: auto;
+}
+
+.oraculo-character-sheet__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+@media (max-width: 760px) {
+  .oraculo-dossier-panel__header {
+    display: grid;
+  }
+
+  .oraculo-character-sheet__action,
+  .oraculo-character-sheet__form-actions button {
+    width: 100%;
+  }
+}

@@ -2,12 +2,57 @@ import { useEffect, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import {
+  createOrUpdateCharacterSheet,
+  subscribeToCharacterSheet,
+  updateCharacterSheet,
+} from '../services/characterSheetsService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
 const statusLabels = {
   approved: 'Aprobado',
   draft: 'Borrador',
   rejected: 'Rechazado',
+}
+
+const attributeLabels = {
+  agility: 'Agility',
+  fighting: 'Fighting',
+  intuition: 'Intuition',
+  presence: 'Presence',
+  reason: 'Reason',
+  strength: 'Strength',
+}
+
+const attributeKeys = ['fighting', 'agility', 'strength', 'reason', 'intuition', 'presence']
+const listFields = ['powers', 'talents', 'drawbacks', 'flags']
+
+const baseCharacterSheet = {
+  attributes: {
+    agility: 1,
+    fighting: 1,
+    intuition: 1,
+    presence: 1,
+    reason: 1,
+    strength: 1,
+  },
+  drawbacks: [],
+  flags: [],
+  gear: '',
+  gmNotes: '',
+  health: 0,
+  isNpc: true,
+  karma: 0,
+  ownerId: '',
+  personality: '',
+  powers: [],
+  realName: '',
+  relationships: '',
+  reputation: '',
+  resources: '',
+  resolve: 0,
+  role: '',
+  talents: [],
 }
 
 function getNumericValue(value) {
@@ -122,6 +167,86 @@ function getInternalFields(hero = {}) {
     .filter(([, value]) => value)
 }
 
+function normalizeArray(value) {
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  return []
+}
+
+function arrayToText(value) {
+  return normalizeArray(value).join(', ')
+}
+
+function createBaseCharacterSheet(heroId) {
+  return {
+    ...baseCharacterSheet,
+    heroId,
+  }
+}
+
+function getSheetFormValues(sheet = {}) {
+  const mergedSheet = {
+    ...baseCharacterSheet,
+    ...sheet,
+    attributes: {
+      ...baseCharacterSheet.attributes,
+      ...(sheet.attributes ?? {}),
+    },
+  }
+
+  return {
+    ...mergedSheet,
+    drawbacks: arrayToText(mergedSheet.drawbacks),
+    flags: arrayToText(mergedSheet.flags),
+    powers: arrayToText(mergedSheet.powers),
+    talents: arrayToText(mergedSheet.talents),
+  }
+}
+
+function getSheetPayload(formState = {}) {
+  return {
+    realName: formState.realName ?? '',
+    role: formState.role ?? '',
+    isNpc: Boolean(formState.isNpc),
+    attributes: Object.fromEntries(
+      attributeKeys.map((key) => [key, getNumericValue(formState.attributes?.[key] ?? 1)]),
+    ),
+    health: getNumericValue(formState.health),
+    resolve: getNumericValue(formState.resolve),
+    karma: getNumericValue(formState.karma),
+    powers: normalizeArray(formState.powers),
+    talents: normalizeArray(formState.talents),
+    drawbacks: normalizeArray(formState.drawbacks),
+    flags: normalizeArray(formState.flags),
+    resources: formState.resources ?? '',
+    gear: formState.gear ?? '',
+    reputation: formState.reputation ?? '',
+    personality: formState.personality ?? '',
+    relationships: formState.relationships ?? '',
+    gmNotes: formState.gmNotes ?? '',
+  }
+}
+
+function renderListValue(value) {
+  const items = normalizeArray(value)
+
+  if (items.length === 0) return <span>—</span>
+
+  return (
+    <div className="oraculo-character-sheet__chips">
+      {items.map((item) => (
+        <span key={item}>{item}</span>
+      ))}
+    </div>
+  )
+}
+
 function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
   const heroId = routeParams.heroId
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -134,6 +259,15 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
   const [missionCalculations, setMissionCalculations] = useState([])
   const [calculationsError, setCalculationsError] = useState(null)
   const [calculationsLoading, setCalculationsLoading] = useState(true)
+const [characterSheet, setCharacterSheet] = useState(null)
+  const [characterSheetError, setCharacterSheetError] = useState(null)
+  const [characterSheetLoading, setCharacterSheetLoading] = useState(true)
+  const [characterSheetForm, setCharacterSheetForm] = useState(getSheetFormValues())
+  const [isEditingCharacterSheet, setIsEditingCharacterSheet] = useState(false)
+  const [isCreatingCharacterSheet, setIsCreatingCharacterSheet] = useState(false)
+  const [isSavingCharacterSheet, setIsSavingCharacterSheet] = useState(false)
+  const [characterSheetMessage, setCharacterSheetMessage] = useState('')
+  const [characterSheetSaveError, setCharacterSheetSaveError] = useState('')
 
   useEffect(() => {
     return subscribeToMissionCalculations(
@@ -147,6 +281,23 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
       },
     )
   }, [])
+
+  useEffect(() => {
+    return subscribeToCharacterSheet(
+      heroId,
+      (sheet) => {
+        setCharacterSheet(sheet)
+        setCharacterSheetLoading(false)
+        if (sheet && !isEditingCharacterSheet) {
+          setCharacterSheetForm(getSheetFormValues(sheet))
+        }
+      },
+      (error) => {
+        setCharacterSheetError(error)
+        setCharacterSheetLoading(false)
+      },
+    )
+  }, [heroId, isEditingCharacterSheet])
 
   const hero = heroes.find((heroItem) => String(heroItem.id) === String(heroId))
   const displayName = hero ? getHeroDisplayName(hero) : ''
@@ -164,8 +315,78 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
         .sort((first, second) => toTimestamp(second.createdAt) - toTimestamp(first.createdAt))
     : []
 
-  const loading = heroesLoading || corporationsLoading || newsLoading || calculationsLoading
+  const loading = heroesLoading || corporationsLoading || newsLoading || calculationsLoading || characterSheetLoading
   const error = heroesError || corporationsError || newsError || calculationsError
+
+  const handleCreateCharacterSheet = async () => {
+    setIsCreatingCharacterSheet(true)
+    setCharacterSheetMessage('')
+    setCharacterSheetSaveError('')
+
+    try {
+      await createOrUpdateCharacterSheet(hero.id, createBaseCharacterSheet(hero.id))
+      setCharacterSheetMessage('Hoja privada creada correctamente.')
+    } catch (error) {
+      setCharacterSheetSaveError(error.message ?? String(error))
+    } finally {
+      setIsCreatingCharacterSheet(false)
+    }
+  }
+
+  const handleStartCharacterSheetEdit = () => {
+    setCharacterSheetForm(getSheetFormValues(characterSheet))
+    setIsEditingCharacterSheet(true)
+    setCharacterSheetMessage('')
+    setCharacterSheetSaveError('')
+  }
+
+  const handleCancelCharacterSheetEdit = () => {
+    setCharacterSheetForm(getSheetFormValues(characterSheet))
+    setIsEditingCharacterSheet(false)
+    setCharacterSheetSaveError('')
+  }
+
+  const handleCharacterSheetFieldChange = (event) => {
+    const { checked, name, type, value } = event.target
+
+    setCharacterSheetForm((currentForm) => ({
+      ...currentForm,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setCharacterSheetSaveError('')
+    setCharacterSheetMessage('')
+  }
+
+  const handleCharacterSheetAttributeChange = (event) => {
+    const { name, value } = event.target
+
+    setCharacterSheetForm((currentForm) => ({
+      ...currentForm,
+      attributes: {
+        ...currentForm.attributes,
+        [name]: value,
+      },
+    }))
+    setCharacterSheetSaveError('')
+    setCharacterSheetMessage('')
+  }
+
+  const handleSaveCharacterSheet = async (event) => {
+    event.preventDefault()
+    setIsSavingCharacterSheet(true)
+    setCharacterSheetMessage('')
+    setCharacterSheetSaveError('')
+
+    try {
+      await updateCharacterSheet(hero.id, getSheetPayload(characterSheetForm))
+      setCharacterSheetMessage('Hoja privada guardada correctamente.')
+      setIsEditingCharacterSheet(false)
+    } catch (error) {
+      setCharacterSheetSaveError(error.message ?? String(error))
+    } finally {
+      setIsSavingCharacterSheet(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -195,6 +416,16 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
   const publicPowers = getPublicPowers(hero)
   const publicBio = hero.publicBio || 'Biografía pública pendiente de actualización.'
   const internalFields = getInternalFields(hero)
+    const displaySheet = characterSheet
+    ? {
+        ...baseCharacterSheet,
+        ...characterSheet,
+        attributes: {
+          ...baseCharacterSheet.attributes,
+          ...(characterSheet.attributes ?? {}),
+        },
+      }
+    : null
 
   return (
     <section className="page-card oraculo-dossier-page">
@@ -292,6 +523,225 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
             </dl>
           </section>
 
+<section className="oraculo-dossier-panel oraculo-character-sheet">
+            <div className="oraculo-dossier-panel__header">
+              <div>
+                <h3>Hoja privada RPG</h3>
+                <p>Esta hoja pertenece a la capa ORÁCULO. No aparece en perfiles públicos ni en el ranking.</p>
+              </div>
+              {characterSheet && !isEditingCharacterSheet ? (
+                <button className="oraculo-character-sheet__action" onClick={handleStartCharacterSheetEdit} type="button">
+                  Editar hoja privada
+                </button>
+              ) : null}
+            </div>
+            {characterSheetError ? (
+              <p className="oraculo-dossier-state oraculo-dossier-state--error">
+                No fue posible cargar la hoja privada RPG.
+              </p>
+            ) : null}
+            {characterSheetMessage ? (
+              <p className="oraculo-dossier-state oraculo-dossier-state--success">{characterSheetMessage}</p>
+            ) : null}
+            {characterSheetSaveError ? (
+              <p className="oraculo-dossier-state oraculo-dossier-state--error">{characterSheetSaveError}</p>
+            ) : null}
+
+            {!characterSheet ? (
+              <div className="oraculo-character-sheet__empty">
+                <p>No existe hoja privada RPG para este héroe.</p>
+                <button
+                  className="oraculo-character-sheet__action"
+                  disabled={isCreatingCharacterSheet}
+                  onClick={handleCreateCharacterSheet}
+                  type="button"
+                >
+                  {isCreatingCharacterSheet ? 'Creando hoja…' : 'Crear hoja privada'}
+                </button>
+              </div>
+            ) : null}
+
+            {displaySheet && !isEditingCharacterSheet ? (
+              <div className="oraculo-character-sheet__summary">
+                <dl className="oraculo-character-sheet__identity">
+                  <div>
+                    <dt>Nombre real</dt>
+                    <dd>{displaySheet.realName || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Tipo</dt>
+                    <dd>{displaySheet.isNpc ? 'NPC' : 'Jugador'}</dd>
+                  </div>
+                  <div>
+                    <dt>Rol</dt>
+                    <dd>{displaySheet.role || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Karma</dt>
+                    <dd>{getNumericValue(displaySheet.karma)}</dd>
+                  </div>
+                  <div>
+                    <dt>Health</dt>
+                    <dd>{getNumericValue(displaySheet.health)}</dd>
+                  </div>
+                  <div>
+                    <dt>Resolve</dt>
+                    <dd>{getNumericValue(displaySheet.resolve)}</dd>
+                  </div>
+                </dl>
+                <div className="oraculo-character-sheet__attributes">
+                  {attributeKeys.map((attribute) => (
+                    <div key={attribute}>
+                      <span>{attributeLabels[attribute]}</span>
+                      <strong>{getNumericValue(displaySheet.attributes?.[attribute])}</strong>
+                    </div>
+                  ))}
+                </div>
+                <dl className="oraculo-character-sheet__details">
+                  <div>
+                    <dt>Powers</dt>
+                    <dd>{renderListValue(displaySheet.powers)}</dd>
+                  </div>
+                  <div>
+                    <dt>Talents</dt>
+                    <dd>{renderListValue(displaySheet.talents)}</dd>
+                  </div>
+                  <div>
+                    <dt>Drawbacks</dt>
+                    <dd>{renderListValue(displaySheet.drawbacks)}</dd>
+                  </div>
+                  <div>
+                    <dt>Resources</dt>
+                    <dd>{displaySheet.resources || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Gear</dt>
+                    <dd>{displaySheet.gear || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Reputation</dt>
+                    <dd>{displaySheet.reputation || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Personality</dt>
+                    <dd>{displaySheet.personality || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Relationships</dt>
+                    <dd>{displaySheet.relationships || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Flags</dt>
+                    <dd>{renderListValue(displaySheet.flags)}</dd>
+                  </div>
+                  <div>
+                    <dt>Notas GM</dt>
+                    <dd>{displaySheet.gmNotes || '—'}</dd>
+                  </div>
+                </dl>
+              </div>
+            ) : null}
+
+            {isEditingCharacterSheet ? (
+              <form className="oraculo-character-sheet__form" onSubmit={handleSaveCharacterSheet}>
+                <div className="oraculo-character-sheet__form-grid">
+                  <label>
+                    <span>Nombre real</span>
+                    <input name="realName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.realName} />
+                  </label>
+                  <label>
+                    <span>Rol</span>
+                    <input name="role" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.role} />
+                  </label>
+                  <label className="oraculo-character-sheet__checkbox">
+                    <input
+                      checked={characterSheetForm.isNpc}
+                      name="isNpc"
+                      onChange={handleCharacterSheetFieldChange}
+                      type="checkbox"
+                    />
+                    <span>Es NPC</span>
+                  </label>
+                  <label>
+                    <span>Karma</span>
+                    <input name="karma" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.karma} />
+                  </label>
+                  <label>
+                    <span>Health</span>
+                    <input name="health" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.health} />
+                  </label>
+                  <label>
+                    <span>Resolve</span>
+                    <input name="resolve" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.resolve} />
+                  </label>
+                </div>
+
+                <fieldset className="oraculo-character-sheet__fieldset">
+                  <legend>Atributos</legend>
+                  <div className="oraculo-character-sheet__attributes-edit">
+                    {attributeKeys.map((attribute) => (
+                      <label key={attribute}>
+                        <span>{attributeLabels[attribute]}</span>
+                        <input
+                          max="10"
+                          min="1"
+                          name={attribute}
+                          onChange={handleCharacterSheetAttributeChange}
+                          type="number"
+                          value={characterSheetForm.attributes?.[attribute] ?? 1}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <div className="oraculo-character-sheet__form-grid">
+                  {listFields.map((field) => (
+                    <label key={field}>
+                      <span>{field === 'powers' ? 'Powers' : field === 'talents' ? 'Talents' : field === 'drawbacks' ? 'Drawbacks' : 'Flags'}</span>
+                      <input
+                        name={field}
+                        onChange={handleCharacterSheetFieldChange}
+                        placeholder="Separado por comas"
+                        value={characterSheetForm[field]}
+                      />
+                    </label>
+                  ))}
+                </div>
+
+                <div className="oraculo-character-sheet__text-grid">
+                  {[
+                    ['resources', 'Resources'],
+                    ['gear', 'Gear'],
+                    ['reputation', 'Reputation'],
+                    ['personality', 'Personality'],
+                    ['relationships', 'Relationships'],
+                    ['gmNotes', 'Notas GM'],
+                  ].map(([field, label]) => (
+                    <label key={field}>
+                      <span>{label}</span>
+                      <textarea name={field} onChange={handleCharacterSheetFieldChange} value={characterSheetForm[field]} />
+                    </label>
+                  ))}
+                </div>
+
+                <div className="oraculo-character-sheet__form-actions">
+                  <button className="oraculo-character-sheet__action" disabled={isSavingCharacterSheet} type="submit">
+                    {isSavingCharacterSheet ? 'Guardando…' : 'Guardar hoja'}
+                  </button>
+                  <button
+                    className="oraculo-character-sheet__action oraculo-character-sheet__action--secondary"
+                    disabled={isSavingCharacterSheet}
+                    onClick={handleCancelCharacterSheetEdit}
+                    type="button"
+                  >
+                    Cancelar edición
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </section>
+
           <section className="oraculo-dossier-panel">
             <h3>Evaluaciones ORÁCULO</h3>
             {relatedCalculations.length > 0 ? (
@@ -377,11 +827,6 @@ function OraculoHeroDossier({ onNavigate, routeParams = {} }) {
               públicas. Este dossier ORÁCULO puede contener datos internos no visibles para civiles ni
               jugadores.
             </p>
-          </section>
-
-          <section className="oraculo-dossier-panel oraculo-dossier-panel--locked">
-            <h3>Hoja privada RPG</h3>
-            <p>Próximamente: atributos, poderes completos, talentos, drawbacks, Karma y notas privadas.</p>
           </section>
         </aside>
       </div>
