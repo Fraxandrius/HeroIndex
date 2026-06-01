@@ -58,14 +58,6 @@ function formatOptionalNumber(value) {
   return formatNumber(value)
 }
 
-function formatValue(value) {
-  if (value === null || value === undefined || value === '') {
-    return '—'
-  }
-
-  return String(value)
-}
-
 function normalizeList(value) {
   if (Array.isArray(value)) {
     return value.map((item) => String(item).trim()).filter(Boolean)
@@ -131,9 +123,9 @@ function MyProfile({ onNavigate }) {
   const [isEditingPublic, setIsEditingPublic] = useState(false)
   const [isSavingPublic, setIsSavingPublic] = useState(false)
   const [publicForm, setPublicForm] = useState(createPublicForm())
-const [publicMessage, setPublicMessage] = useState('')
+  const [publicMessage, setPublicMessage] = useState('')
   const [publicError, setPublicError] = useState('')
-  const [isEditingSheet, setIsEditingSheet] = useState(false)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSavingSheet, setIsSavingSheet] = useState(false)
   const [sheetForm, setSheetForm] = useState(createSheetForm())
   const [sheetMessage, setSheetMessage] = useState('')
@@ -157,6 +149,24 @@ const [publicMessage, setPublicMessage] = useState('')
     )
   }, [])
 
+  useEffect(() => {
+    if (!isSheetOpen) {
+      return undefined
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSheetForm(createSheetForm(characterSheet))
+        setSheetSaveError('')
+        setIsSheetOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [characterSheet, isSheetOpen])
+
   const hero = useMemo(
     () => heroes.find((item) => String(item.id) === String(playerHeroId)),
     [heroes],
@@ -166,6 +176,19 @@ const [publicMessage, setPublicMessage] = useState('')
   const publicPowers = getPublicPowers(hero)
   const isLoading = Boolean(playerHeroId) && (heroesLoading || corporationsLoading || sheetLoading)
   const loadError = heroesError || corporationsError || sheetError
+
+  const closeSheetPanel = () => {
+    setSheetForm(createSheetForm(characterSheet))
+    setSheetSaveError('')
+    setIsSheetOpen(false)
+  }
+
+  const handleOpenSheetPanel = () => {
+    setSheetForm(createSheetForm(characterSheet))
+    setSheetMessage('')
+    setSheetSaveError('')
+    setIsSheetOpen(true)
+  }
 
   const handleStartEditPublic = () => {
     setPublicForm(createPublicForm(hero))
@@ -217,19 +240,6 @@ const [publicMessage, setPublicMessage] = useState('')
     }
   }
 
-  const handleStartEditSheet = () => {
-    setSheetForm(createSheetForm(characterSheet))
-    setSheetMessage('')
-    setSheetSaveError('')
-    setIsEditingSheet(true)
-  }
-
-  const handleCancelEditSheet = () => {
-    setSheetForm(createSheetForm(characterSheet))
-    setSheetSaveError('')
-    setIsEditingSheet(false)
-  }
-
   const handleSheetFormChange = (field, value) => {
     setSheetForm((currentForm) => ({
       ...currentForm,
@@ -275,8 +285,7 @@ const [publicMessage, setPublicMessage] = useState('')
         relationships: sheetForm.relationships.trim(),
       })
 
-      setSheetMessage('Hoja RPG guardada correctamente.')
-      setIsEditingSheet(false)
+     setSheetMessage('Hoja guardada correctamente.')
     } catch {
       setSheetSaveError('No fue posible guardar los cambios.')
     } finally {
@@ -430,291 +439,74 @@ const [publicMessage, setPublicMessage] = useState('')
         {publicError && <p className="my-profile-feedback my-profile-feedback--error">{publicError}</p>}
 
         {isEditingPublic ? (
-          <form className="my-profile-form" onSubmit={handleSavePublic}>
-            <label>
-              <span>Alias</span>
-              <input
-                value={publicForm.alias}
-                onChange={(event) => handlePublicFormChange('alias', event.target.value)}
-              />
+<form className="my-profile-form hi-form" onSubmit={handleSavePublic}>
+            <label className="hi-field">
+              <span className="hi-label">Alias</span>
+              <input className="hi-input" value={publicForm.alias} onChange={(event) => handlePublicFormChange('alias', event.target.value)} />
             </label>
-            <label>
-              <span>Nombre público</span>
-              <input
-                value={publicForm.publicName}
-                onChange={(event) => handlePublicFormChange('publicName', event.target.value)}
-              />
+            <label className="hi-field">
+              <span className="hi-label">Nombre público</span>
+              <input className="hi-input" value={publicForm.publicName} onChange={(event) => handlePublicFormChange('publicName', event.target.value)} />
             </label>
-            <label>
-              <span>Código / nombre clave</span>
-              <input
-                value={publicForm.codename}
-                onChange={(event) => handlePublicFormChange('codename', event.target.value)}
-              />
+            <label className="hi-field">
+              <span className="hi-label">Código / nombre clave</span>
+              <input className="hi-input" value={publicForm.codename} onChange={(event) => handlePublicFormChange('codename', event.target.value)} />
             </label>
-            <label>
-              <span>Título heroico</span>
-              <input
-                value={publicForm.heroTitle}
-                onChange={(event) => handlePublicFormChange('heroTitle', event.target.value)}
-              />
+            <label className="hi-field">
+              <span className="hi-label">Título heroico</span>
+              <input className="hi-input" value={publicForm.heroTitle} onChange={(event) => handlePublicFormChange('heroTitle', event.target.value)} />
             </label>
-            <label className="my-profile-form__wide">
-              <span>Biografía pública</span>
-              <textarea
-                rows="5"
-                value={publicForm.publicBio}
-                onChange={(event) => handlePublicFormChange('publicBio', event.target.value)}
-              />
+            <label className="hi-field my-profile-form__wide">
+              <span className="hi-label">Biografía pública</span>
+              <textarea className="hi-textarea" rows="5" value={publicForm.publicBio} onChange={(event) => handlePublicFormChange('publicBio', event.target.value)} />
             </label>
-            <label className="my-profile-form__wide">
-              <span>Poderes visibles</span>
-              <input
-                value={publicForm.publicPowers}
-                onChange={(event) => handlePublicFormChange('publicPowers', event.target.value)}
-                placeholder="Separados por coma"
-              />
+            <label className="hi-field my-profile-form__wide">
+              <span className="hi-label">Poderes visibles</span>
+              <input className="hi-input" value={publicForm.publicPowers} onChange={(event) => handlePublicFormChange('publicPowers', event.target.value)} placeholder="Separados por coma" />
             </label>
-            <label>
-              <span>Avatar URL</span>
-              <input
-                value={publicForm.avatarUrl}
-                onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)}
-              />
+            <label className="hi-field">
+              <span className="hi-label">Avatar URL</span>
+              <input className="hi-input" value={publicForm.avatarUrl} onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)} />
             </label>
-            <label>
-              <span>Portada URL</span>
-              <input
-                value={publicForm.bannerUrl}
-                onChange={(event) => handlePublicFormChange('bannerUrl', event.target.value)}
-              />
+            <label className="hi-field">
+              <span className="hi-label">Portada URL</span>
+              <input className="hi-input" value={publicForm.bannerUrl} onChange={(event) => handlePublicFormChange('bannerUrl', event.target.value)} />
             </label>
 
             <div className="my-profile-form__actions">
-              <button type="submit" disabled={isSavingPublic}>
-                 {isSavingPublic ? 'Guardando...' : 'Guardar configuración pública'}
+              <button className="hi-button hi-button--primary" type="submit" disabled={isSavingPublic}>
+                {isSavingPublic ? 'Guardando...' : 'Guardar configuración pública'}
               </button>
-              <button type="button" onClick={handleCancelEditPublic} disabled={isSavingPublic}>
+              <button className="hi-button hi-button--secondary" type="button" onClick={handleCancelEditPublic} disabled={isSavingPublic}>
                 Cancelar cambios
               </button>
             </div>
           </form>
         ) : (
-           <p className="my-profile-help-text">
+          <p className="my-profile-help-text">
             La configuración pública puede actualizar tu alias, título heroico, biografía, poderes
             visibles e imágenes. Las métricas públicas permanecen bajo control de HeroIndex.
           </p>
         )}
       </section>
 
-      <section className="page-card my-profile-karma">
-        <span className="section-kicker">Progresión</span>
-        <h3>Karma</h3>
-        <strong>{formatOptionalNumber(characterSheet?.karma)}</strong>
-        <p>Karma es tu recurso de progresión. Su asignación final depende de ORÁCULO/GM.</p>
-        <p>
-          Karma es el recurso de progresión utilizado para mejorar tu héroe. No modifica
-          directamente el Ranking HeroIndex.
-        </p>
-      </section>
-
-      <section className="page-card my-profile-panel">
-        <div className="my-profile-panel__header">
-          <div>
-            <span className="section-kicker">Mi hoja RPG</span>
-            <h3>Ficha privada de personaje</h3>
-          </div>
-          {characterSheet && !isEditingSheet && (
-            <button type="button" onClick={handleStartEditSheet}>
-              Editar hoja RPG
+      <section className="page-card my-profile-karma my-profile-sheet-entry">
+        <div>
+          <span className="section-kicker">Progresión</span>
+          <h3>Karma</h3>
+          <strong>{formatOptionalNumber(characterSheet?.karma)}</strong>
+          <p>Karma es tu recurso de progresión. Su asignación final depende de ORÁCULO/GM.</p>
+        </div>
+        <div className="my-profile-sheet-entry__actions">
+          <p>Ver y editar tu ficha RPG privada.</p>
+          {characterSheet ? (
+            <button className="hi-button hi-button--primary" type="button" onClick={handleOpenSheetPanel}>
+              Abrir hoja de personaje
             </button>
+          ) : (
+            <p className="my-profile-empty-state">No hay hoja RPG vinculada a este héroe. Contacta a ORÁCULO/GM.</p>
           )}
         </div>
-        <p className="my-profile-help-text">
-          Esta información pertenece a tu hoja privada de personaje. Los campos mecánicos editables
-          son parte de tu propia ficha; Karma y campos GM permanecen bloqueados.
-        </p>
-
-        {sheetMessage && <p className="my-profile-feedback my-profile-feedback--success">{sheetMessage}</p>}
-        {sheetSaveError && <p className="my-profile-feedback my-profile-feedback--error">{sheetSaveError}</p>}
-
-        {!characterSheet ? (
-          <p className="my-profile-empty-state">
-             No hay hoja RPG vinculada a este héroe. Contacta a ORÁCULO/GM.
-          </p>
-          ) : isEditingSheet ? (
-          <form className="my-profile-form" onSubmit={handleSaveSheet}>
-            <label>
-              <span>Nombre real</span>
-              <input
-                value={sheetForm.realName}
-                onChange={(event) => handleSheetFormChange('realName', event.target.value)}
-              />
-            </label>
-            <label>
-              <span>Rol</span>
-              <input
-                value={sheetForm.role}
-                onChange={(event) => handleSheetFormChange('role', event.target.value)}
-              />
-            </label>
-            <label>
-              <span>Health</span>
-              <input
-                min="0"
-                type="number"
-                value={sheetForm.health}
-                onChange={(event) => handleSheetFormChange('health', event.target.value)}
-              />
-            </label>
-            <label>
-              <span>Resolve</span>
-              <input
-                min="0"
-                type="number"
-                value={sheetForm.resolve}
-                onChange={(event) => handleSheetFormChange('resolve', event.target.value)}
-              />
-            </label>
-
-            <div className="my-profile-form__wide my-profile-edit-group">
-              <h4>Atributos</h4>
-              <div className="my-profile-edit-grid">
-                {attributeLabels.map(([key, label]) => (
-                  <label key={key}>
-                    <span>{label}</span>
-                    <input
-                      max="10"
-                      min="1"
-                      type="number"
-                      value={sheetForm.attributes[key]}
-                      onChange={(event) => handleAttributeChange(key, event.target.value)}
-                    />
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <label className="my-profile-form__wide">
-              <span>Powers</span>
-              <input
-                value={sheetForm.powers}
-                onChange={(event) => handleSheetFormChange('powers', event.target.value)}
-                placeholder="Separados por coma"
-              />
-            </label>
-            <label className="my-profile-form__wide">
-              <span>Talents</span>
-              <input
-                value={sheetForm.talents}
-                onChange={(event) => handleSheetFormChange('talents', event.target.value)}
-                placeholder="Separados por coma"
-              />
-            </label>
-            <label className="my-profile-form__wide">
-              <span>Drawbacks</span>
-              <input
-                value={sheetForm.drawbacks}
-                onChange={(event) => handleSheetFormChange('drawbacks', event.target.value)}
-                placeholder="Separados por coma"
-              />
-            </label>
-
-            {narrativeFields.map(([key, label]) => (
-              <label className="my-profile-form__wide" key={key}>
-                <span>{label}</span>
-                <textarea
-                  rows="3"
-                  value={sheetForm[key]}
-                  onChange={(event) => handleSheetFormChange(key, event.target.value)}
-                />
-              </label>
-            ))}
-
-            <div className="my-profile-form__actions">
-              <button type="submit" disabled={isSavingSheet}>
-                {isSavingSheet ? 'Guardando...' : 'Guardar hoja RPG'}
-              </button>
-              <button type="button" onClick={handleCancelEditSheet} disabled={isSavingSheet}>
-                Cancelar edición
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="my-profile-sheet-grid">
-            <dl className="my-profile-sheet-list">
-              <div>
-                <dt>Nombre real</dt>
-                <dd>{formatValue(characterSheet.realName)}</dd>
-              </div>
-              <div>
-                <dt>Rol</dt>
-                <dd>{formatValue(characterSheet.role)}</dd>
-              </div>
-              <div>
-                <dt>Health</dt>
-                <dd>{formatOptionalNumber(characterSheet.health)}</dd>
-              </div>
-              <div>
-                <dt>Resolve</dt>
-                <dd>{formatOptionalNumber(characterSheet.resolve)}</dd>
-              </div>
-            </dl>
-
-            <div className="my-profile-attributes">
-              {attributeLabels.map(([key, label]) => (
-                <article key={key}>
-                  <span>{label}</span>
-                  <strong>{formatNumber(characterSheet.attributes?.[key] ?? 1)}</strong>
-                </article>
-              ))}
-            </div>
-
-            <div className="my-profile-sheet-block">
-              <h4>Powers</h4>
-              <div className="my-profile-powers">
-                {normalizeList(characterSheet.powers).length > 0 ? (
-                  normalizeList(characterSheet.powers).map((power) => <span key={power}>{power}</span>)
-                ) : (
-                  <span>—</span>
-                )}
-              </div>
-            </div>
-
-            <div className="my-profile-sheet-block">
-              <h4>Talents</h4>
-              <div className="my-profile-powers">
-                {normalizeList(characterSheet.talents).length > 0 ? (
-                  normalizeList(characterSheet.talents).map((talent) => <span key={talent}>{talent}</span>)
-                ) : (
-                  <span>—</span>
-                )}
-              </div>
-            </div>
-
-            <div className="my-profile-sheet-block">
-              <h4>Drawbacks</h4>
-              <div className="my-profile-powers">
-                {normalizeList(characterSheet.drawbacks).length > 0 ? (
-                  normalizeList(characterSheet.drawbacks).map((drawback) => (
-                    <span key={drawback}>{drawback}</span>
-                  ))
-                ) : (
-                  <span>—</span>
-                )}
-              </div>
-            </div>
-
-            <dl className="my-profile-sheet-list my-profile-sheet-list--wide">
-                {narrativeFields.map(([key, label]) => (
-                <div key={key}>
-                  <dt>{label}</dt>
-                  <dd>{formatValue(characterSheet[key])}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
       </section>
       
       <section className="page-card my-profile-panel my-profile-private-note">
@@ -725,6 +517,83 @@ const [publicMessage, setPublicMessage] = useState('')
           futura configuración permita activarlo.
         </p>
       </section>
+      
+      {isSheetOpen && characterSheet && (
+        <div
+          className="hi-modal"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeSheetPanel()
+            }
+          }}
+        >
+          <section className="hi-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+            <header className="hi-sheet-panel__header">
+              <div>
+                <span className="section-kicker">Ficha privada RPG</span>
+                <h3 id="sheet-title">Hoja de personaje</h3>
+                <p>Ficha privada RPG del héroe.</p>
+              </div>
+              <button className="hi-button hi-button--secondary" type="button" onClick={closeSheetPanel}>Cerrar</button>
+            </header>
+
+            {sheetMessage && <p className="my-profile-feedback my-profile-feedback--success">{sheetMessage}</p>}
+            {sheetSaveError && <p className="my-profile-feedback my-profile-feedback--error">{sheetSaveError}</p>}
+
+            <form className="hi-form my-profile-sheet-form" onSubmit={handleSaveSheet}>
+              <section className="hi-sheet-panel__section">
+                <h4>Resumen</h4>
+                <div className="my-profile-edit-grid">
+                  <label className="hi-field"><span className="hi-label">Nombre real</span><input className="hi-input" value={sheetForm.realName} onChange={(event) => handleSheetFormChange('realName', event.target.value)} /></label>
+                  <label className="hi-field"><span className="hi-label">Rol</span><input className="hi-input" value={sheetForm.role} onChange={(event) => handleSheetFormChange('role', event.target.value)} /></label>
+                  <label className="hi-field"><span className="hi-label">Health</span><input className="hi-input" min="0" type="number" value={sheetForm.health} onChange={(event) => handleSheetFormChange('health', event.target.value)} /></label>
+                  <label className="hi-field"><span className="hi-label">Resolve</span><input className="hi-input" min="0" type="number" value={sheetForm.resolve} onChange={(event) => handleSheetFormChange('resolve', event.target.value)} /></label>
+                  <label className="hi-field"><span className="hi-label">Karma</span><input className="hi-input" readOnly value={formatOptionalNumber(characterSheet.karma)} aria-readonly="true" /></label>
+                </div>
+              </section>
+
+              <section className="hi-sheet-panel__section">
+                <h4>Atributos</h4>
+                <div className="my-profile-attribute-editor">
+                  {attributeLabels.map(([key, label]) => (
+                    <label className="hi-field my-profile-attribute-card" key={key}>
+                      <span className="hi-label">{label}</span>
+                      <input className="hi-input" max="10" min="1" type="number" value={sheetForm.attributes[key]} onChange={(event) => handleAttributeChange(key, event.target.value)} />
+                    </label>
+                  ))}
+                </div>
+              </section>
+
+              <section className="hi-sheet-panel__section">
+                <h4>Poderes y rasgos</h4>
+                <label className="hi-field"><span className="hi-label">Powers</span><input className="hi-input" value={sheetForm.powers} onChange={(event) => handleSheetFormChange('powers', event.target.value)} placeholder="Separados por coma" /></label>
+                <label className="hi-field"><span className="hi-label">Talents</span><input className="hi-input" value={sheetForm.talents} onChange={(event) => handleSheetFormChange('talents', event.target.value)} placeholder="Separados por coma" /></label>
+                <label className="hi-field"><span className="hi-label">Drawbacks</span><input className="hi-input" value={sheetForm.drawbacks} onChange={(event) => handleSheetFormChange('drawbacks', event.target.value)} placeholder="Separados por coma" /></label>
+              </section>
+
+              <section className="hi-sheet-panel__section">
+                <h4>Equipo y recursos</h4>
+                {narrativeFields.slice(0, 3).map(([key, label]) => (
+                  <label className="hi-field" key={key}><span className="hi-label">{label}</span><textarea className="hi-textarea" rows="3" value={sheetForm[key]} onChange={(event) => handleSheetFormChange(key, event.target.value)} /></label>
+                ))}
+              </section>
+
+              <section className="hi-sheet-panel__section">
+                <h4>Narrativa</h4>
+                {narrativeFields.slice(3).map(([key, label]) => (
+                  <label className="hi-field" key={key}><span className="hi-label">{label}</span><textarea className="hi-textarea" rows="4" value={sheetForm[key]} onChange={(event) => handleSheetFormChange(key, event.target.value)} /></label>
+                ))}
+              </section>
+
+              <footer className="hi-sheet-panel__footer">
+                <button className="hi-button hi-button--primary" type="submit" disabled={isSavingSheet}>{isSavingSheet ? 'Guardando...' : 'Guardar hoja'}</button>
+                <button className="hi-button hi-button--secondary" type="button" onClick={closeSheetPanel} disabled={isSavingSheet}>Cancelar cambios</button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
