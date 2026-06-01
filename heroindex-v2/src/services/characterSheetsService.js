@@ -13,6 +13,36 @@ function normalizeCharacterSheet(heroId, sheet) {
   }
 }
 
+
+function normalizeCharacterSheetsSnapshot(snapshotValue) {
+  if (!snapshotValue) return []
+
+  return Object.entries(snapshotValue)
+    .filter(([, sheet]) => sheet && typeof sheet === 'object')
+    .map(([heroId, sheet]) => normalizeCharacterSheet(heroId, sheet))
+}
+
+export function subscribeToCharacterSheets(callback, onError) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!isConfigured || !database) {
+    callback?.([])
+    return () => {}
+  }
+
+  const sheetsRef = ref(database, CHARACTER_SHEETS_PATH)
+
+  return onValue(
+    sheetsRef,
+    (snapshot) => {
+      callback?.(normalizeCharacterSheetsSnapshot(snapshot.val()))
+    },
+    (error) => {
+      onError?.(error)
+    },
+  )
+}
+
 export function subscribeToCharacterSheet(heroId, callback, onError) {
   const { database, isConfigured } = getFirebaseClient()
 

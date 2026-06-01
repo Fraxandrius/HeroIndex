@@ -3,6 +3,9 @@ import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
 
+
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
+
 function getNumericValue(value) {
   const numberValue = Number(value ?? 0)
 
@@ -305,6 +308,28 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
               en el ecosistema heroico.
             </p>
           </section>
+          
+          {isOraculoMode ? (
+            <section className="hero-profile-panel hero-profile-oraculo-overlay">
+              <p className="page-card__kicker">Modo ORÁCULO activo</p>
+              <h3>Acceso ORÁCULO</h3>
+              <p>Controles internos visibles solo para la capa ORÁCULO/GM.</p>
+              <div className="hero-profile-oraculo-overlay__actions">
+                <button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">
+                  Abrir dossier ORÁCULO
+                </button>
+                <button onClick={() => onNavigate?.('oraculo-hub')} type="button">
+                  Ir a ORÁCULO Hub
+                </button>
+                <button onClick={() => onNavigate?.('mission-calculator')} type="button">
+                  Abrir Mission Calculator
+                </button>
+                <button onClick={() => onNavigate?.('gm-manager')} type="button">
+                  Volver a GM Manager
+                </button>
+              </div>
+            </section>
+          ) : null}
         </aside>
       </div>
     </section>
