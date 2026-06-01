@@ -3,6 +3,7 @@ import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
 import { subscribeToCharacterSheets } from '../services/characterSheetsService.js'
+import { subscribeToCampaignLogs } from '../services/campaignLogsService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
 const heroFilters = [
@@ -105,6 +106,9 @@ function OraculoHub({ onNavigate }) {
   const [missionCalculations, setMissionCalculations] = useState([])
   const [missionCalculationsLoading, setMissionCalculationsLoading] = useState(true)
   const [missionCalculationsError, setMissionCalculationsError] = useState(null)
+  const [campaignLogs, setCampaignLogs] = useState([])
+  const [campaignLogsLoading, setCampaignLogsLoading] = useState(true)
+  const [campaignLogsError, setCampaignLogsError] = useState(null)
   const [characterSheets, setCharacterSheets] = useState([])
   const [characterSheetsLoading, setCharacterSheetsLoading] = useState(true)
   const [characterSheetsError, setCharacterSheetsError] = useState(null)
@@ -127,6 +131,19 @@ function OraculoHub({ onNavigate }) {
       (error) => {
         setMissionCalculationsError(error)
         setMissionCalculationsLoading(false)
+      },
+    )
+  }, [])
+
+  useEffect(() => {
+    return subscribeToCampaignLogs(
+      (items) => {
+        setCampaignLogs(items)
+        setCampaignLogsLoading(false)
+      },
+      (error) => {
+        setCampaignLogsError(error)
+        setCampaignLogsLoading(false)
       },
     )
   }, [])
@@ -177,6 +194,7 @@ function OraculoHub({ onNavigate }) {
     .sort(sortHeroesByRankingPoints)
     .slice(0, 5)
   const highlightedHeroes = [...activeHeroes].sort(sortHeroesByRankingPoints).slice(0, 5)
+  const recentCampaignLogs = campaignLogs.slice(0, 3)
   const activeHeroCount = activeHeroes.length
   const inactiveHeroCount = allHeroes.filter((hero) => hero.active === false).length
   const missingSheetCount = activeHeroes.filter((hero) => !sheetsByHeroId.has(String(hero.id))).length
@@ -203,9 +221,20 @@ function OraculoHub({ onNavigate }) {
   const brokenNewsLinksCount = newsWithBrokenHeroLinksCount + newsWithBrokenCorporationLinksCount
   const integrityIssuesCount =
     orphanSheetsCount + orphanAssessmentsCount + brokenNewsLinksCount + heroesWithInvalidCorporationCount
-  const loading = heroesLoading || corporationsLoading || newsLoading || missionCalculationsLoading || characterSheetsLoading
-  const error = heroesError || corporationsError || newsError || missionCalculationsError
+  const loading =
+    heroesLoading ||
+    corporationsLoading ||
+    newsLoading ||
+    missionCalculationsLoading ||
+    characterSheetsLoading ||
+    campaignLogsLoading
+  const error = heroesError || corporationsError || newsError || missionCalculationsError || campaignLogsError
   const quickLinks = [
+    {
+      description: 'Registrar sesiones, misiones y consecuencias narrativas.',
+      label: 'Registro de Campaña',
+      routeId: 'oraculo-campaign-log',
+    },
     {
       description: 'Crear héroes NPC con perfil público y hoja privada.',
       label: 'Creador de NPC',
@@ -235,6 +264,11 @@ function OraculoHub({ onNavigate }) {
       description: 'Explorar catálogo público de héroes.',
       label: 'Perfiles públicos',
       routeId: 'profiles',
+    },
+    {
+      description: 'Revisar progresión y movimientos de Karma.',
+      label: 'Karma',
+      routeId: 'karma',
     },
   ]
 
@@ -296,6 +330,11 @@ function OraculoHub({ onNavigate }) {
           <span>Evaluaciones pendientes</span>
           <strong>{pendingAssessments.length}</strong>
         </article>
+        <article>
+          <span>Registros de campaña</span>
+          <strong>{campaignLogs.length}</strong>
+        </article>
+
       </section>
 
       {allHeroes.length === 0 ? <p className="oraculo-hub-state">No hay héroes registrados.</p> : null}
@@ -456,6 +495,36 @@ function OraculoHub({ onNavigate }) {
               </div>
             ) : (
               <p className="oraculo-hub-state">No hay evaluaciones aprobadas pendientes.</p>
+            )}
+          </section>
+
+<section className="oraculo-hub-panel">
+            <div className="oraculo-hub-panel__header">
+              <div>
+                <h3>Registro de Campaña</h3>
+                <p>Últimas sesiones y misiones archivadas por ORÁCULO.</p>
+              </div>
+              <button onClick={() => onNavigate?.('oraculo-campaign-log')} type="button">
+                Abrir registro
+              </button>
+            </div>
+            {recentCampaignLogs.length > 0 ? (
+              <div className="oraculo-hub-compact-list">
+                {recentCampaignLogs.map((log) => (
+                  <article key={log.id}>
+                    <div>
+                      <strong>{log.title || 'Registro sin título'}</strong>
+                      <span>{log.location || 'Zona no registrada'}</span>
+                      <small>{formatDate(log.sessionDate || log.createdAt)} · {log.status || 'draft'}</small>
+                    </div>
+                    <button onClick={() => onNavigate?.('oraculo-campaign-log')} type="button">
+                      Ver registro
+                    </button>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="oraculo-hub-state">No hay registros de campaña.</p>
             )}
           </section>
 

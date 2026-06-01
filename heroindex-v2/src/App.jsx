@@ -10,6 +10,7 @@ import Karma from './pages/Karma.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
 import MyProfile from './pages/MyProfile.jsx'
 import News from './pages/News.jsx'
+import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
@@ -40,6 +41,13 @@ const routes = [
   { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
+  {
+    id: 'oraculo-campaign-log',
+    label: 'Registro de Campaña',
+    path: '/oraculo/campaign-log',
+    component: OraculoCampaignLog,
+    navGroup: 'oracle',
+  },
   {
     id: 'oraculo-npc-builder',
     label: 'Creador de NPC',

@@ -8,6 +8,13 @@ import {
   updateCharacterSheet,
 } from '../services/characterSheetsService.js'
 import { deleteHero } from '../services/heroesService.js'
+import {
+  createKarmaTransaction,
+  getKarmaCostOptions,
+  getKarmaGainOptions,
+  getKarmaPenaltyOptions,
+  subscribeToKarmaTransactions,
+} from '../services/karmaService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
 const statusLabels = {
@@ -27,6 +34,34 @@ const attributeLabels = {
 
 const attributeKeys = ['fighting', 'agility', 'strength', 'reason', 'intuition', 'presence']
 const listFields = ['powers', 'talents', 'drawbacks', 'flags']
+
+const karmaTypeLabels = {
+  adjustment: 'Ajuste',
+  gain: 'Ganancia',
+  penalty: 'Penalización',
+  spend: 'Gasto',
+}
+
+const karmaTypeOptions = [
+  { id: 'gain', label: 'Ganancia' },
+  { id: 'spend', label: 'Gasto' },
+  { id: 'penalty', label: 'Penalización' },
+  { id: 'adjustment', label: 'Ajuste' },
+]
+
+function getKarmaOptionsByType(type) {
+  if (type === 'spend') return getKarmaCostOptions()
+  if (type === 'penalty') return getKarmaPenaltyOptions()
+  if (type === 'gain') return getKarmaGainOptions()
+
+  return [{ category: 'manual_adjustment', label: 'Ajuste manual', amount: 1, manual: true }]
+}
+
+function formatKarmaAmount(amount) {
+  const value = Number(amount ?? 0)
+
+  return value > 0 ? `+${value}` : String(value)
+}
 
 const baseCharacterSheet = {
   attributes: {
@@ -289,7 +324,20 @@ const [characterSheet, setCharacterSheet] = useState(null)
  const [deleteMessage, setDeleteMessage] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [isDeletingHero, setIsDeletingHero] = useState(false)
-
+const [karmaTransactions, setKarmaTransactions] = useState([])
+  const [karmaTransactionsLoading, setKarmaTransactionsLoading] = useState(true)
+  const [karmaTransactionsError, setKarmaTransactionsError] = useState(null)
+  const [karmaForm, setKarmaForm] = useState({
+    amount: '1',
+    category: 'action_scene',
+    notes: '',
+    reason: 'Participó en escena de acción',
+    type: 'gain',
+  })
+  const [karmaMessage, setKarmaMessage] = useState('')
+  const [karmaError, setKarmaError] = useState('')
+  const [isSavingKarma, setIsSavingKarma] = useState(false)
+  
   useEffect(() => {
     return subscribeToMissionCalculations(
       (items) => {
@@ -320,6 +368,20 @@ const [characterSheet, setCharacterSheet] = useState(null)
     )
   }, [heroId, isEditingCharacterSheet])
 
+  useEffect(() => {
+    return subscribeToKarmaTransactions(
+      heroId,
+      (items) => {
+        setKarmaTransactions(items)
+        setKarmaTransactionsLoading(false)
+      },
+      (error) => {
+        setKarmaTransactionsError(error)
+        setKarmaTransactionsLoading(false)
+      },
+    )
+  }, [heroId])
+
   const hero = heroes.find((heroItem) => String(heroItem.id) === String(heroId))
   const displayName = hero ? getHeroDisplayName(hero) : ''
   const relatedCalculations = hero
@@ -336,7 +398,7 @@ const [characterSheet, setCharacterSheet] = useState(null)
         .sort((first, second) => toTimestamp(second.createdAt) - toTimestamp(first.createdAt))
     : []
 
-  const loading = heroesLoading || corporationsLoading || newsLoading || calculationsLoading || characterSheetLoading
+  const loading = heroesLoading || corporationsLoading || newsLoading || calculationsLoading || characterSheetLoading || karmaTransactionsLoading
   const error = heroesError || corporationsError || newsError || calculationsError
 
   const handleCreateCharacterSheet = async () => {
@@ -429,6 +491,81 @@ const [characterSheet, setCharacterSheet] = useState(null)
       setCharacterSheetSaveError(error.message ?? String(error))
     } finally {
       setIsSavingCharacterSheet(false)
+    }
+  }
+
+  const handleKarmaTypeChange = (event) => {
+    const nextType = event.target.value
+    const [firstOption] = getKarmaOptionsByType(nextType)
+
+    setKarmaForm({
+      amount: String(firstOption?.amount ?? 1),
+      category: firstOption?.category ?? '',
+      notes: '',
+      reason: firstOption?.label ?? '',
+      type: nextType,
+    })
+    setKarmaMessage('')
+    setKarmaError('')
+  }
+
+  const handleKarmaCategoryChange = (event) => {
+    const option = getKarmaOptionsByType(karmaForm.type).find((item) => item.category === event.target.value)
+
+    setKarmaForm((currentForm) => ({
+      ...currentForm,
+      amount: String(option?.amount ?? currentForm.amount),
+      category: event.target.value,
+      reason: option?.label ?? currentForm.reason,
+    }))
+    setKarmaMessage('')
+    setKarmaError('')
+  }
+
+  const handleKarmaFieldChange = (event) => {
+    const { name, value } = event.target
+
+    setKarmaForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }))
+    setKarmaMessage('')
+    setKarmaError('')
+  }
+
+  const handleCreateKarmaTransaction = async (event) => {
+    event.preventDefault()
+    setIsSavingKarma(true)
+    setKarmaMessage('')
+    setKarmaError('')
+
+    try {
+      const rawAmount = getNumericValue(karmaForm.amount)
+      const signedAmount =
+        karmaForm.type === 'spend' || karmaForm.type === 'penalty'
+          ? -Math.abs(rawAmount)
+          : karmaForm.type === 'gain'
+            ? Math.abs(rawAmount)
+            : rawAmount
+
+      await createKarmaTransaction({
+        heroId: hero.id,
+        type: karmaForm.type,
+        amount: signedAmount,
+        category: karmaForm.category,
+        reason: karmaForm.reason,
+        notes: karmaForm.notes,
+        createdBy: 'ORÁCULO/GM',
+      })
+      setKarmaMessage('Movimiento de Karma registrado correctamente.')
+      setKarmaForm((currentForm) => ({
+        ...currentForm,
+        notes: '',
+      }))
+    } catch (transactionError) {
+      setKarmaError(transactionError.message ?? 'No fue posible registrar el movimiento de Karma.')
+    } finally {
+      setIsSavingKarma(false)
     }
   }
 
@@ -904,6 +1041,84 @@ const [characterSheet, setCharacterSheet] = useState(null)
               </form>
             ) : null}
             
+          </section>
+
+<section className="oraculo-dossier-panel oraculo-karma-management">
+            <div className="oraculo-dossier-panel__header">
+              <div>
+                <h3>Gestión de Karma</h3>
+                <p>Karma es progresión RPG. No modifica Ranking HeroIndex ni aprobación ciudadana.</p>
+              </div>
+              <strong className="oraculo-karma-management__value">
+                {getNumericValue(characterSheet?.karma)} Karma
+              </strong>
+            </div>
+
+            {karmaTransactionsError ? (
+              <p className="oraculo-dossier-state oraculo-dossier-state--error">
+                No fue posible cargar el historial de Karma.
+              </p>
+            ) : null}
+            {karmaMessage ? <p className="oraculo-dossier-state oraculo-dossier-state--success">{karmaMessage}</p> : null}
+            {karmaError ? <p className="oraculo-dossier-state oraculo-dossier-state--error">{karmaError}</p> : null}
+
+            <form className="oraculo-karma-form hi-form" onSubmit={handleCreateKarmaTransaction}>
+              <label className="hi-field">
+                <span className="hi-label">Tipo</span>
+                <select className="hi-select" name="type" onChange={handleKarmaTypeChange} value={karmaForm.type}>
+                  {karmaTypeOptions.map((typeOption) => (
+                    <option key={typeOption.id} value={typeOption.id}>
+                      {typeOption.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="hi-field">
+                <span className="hi-label">Categoría</span>
+                <select className="hi-select" name="category" onChange={handleKarmaCategoryChange} value={karmaForm.category}>
+                  {getKarmaOptionsByType(karmaForm.type).map((option) => (
+                    <option key={option.category} value={option.category}>
+                      {option.label} ({formatKarmaAmount(option.amount)})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="hi-field">
+                <span className="hi-label">Cantidad</span>
+                <input className="hi-input" name="amount" onChange={handleKarmaFieldChange} type="number" value={karmaForm.amount} />
+              </label>
+              <label className="hi-field">
+                <span className="hi-label">Motivo</span>
+                <input className="hi-input" name="reason" onChange={handleKarmaFieldChange} value={karmaForm.reason} />
+              </label>
+              <label className="hi-field oraculo-karma-form__wide">
+                <span className="hi-label">Notas ORÁCULO</span>
+                <textarea className="hi-textarea" name="notes" onChange={handleKarmaFieldChange} value={karmaForm.notes} />
+              </label>
+              <div className="oraculo-karma-form__wide">
+                <button className="hi-button hi-button-primary" disabled={isSavingKarma} type="submit">
+                  {isSavingKarma ? 'Registrando…' : 'Registrar movimiento'}
+                </button>
+              </div>
+            </form>
+
+            <div className="oraculo-karma-history">
+              <h4>Historial reciente</h4>
+              {karmaTransactions.length > 0 ? (
+                karmaTransactions.slice(0, 6).map((transaction) => (
+                  <article className={`karma-transaction karma-transaction--${transaction.type}`} key={transaction.id}>
+                    <div>
+                      <span>{karmaTypeLabels[transaction.type] ?? transaction.type}</span>
+                      <strong>{formatKarmaAmount(transaction.amount)}</strong>
+                    </div>
+                    <p>{transaction.reason || 'Movimiento sin motivo'}</p>
+                    <small>{formatDate(transaction.createdAt)} · {transaction.notes || 'Sin notas'}</small>
+                  </article>
+                ))
+              ) : (
+                <p>Sin movimientos de Karma registrados.</p>
+              )}
+            </div>
           </section>
 
           <section className="oraculo-dossier-panel">

@@ -528,6 +528,9 @@ function MyProfile({ onNavigate }) {
             <h3>Karma</h3>
             <strong>{formatOptionalNumber(characterSheet?.karma)}</strong>
             <p>Karma es tu recurso de progresión. Su asignación final depende de ORÁCULO/GM.</p>
+             <button className="hi-button hi-button-secondary" type="button" onClick={() => onNavigate('karma')}>
+              Ver historial de Karma
+            </button>
           </section>
 
           <section className="page-card hi-card hi-card-player my-profile-status-card">
