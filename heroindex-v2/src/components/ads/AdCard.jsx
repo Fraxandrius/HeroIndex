@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 function AdImageFallback({ ad }) {
   return (
@@ -10,13 +10,9 @@ function AdImageFallback({ ad }) {
 }
 
 function AdCard({ ad }) {
-  const [hasImageError, setHasImageError] = useState(false)
+  const [imageErrorState, setImageErrorState] = useState({ imageUrl: null, hasError: false })
   const label = ad.label ?? ad.slotId
-
-  useEffect(() => {
-    setHasImageError(false)
-  }, [ad.imageUrl])
-
+  const hasImageError = imageErrorState.imageUrl === ad.imageUrl && imageErrorState.hasError
   const shouldRenderImage = Boolean(ad.imageUrl) && !hasImageError
   const specs = [
     { label: 'Placement', value: ad.placement },
@@ -28,7 +24,11 @@ function AdCard({ ad }) {
     <article className="broadcast-card" data-broadcast-slot={ad.slotId} aria-label={label}>
       <div className="broadcast-card__media" aria-label="Broadcast creative">
         {shouldRenderImage ? (
-          <img src={ad.imageUrl} alt="" onError={() => setHasImageError(true)} />
+          <img
+            src={ad.imageUrl}
+            alt=""
+            onError={() => setImageErrorState({ imageUrl: ad.imageUrl, hasError: true })}
+          />
         ) : (
           <AdImageFallback ad={ad} />
         )}

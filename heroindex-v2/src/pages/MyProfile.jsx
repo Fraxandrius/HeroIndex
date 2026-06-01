@@ -334,8 +334,8 @@ function MyProfile({ onNavigate }) {
   }
 
   return (
-    <div className="my-profile-page">
-      <header className="page-card my-profile-hero">
+     <div className="my-profile-page hi-page hi-page-wide">
+      <header className="page-card hi-page-header hi-card hi-card-player my-profile-hero">
         {hero.bannerUrl ? (
           <div
             aria-label="Portada pública del héroe"
@@ -374,149 +374,188 @@ function MyProfile({ onNavigate }) {
         </div>
       </header>
 
-      <section className="page-card my-profile-panel">
-        <div className="my-profile-panel__header">
-          <div>
-            <span className="section-kicker">Vista pública</span>
-            <h3>{getHeroDisplayName(hero)}</h3>
-            <p>{getHeroTitle(hero)}</p>
-          </div>
-           <button type="button" onClick={() => onNavigate('hero-profile', { heroId: hero.id })}>
-            Ver perfil público
-          </button>
-        </div>
+<div className="hi-dashboard-grid my-profile-dashboard">
+        <main className="hi-main-column my-profile-dashboard__main">
+          <section className="page-card hi-card hi-card-player my-profile-panel">
+            <div className="my-profile-panel__header">
+              <div>
+                <span className="section-kicker">Vista pública</span>
+                <h3>{getHeroDisplayName(hero)}</h3>
+                <p>{getHeroTitle(hero)}</p>
+              </div>
+              <button className="hi-button hi-button-secondary" type="button" onClick={() => onNavigate('hero-profile', { heroId: hero.id })}>
+                Ver perfil público
+              </button>
+            </div>
 
-        <div className="my-profile-layout">
-          <div>
-            <p className="my-profile-public-bio">
-              {hero.publicBio || 'Biografía pública pendiente de actualización.'}
-            </p>
-            <div className="my-profile-powers" aria-label="Poderes visibles">
-              {publicPowers.length > 0 ? (
-                publicPowers.map((power) => <span key={power}>{power}</span>)
-              ) : (
-                <span>Sin poderes públicos registrados.</span>
+            <div className="my-profile-layout">
+              <div>
+                <p className="my-profile-public-bio">
+                  {hero.publicBio || 'Biografía pública pendiente de actualización.'}
+                </p>
+                <div className="my-profile-powers" aria-label="Poderes visibles">
+                  {publicPowers.length > 0 ? (
+                    publicPowers.map((power) => <span key={power}>{power}</span>)
+                  ) : (
+                    <span>Sin poderes públicos registrados.</span>
+                  )}
+                </div>
+              </div>
+
+              <dl className="my-profile-metrics hi-section-grid">
+                <div className="hi-metric-card">
+                  <dt>Corporación</dt>
+                  <dd>{corporationName}</dd>
+                </div>
+                <div className="hi-metric-card">
+                  <dt>Puntos HeroIndex</dt>
+                  <dd>{formatNumber(hero.rankingPoints)}</dd>
+                </div>
+                <div className="hi-metric-card">
+                  <dt>Aprobación ciudadana</dt>
+                  <dd>{formatNumber(hero.approval)}%</dd>
+                </div>
+                <div className="hi-metric-card">
+                  <dt>Estado público</dt>
+                  <dd>{hero.active === false ? 'Inactivo' : 'Activo'}</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+
+          <section className="page-card hi-card hi-card-player my-profile-panel">
+            <div className="my-profile-panel__header">
+              <div>
+                <span className="section-kicker">Configuración pública</span>
+                <h3>Presentación en HeroIndex</h3>
+                <p>Edita únicamente los campos públicos permitidos de tu identidad heroica.</p>
+              </div>
+              {!isEditingPublic && (
+                <button className="hi-button hi-button-secondary" type="button" onClick={handleStartEditPublic}>
+                  Editar presentación pública
+                </button>
               )}
             </div>
-          </div>
 
-          <dl className="my-profile-metrics">
-            <div>
-              <dt>Corporación</dt>
-              <dd>{corporationName}</dd>
-            </div>
-            <div>
-              <dt>Puntos HeroIndex</dt>
-              <dd>{formatNumber(hero.rankingPoints)}</dd>
-            </div>
-            <div>
-              <dt>Aprobación ciudadana</dt>
-              <dd>{formatNumber(hero.approval)}%</dd>
-            </div>
-            <div>
-              <dt>Estado público</dt>
-              <dd>{hero.active === false ? 'Inactivo' : 'Activo'}</dd>
-            </div>
-          </dl>
-        </div>
-      </section>
+            {publicMessage && <p className="my-profile-feedback my-profile-feedback--success hi-state-card hi-state-card--success">{publicMessage}</p>}
+            {publicError && <p className="my-profile-feedback my-profile-feedback--error hi-state-card hi-state-card--error">{publicError}</p>}
 
-      <section className="page-card my-profile-panel">
-        <div className="my-profile-panel__header">
-          <div>
-            <span className="section-kicker">Configuración pública</span>
-            <h3>Presentación en HeroIndex</h3>
-            <p>Edita únicamente los campos públicos permitidos de tu identidad heroica.</p>
-          </div>
-          {!isEditingPublic && (
-            <button type="button" onClick={handleStartEditPublic}>
-              Editar presentación pública
-            </button>
-          )}
-        </div>
+            {isEditingPublic ? (
+              <form className="my-profile-form hi-form" onSubmit={handleSavePublic}>
+                <label className="hi-field">
+                  <span className="hi-label">Alias</span>
+                  <input className="hi-input" value={publicForm.alias} onChange={(event) => handlePublicFormChange('alias', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Nombre público</span>
+                  <input className="hi-input" value={publicForm.publicName} onChange={(event) => handlePublicFormChange('publicName', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Código / nombre clave</span>
+                  <input className="hi-input" value={publicForm.codename} onChange={(event) => handlePublicFormChange('codename', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Título heroico</span>
+                  <input className="hi-input" value={publicForm.heroTitle} onChange={(event) => handlePublicFormChange('heroTitle', event.target.value)} />
+                </label>
+                <label className="hi-field my-profile-form__wide">
+                  <span className="hi-label">Biografía pública</span>
+                  <textarea className="hi-textarea" rows="5" value={publicForm.publicBio} onChange={(event) => handlePublicFormChange('publicBio', event.target.value)} />
+                </label>
+                <label className="hi-field my-profile-form__wide">
+                  <span className="hi-label">Poderes visibles</span>
+                  <input className="hi-input" value={publicForm.publicPowers} onChange={(event) => handlePublicFormChange('publicPowers', event.target.value)} placeholder="Separados por coma" />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Avatar URL</span>
+                  <input className="hi-input" value={publicForm.avatarUrl} onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Portada URL</span>
+                  <input className="hi-input" value={publicForm.bannerUrl} onChange={(event) => handlePublicFormChange('bannerUrl', event.target.value)} />
+                </label>
 
-        {publicMessage && <p className="my-profile-feedback my-profile-feedback--success">{publicMessage}</p>}
-        {publicError && <p className="my-profile-feedback my-profile-feedback--error">{publicError}</p>}
+                <div className="my-profile-form__actions hi-quick-actions">
+                  <button className="hi-button hi-button-primary" type="submit" disabled={isSavingPublic}>
+                    {isSavingPublic ? 'Guardando...' : 'Guardar configuración pública'}
+                  </button>
+                  <button className="hi-button hi-button-secondary" type="button" onClick={handleCancelEditPublic} disabled={isSavingPublic}>
+                    Cancelar cambios
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="my-profile-help-text">
+                La configuración pública puede actualizar tu alias, título heroico, biografía, poderes
+                visibles e imágenes. Las métricas públicas permanecen bajo control de HeroIndex.
+              </p>
+            )}
+          </section>
+        </main>
 
-        {isEditingPublic ? (
-<form className="my-profile-form hi-form" onSubmit={handleSavePublic}>
-            <label className="hi-field">
-              <span className="hi-label">Alias</span>
-              <input className="hi-input" value={publicForm.alias} onChange={(event) => handlePublicFormChange('alias', event.target.value)} />
-            </label>
-            <label className="hi-field">
-              <span className="hi-label">Nombre público</span>
-              <input className="hi-input" value={publicForm.publicName} onChange={(event) => handlePublicFormChange('publicName', event.target.value)} />
-            </label>
-            <label className="hi-field">
-              <span className="hi-label">Código / nombre clave</span>
-              <input className="hi-input" value={publicForm.codename} onChange={(event) => handlePublicFormChange('codename', event.target.value)} />
-            </label>
-            <label className="hi-field">
-              <span className="hi-label">Título heroico</span>
-              <input className="hi-input" value={publicForm.heroTitle} onChange={(event) => handlePublicFormChange('heroTitle', event.target.value)} />
-            </label>
-            <label className="hi-field my-profile-form__wide">
-              <span className="hi-label">Biografía pública</span>
-              <textarea className="hi-textarea" rows="5" value={publicForm.publicBio} onChange={(event) => handlePublicFormChange('publicBio', event.target.value)} />
-            </label>
-            <label className="hi-field my-profile-form__wide">
-              <span className="hi-label">Poderes visibles</span>
-              <input className="hi-input" value={publicForm.publicPowers} onChange={(event) => handlePublicFormChange('publicPowers', event.target.value)} placeholder="Separados por coma" />
-            </label>
-            <label className="hi-field">
-              <span className="hi-label">Avatar URL</span>
-              <input className="hi-input" value={publicForm.avatarUrl} onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)} />
-            </label>
-            <label className="hi-field">
-              <span className="hi-label">Portada URL</span>
-              <input className="hi-input" value={publicForm.bannerUrl} onChange={(event) => handlePublicFormChange('bannerUrl', event.target.value)} />
-            </label>
-
-            <div className="my-profile-form__actions">
-              <button className="hi-button hi-button--primary" type="submit" disabled={isSavingPublic}>
-                {isSavingPublic ? 'Guardando...' : 'Guardar configuración pública'}
+        <aside className="hi-side-column my-profile-dashboard__side">
+          <section className="page-card hi-card hi-actions-card my-profile-actions-panel">
+            <span className="section-kicker">Acciones de jugador</span>
+            <h3>Centro personal</h3>
+            <p>Accede rápidamente a tu ficha RPG privada y configuración pública.</p>
+            <div className="hi-quick-actions">
+              {characterSheet ? (
+                <button className="hi-button hi-button-primary" type="button" onClick={handleOpenSheetPanel}>
+                  Abrir hoja de personaje
+                </button>
+              ) : (
+                <p className="my-profile-empty-state hi-state-card hi-state-card--error">
+                  No hay hoja RPG vinculada a este héroe. Contacta a ORÁCULO/GM.
+                </p>
+              )}
+              <button className="hi-button hi-button-secondary" type="button" onClick={handleStartEditPublic}>
+                Editar presentación pública
               </button>
-              <button className="hi-button hi-button--secondary" type="button" onClick={handleCancelEditPublic} disabled={isSavingPublic}>
-                Cancelar cambios
+              <button className="hi-button hi-button-secondary" type="button" onClick={() => onNavigate('hero-profile', { heroId: hero.id })}>
+                Ver perfil público
+              </button>
+              <button className="hi-button hi-button-ghost" type="button" onClick={() => onNavigate('home')}>
+                Volver al inicio
+              </button>
+              <button className="hi-button hi-button-ghost" type="button" onClick={() => onNavigate('ranking')}>
+                Ver ranking
               </button>
             </div>
-          </form>
-        ) : (
-          <p className="my-profile-help-text">
-            La configuración pública puede actualizar tu alias, título heroico, biografía, poderes
-            visibles e imágenes. Las métricas públicas permanecen bajo control de HeroIndex.
-          </p>
-        )}
-      </section>
+          </section>
 
-      <section className="page-card my-profile-karma my-profile-sheet-entry">
-        <div>
-          <span className="section-kicker">Progresión</span>
-          <h3>Karma</h3>
-          <strong>{formatOptionalNumber(characterSheet?.karma)}</strong>
-          <p>Karma es tu recurso de progresión. Su asignación final depende de ORÁCULO/GM.</p>
-        </div>
-        <div className="my-profile-sheet-entry__actions">
-          <p>Ver y editar tu ficha RPG privada.</p>
-          {characterSheet ? (
-            <button className="hi-button hi-button--primary" type="button" onClick={handleOpenSheetPanel}>
-              Abrir hoja de personaje
-            </button>
-          ) : (
-            <p className="my-profile-empty-state">No hay hoja RPG vinculada a este héroe. Contacta a ORÁCULO/GM.</p>
-          )}
-        </div>
-      </section>
-      
-      <section className="page-card my-profile-panel my-profile-private-note">
-        <span className="section-kicker">Privacidad de identidad</span>
-        <h3>Tu identidad fuera de la capa pública</h3>
-        <p>
-          Tu nombre real forma parte de tu hoja privada. No aparece públicamente salvo que una
-          futura configuración permita activarlo.
-        </p>
-      </section>
+          <section className="page-card hi-card hi-card-player my-profile-karma">
+            <span className="section-kicker">Progresión</span>
+            <h3>Karma</h3>
+            <strong>{formatOptionalNumber(characterSheet?.karma)}</strong>
+            <p>Karma es tu recurso de progresión. Su asignación final depende de ORÁCULO/GM.</p>
+          </section>
+
+          <section className="page-card hi-card hi-card-player my-profile-status-card">
+            <span className="section-kicker">Estado público</span>
+            <h3>{hero.active === false ? 'Perfil inactivo' : 'Perfil activo'}</h3>
+            <p>{corporationName}</p>
+            <dl className="my-profile-side-metrics">
+              <div>
+                <dt>Puntos</dt>
+                <dd>{formatNumber(hero.rankingPoints)}</dd>
+              </div>
+              <div>
+                <dt>Aprobación</dt>
+                <dd>{formatNumber(hero.approval)}%</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="page-card hi-card hi-card-player my-profile-private-note">
+            <span className="section-kicker">Privacidad de identidad</span>
+            <h3>Tu identidad fuera de la capa pública</h3>
+            <p>
+              Tu nombre real forma parte de tu hoja privada. No aparece públicamente salvo que una
+              futura configuración permita activarlo.
+            </p>
+          </section>
+        </aside>
+      </div>
       
       {isSheetOpen && characterSheet && (
         <div
@@ -535,11 +574,11 @@ function MyProfile({ onNavigate }) {
                 <h3 id="sheet-title">Hoja de personaje</h3>
                 <p>Ficha privada RPG del héroe.</p>
               </div>
-              <button className="hi-button hi-button--secondary" type="button" onClick={closeSheetPanel}>Cerrar</button>
+              <button className="hi-button hi-button-secondary" type="button" onClick={closeSheetPanel}>Cerrar</button>
             </header>
 
-            {sheetMessage && <p className="my-profile-feedback my-profile-feedback--success">{sheetMessage}</p>}
-            {sheetSaveError && <p className="my-profile-feedback my-profile-feedback--error">{sheetSaveError}</p>}
+            {sheetMessage && <p className="my-profile-feedback my-profile-feedback--success hi-state-card hi-state-card--success">{sheetMessage}</p>}
+            {sheetSaveError && <p className="my-profile-feedback my-profile-feedback--error hi-state-card hi-state-card--error">{sheetSaveError}</p>}
 
             <form className="hi-form my-profile-sheet-form" onSubmit={handleSaveSheet}>
               <section className="hi-sheet-panel__section">
@@ -587,8 +626,8 @@ function MyProfile({ onNavigate }) {
               </section>
 
               <footer className="hi-sheet-panel__footer">
-                <button className="hi-button hi-button--primary" type="submit" disabled={isSavingSheet}>{isSavingSheet ? 'Guardando...' : 'Guardar hoja'}</button>
-                <button className="hi-button hi-button--secondary" type="button" onClick={closeSheetPanel} disabled={isSavingSheet}>Cancelar cambios</button>
+                <button className="hi-button hi-button-primary" type="submit" disabled={isSavingSheet}>{isSavingSheet ? 'Guardando...' : 'Guardar hoja'}</button>
+                <button className="hi-button hi-button-secondary" type="button" onClick={closeSheetPanel} disabled={isSavingSheet}>Cancelar cambios</button>
               </footer>
             </form>
           </section>
