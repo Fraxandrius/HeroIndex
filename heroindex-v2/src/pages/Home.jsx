@@ -52,8 +52,8 @@ function Home({ onNavigate }) {
 
   return (
     <div className="home-page">
-      <section className="story-rail" aria-label="Featured heroes">
-        {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
+       <section className="story-rail" aria-label="Héroes destacados">
+        {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
         {!heroesLoading && !corporationsLoading
           ? featuredHeroes.map((hero) => {
               const corporationName =
@@ -88,9 +88,9 @@ function Home({ onNavigate }) {
       </section>
 
       <div className="home-grid">
-        <div className="home-main" aria-label="HeroIndex news feed">
+        <div className="home-main" aria-label="Feed de noticias HeroIndex">
           <section className="hero-feature">
-            {newsLoading ? <p>Loading...</p> : null}
+             {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading && topStory ? (
               <>
                 <div className="hero-feature__copy">
@@ -99,7 +99,7 @@ function Home({ onNavigate }) {
                   </p>
                   <h2>{topStory.title}</h2>
                   <p>{getNewsSummary(topStory)}</p>
-                  <div className="hero-feature__actions" aria-label="Featured news metadata">
+                  <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada">
                     <span>{topStory.source}</span>
                     <span>{topStory.time}</span>
                     <span>{topStory.metric}</span>
@@ -125,8 +125,8 @@ function Home({ onNavigate }) {
             {!newsLoading && !topStory ? (
               <div className="hero-feature__copy">
                 <p className="page-card__kicker">HeroIndex</p>
-                <h2>No active newsroom updates yet</h2>
-                <p>Fresh HeroIndex coverage will appear here when it goes live.</p>
+                 <h2>Sin actualizaciones activas por ahora</h2>
+                <p>La cobertura pública de HeroIndex aparecerá aquí cuando esté disponible.</p>
               </div>
             ) : null}
           </section>
@@ -135,11 +135,11 @@ function Home({ onNavigate }) {
 
           <section className="feed-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">News feed</p>
-              <h2>Latest HeroIndex coverage</h2>
+               <p className="page-card__kicker">Feed de noticias</p>
+              <h2>Cobertura reciente HeroIndex</h2>
             </div>
 
-            {newsLoading ? <p>Loading...</p> : null}
+            {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading
               ? recentNews.map((item, index) => (
                   <article className="feed-card" key={item.id}>
@@ -179,18 +179,18 @@ function Home({ onNavigate }) {
                   </article>
                 ))
               : null}
-            {!newsLoading && recentNews.length === 0 ? <p>No recent active news yet.</p> : null}
+            {!newsLoading && recentNews.length === 0 ? <p>Sin noticias activas recientes.</p> : null}
           </section>
         </div>
 
         <aside className="home-sidebar" aria-label="Home sidebar">
           <section className="side-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">Trending news</p>
-              <h2>Rising now</h2>
+              <p className="page-card__kicker">Noticias destacadas</p>
+              <h2>Actividad destacada</h2>
             </div>
             <ol className="trending-list">
-              {newsLoading ? <li>Loading...</li> : null}
+              {newsLoading ? <li>Cargando...</li> : null}
               {!newsLoading
                 ? visibleTrendingNews.map((newsItem) => (
                     <li key={newsItem.id}>
@@ -212,7 +212,7 @@ function Home({ onNavigate }) {
               <p>Figuras con alto reconocimiento público dentro de HeroIndex.</p>
             </div>
             <div className="home-hero-list">
-              {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
+              {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
               {!heroesLoading && !corporationsLoading
                 ? citizenFeaturedHeroes.map((hero) => (
                     <article className="home-hero-card" key={hero.id}>
@@ -253,11 +253,11 @@ function Home({ onNavigate }) {
 
           <section className="side-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">Corporations</p>
-              <h2>Trusted operators</h2>
+               <p className="page-card__kicker">Corporaciones</p>
+              <h2>Operadores verificados</h2>
             </div>
             <div className="corporation-mini-list">
-              {corporationsLoading ? <p>Loading...</p> : null}
+              {corporationsLoading ? <p>Cargando corporaciones HeroIndex...</p> : null}
               {!corporationsLoading
                 ? featuredCorporations.map((corporation) => (
                     <article className="corporation-mini-card" key={corporation.id}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
+import { useNews } from '../hooks/useNews.js'
 import { subscribeToCharacterSheets } from '../services/characterSheetsService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
@@ -107,8 +108,15 @@ function OraculoHub({ onNavigate }) {
   const [characterSheets, setCharacterSheets] = useState([])
   const [characterSheetsLoading, setCharacterSheetsLoading] = useState(true)
   const [characterSheetsError, setCharacterSheetsError] = useState(null)
-  const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
-  const { error: corporationsError, getCorporationById, loading: corporationsLoading } = useCorporations()
+  const { error: heroesError, firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
+  const { error: newsError, feedNews, firebaseNews, loading: newsLoading } = useNews()
+  const {
+    corporations,
+    error: corporationsError,
+    firebaseCorporations,
+    getCorporationById,
+    loading: corporationsLoading,
+  } = useCorporations()
 
   useEffect(() => {
     return subscribeToMissionCalculations(
@@ -136,10 +144,15 @@ function OraculoHub({ onNavigate }) {
     )
   }, [])
 
+  const allHeroes = firebaseHeroes.length > 0 ? firebaseHeroes : heroes
+  const allCorporations = firebaseCorporations.length > 0 ? firebaseCorporations : corporations
+  const allNews = firebaseNews.length > 0 ? firebaseNews : feedNews
+  const heroIds = new Set(allHeroes.map((hero) => String(hero.id)))
+  const corporationIds = new Set(allCorporations.map((corporation) => String(corporation.id)))
   const sheetsByHeroId = new Map(characterSheets.map((sheet) => [String(sheet.heroId ?? sheet.id), sheet]))
-  const activeHeroes = heroes.filter((hero) => hero.active !== false)
+  const activeHeroes = allHeroes.filter((hero) => hero.active !== false)
   const search = searchQuery.trim().toLowerCase()
-  const filteredHeroes = heroes
+  const filteredHeroes = allHeroes
     .filter((hero) => {
       const hasSheet = sheetsByHeroId.has(String(hero.id))
       const corporationName = getCorporationName(hero, getCorporationById)
@@ -163,9 +176,35 @@ function OraculoHub({ onNavigate }) {
     .filter((hero) => !sheetsByHeroId.has(String(hero.id)))
     .sort(sortHeroesByRankingPoints)
     .slice(0, 5)
-  const highlightedHeroes = activeHeroes.sort(sortHeroesByRankingPoints).slice(0, 5)
-  const loading = heroesLoading || corporationsLoading || missionCalculationsLoading || characterSheetsLoading
-  const error = heroesError || corporationsError || missionCalculationsError
+  const highlightedHeroes = [...activeHeroes].sort(sortHeroesByRankingPoints).slice(0, 5)
+  const activeHeroCount = activeHeroes.length
+  const inactiveHeroCount = allHeroes.filter((hero) => hero.active === false).length
+  const missingSheetCount = activeHeroes.filter((hero) => !sheetsByHeroId.has(String(hero.id))).length
+  const orphanSheetsCount = characterSheets.filter((sheet) => !heroIds.has(String(sheet.heroId ?? sheet.id))).length
+  const orphanAssessmentsCount = missionCalculations.filter(
+    (assessment) => assessment.heroId && !heroIds.has(String(assessment.heroId)),
+  ).length
+  const newsWithBrokenHeroLinksCount = allNews.filter(
+    (newsItem) =>
+      Array.isArray(newsItem.heroIds) &&
+      newsItem.heroIds.some((heroId) => !heroIds.has(String(heroId))),
+  ).length
+  const newsWithBrokenCorporationLinksCount = allNews.filter(
+    (newsItem) =>
+      Array.isArray(newsItem.corporationIds) &&
+      newsItem.corporationIds.some((corporationId) => !corporationIds.has(String(corporationId))),
+  ).length
+  const heroesWithInvalidCorporationCount = allHeroes.filter(
+    (hero) =>
+      hero.corporationId &&
+      hero.corporationId !== 'independent' &&
+      !corporationIds.has(String(hero.corporationId)),
+  ).length
+  const brokenNewsLinksCount = newsWithBrokenHeroLinksCount + newsWithBrokenCorporationLinksCount
+  const integrityIssuesCount =
+    orphanSheetsCount + orphanAssessmentsCount + brokenNewsLinksCount + heroesWithInvalidCorporationCount
+  const loading = heroesLoading || corporationsLoading || newsLoading || missionCalculationsLoading || characterSheetsLoading
+  const error = heroesError || corporationsError || newsError || missionCalculationsError
   const quickLinks = [
     {
       description: 'Crear héroes NPC con perfil público y hoja privada.',
@@ -207,7 +246,7 @@ function OraculoHub({ onNavigate }) {
     )
   }
 
-  if (error && heroes.length === 0) {
+  if (error && allHeroes.length === 0) {    
     return (
       <section className="page-card oraculo-hub-page">
         <p className="oraculo-hub-state oraculo-hub-state--error">
@@ -240,7 +279,26 @@ function OraculoHub({ onNavigate }) {
         ))}
       </section>
 
-      {heroes.length === 0 ? <p className="oraculo-hub-state">No hay héroes registrados.</p> : null}
+<section className="oraculo-hub-summary" aria-label="Resumen operativo ORÁCULO">
+        <article>
+          <span>Héroes activos</span>
+          <strong>{activeHeroCount}</strong>
+        </article>
+        <article>
+          <span>Héroes inactivos</span>
+          <strong>{inactiveHeroCount}</strong>
+        </article>
+        <article>
+          <span>Sin hoja RPG</span>
+          <strong>{missingSheetCount}</strong>
+        </article>
+        <article>
+          <span>Evaluaciones pendientes</span>
+          <strong>{pendingAssessments.length}</strong>
+        </article>
+      </section>
+
+      {allHeroes.length === 0 ? <p className="oraculo-hub-state">No hay héroes registrados.</p> : null}
 
       <div className="oraculo-hub-layout">
         <main className="oraculo-hub-main">
@@ -248,13 +306,13 @@ function OraculoHub({ onNavigate }) {
             <div className="oraculo-hub-panel__header">
               <div>
                 <h3>Acceso rápido a dossiers</h3>
-                <p>Busca héroes y abre su dossier interno ORÁCULO.</p>
+                <p>Busca héroes y abre su dossier interno ORÁCULO. Los filtros respetan afiliación, independencia y hojas privadas.</p>
               </div>
             </div>
             <div className="oraculo-hub-controls">
               <input
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Buscar héroe, título o afiliación..."
+                placeholder="Buscar héroe, título, alias o afiliación..."
                 type="search"
                 value={searchQuery}
               />
@@ -308,7 +366,7 @@ function OraculoHub({ onNavigate }) {
                 })}
               </div>
             ) : (
-              <p className="oraculo-hub-state">No hay resultados para los filtros actuales.</p>
+              <p className="oraculo-hub-state">No hay héroes que coincidan con la búsqueda.</p>
             )}
           </section>
 
@@ -349,7 +407,37 @@ function OraculoHub({ onNavigate }) {
         </main>
 
         <aside className="oraculo-hub-side">
-          <section className="oraculo-hub-panel">
+          <section className="oraculo-hub-panel oraculo-hub-integrity">
+            <h3>Integridad de datos</h3>
+            <p>Diagnóstico de solo lectura. ORÁCULO no modifica Firebase desde este panel.</p>
+            <div className="oraculo-hub-integrity__grid">
+              <article>
+                <span>Hojas huérfanas</span>
+                <strong>{orphanSheetsCount}</strong>
+              </article>
+              <article>
+                <span>Evaluaciones huérfanas</span>
+                <strong>{orphanAssessmentsCount}</strong>
+              </article>
+              <article>
+                <span>Noticias con vínculos rotos</span>
+                <strong>{brokenNewsLinksCount}</strong>
+              </article>
+              <article>
+                <span>Afiliaciones inválidas</span>
+                <strong>{heroesWithInvalidCorporationCount}</strong>
+              </article>
+            </div>
+            {integrityIssuesCount === 0 ? (
+              <p className="oraculo-hub-state">Sin inconsistencias detectadas.</p>
+            ) : (
+              <p className="oraculo-hub-state oraculo-hub-state--warning">
+                Se detectaron {integrityIssuesCount} señales para revisión manual.
+              </p>
+            )}
+          </section>
+
+          <section className="oraculo-hub-panel oraculo-hub-panel--priority">
             <h3>Pendientes de aplicación</h3>
             {pendingAssessments.length > 0 ? (
               <div className="oraculo-hub-compact-list">
@@ -372,7 +460,7 @@ function OraculoHub({ onNavigate }) {
           </section>
 
           <section className="oraculo-hub-panel">
-            <h3>Héroes sin hoja privada</h3>
+            <h3>Héroes sin hoja privada ({missingSheetCount})</h3>
             {characterSheetsError ? (
               <p className="oraculo-hub-state oraculo-hub-state--warning">
                 Estado de hojas privadas no disponible.

@@ -3,14 +3,34 @@ import { mockHeroes } from '../data/mockHeroes.js'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 import { subscribeToHeroes } from '../services/heroesService.js'
 
-function getApprovalValue(hero) {
-  const approval = Number(hero.approval ?? 0)
+function getNumberValue(value) {
+  const numberValue = Number(value ?? 0)
 
-  return Number.isNaN(approval) ? 0 : approval
+  return Number.isNaN(numberValue) ? 0 : numberValue
 }
 
-function sortHeroesByApproval(firstHero, secondHero) {
-  return getApprovalValue(secondHero) - getApprovalValue(firstHero)
+function getApprovalValue(hero) {
+  return getNumberValue(hero.approval)
+}
+
+function getRankingPointsValue(hero) {
+  return getNumberValue(hero.rankingPoints)
+}
+
+function getHeroDisplayName(hero = {}) {
+  return hero.alias ?? hero.publicName ?? hero.codename ?? hero.name ?? 'Identidad HeroIndex'
+}
+
+function sortHeroesByRankingPoints(firstHero, secondHero) {
+  const rankingDifference = getRankingPointsValue(secondHero) - getRankingPointsValue(firstHero)
+
+  if (rankingDifference !== 0) return rankingDifference
+
+  const approvalDifference = getApprovalValue(secondHero) - getApprovalValue(firstHero)
+
+  if (approvalDifference !== 0) return approvalDifference
+
+  return getHeroDisplayName(firstHero).localeCompare(getHeroDisplayName(secondHero), 'es')
 }
 
 function getErrorMessage(error) {
@@ -29,12 +49,17 @@ function normalizeHeroForUi(hero) {
   return {
     ...hero,
     approval: getApprovalValue(hero),
+    heroTitle: hero.heroTitle ?? 'Figura HeroIndex',
     avatarUrl: hero.avatarUrl ?? '',
     bannerUrl: hero.bannerUrl ?? '',
     corporationId: hero.corporationId ?? 'independent',
     description: hero.description ?? 'No public dossier available yet.',
-    name: hero.name ?? 'Unknown hero',
-    powerClass: hero.powerClass ?? 'Unclassified',
+    name: hero.name ?? getHeroDisplayName(hero),
+    publicBio: hero.publicBio ?? hero.description ?? '',
+    publicName: hero.publicName ?? '',
+    publicPowers: hero.publicPowers ?? hero.visiblePowers ?? [],
+    rankingPoints: getRankingPointsValue(hero),
+    visiblePowers: hero.visiblePowers ?? hero.publicPowers ?? [],
   }
 }
 
@@ -76,7 +101,7 @@ export function useHeroes() {
   }, [])
 
   const rankingHeroes = useMemo(
-    () => [...heroesState.heroes].sort(sortHeroesByApproval),
+    () => [...heroesState.heroes].sort(sortHeroesByRankingPoints),
     [heroesState.heroes],
   )
 

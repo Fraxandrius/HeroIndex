@@ -28,17 +28,18 @@ function News() {
 
   return (
     <section className="page-card news-page">
-      <p className="page-card__kicker">Updates · {source}</p>
-      <h2>News</h2>
+      <p className="page-card__kicker">Actualizaciones · {source}</p>
+      <h2>Noticias HeroIndex</h2>
       {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="news-list">
-        {loading ? <p>Loading...</p> : null}
+        {loading ? <p>Cargando noticias HeroIndex...</p> : null}
+        {!loading && visibleNews.length === 0 ? <p>Sin noticias activas disponibles.</p> : null}
         {!loading
           ? visibleNews.map((newsItem) => (
               <article className="news-list__item" key={newsItem.id}>
-                <p className="feed-card__tag">{newsItem.tag}</p>
+                 <p className="feed-card__tag">{newsItem.category ?? newsItem.layer ?? newsItem.tag}</p>
                 <h3>{newsItem.title}</h3>
-                <p>{newsItem.body}</p>
+                <p>{newsItem.summary ?? newsItem.body}</p>
                 {newsItem.imageUrl ? (
                   <img
                     alt={newsItem.title ?? 'HeroIndex news'}

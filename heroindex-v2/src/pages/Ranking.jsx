@@ -84,12 +84,6 @@ function sortHeroesByRankingValue(firstHero, secondHero) {
     return rankingDifference
   }
 
-  const trustDifference = getNumericValue(secondHero.trustScore) - getNumericValue(firstHero.trustScore)
-
-  if (trustDifference !== 0) {
-    return trustDifference
-  }
-
   const approvalDifference = getNumericValue(secondHero.approval) - getNumericValue(firstHero.approval)
 
   if (approvalDifference !== 0) {

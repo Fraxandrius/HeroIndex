@@ -73,11 +73,14 @@ function Corporations() {
 
   return (
     <section className="page-card corporations-page">
-      <p className="page-card__kicker">Corporations · {source}</p>
-      <h2>Corporations</h2>
+      <p className="page-card__kicker">Corporaciones · {source}</p>
+      <h2>Corporaciones HeroIndex</h2>
             {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="corporations-list">
-        {loading || newsLoading ? <p>Loading...</p> : null}
+        {loading || newsLoading ? <p>Cargando corporaciones HeroIndex...</p> : null}
+        {!loading && !newsLoading && visibleCorporations.length === 0 ? (
+          <p>No hay corporaciones activas disponibles.</p>
+        ) : null}
         {!loading && !newsLoading
         ? visibleCorporations.map((corporation) => {
               const relatedNews = getRelatedNews(corporation.id, feedNews)
@@ -115,16 +118,12 @@ function Corporations() {
                     <p>{corporation.description}</p>
                     <dl className="corporation-card__stats">
                       <div>
-                        <dt>Country</dt>
+                         <dt>País</dt>
                         <dd>{corporation.country}</dd>
                       </div>
                       <div>
-                        <dt>Approval</dt>
+                        <dt>Aprobación</dt>
                         <dd>{corporation.approval}</dd>
-                      </div>
-                      <div>
-                        <dt>Trust</dt>
-                        <dd>{corporation.trustScore}</dd>
                       </div>
                     </dl>
                     <section

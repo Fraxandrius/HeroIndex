@@ -3764,8 +3764,72 @@ button {
   transform: translateY(-1px);
 }
 
+
 .oraculo-hub-quick-links span {
   font-size: 1.12rem;
+}
+
+.oraculo-hub-summary {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.oraculo-hub-summary article {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(104, 216, 255, 0.18);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem;
+}
+
+.oraculo-hub-summary span {
+  color: #8edfff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.oraculo-hub-summary strong {
+  color: #ffffff;
+  font-size: 1.8rem;
+}
+
+.oraculo-hub-integrity {
+  border-color: rgba(245, 190, 92, 0.28);
+}
+
+.oraculo-hub-integrity__grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.oraculo-hub-integrity__grid article {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 0.9rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+}
+
+.oraculo-hub-integrity__grid span {
+  color: #aeb8d8;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.oraculo-hub-integrity__grid strong {
+  color: #ffffff;
+  font-size: 1.45rem;
+}
+
+.oraculo-hub-panel--priority {
+  border-color: rgba(104, 216, 255, 0.3);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.18);
 }
 
 .oraculo-hub-quick-links small,
@@ -4680,6 +4744,10 @@ button {
 }
 
 @media (max-width: 760px) {
+  .oraculo-hub-integrity__grid {
+    grid-template-columns: 1fr;
+  }
+
   .oraculo-npc-import-panel__header,
   .oraculo-npc-import-created-list article {
     align-items: stretch;
