@@ -11,6 +11,7 @@ import MissionCalculator from './pages/MissionCalculator.jsx'
 import News from './pages/News.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
+import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
 import Profiles from './pages/Profiles.jsx'
 import Ranking from './pages/Ranking.jsx'
 
@@ -36,6 +37,13 @@ const routes = [
   { id: 'news', label: 'News', path: '/news', component: News, navGroup: 'public' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
+  {
+    id: 'oraculo-npc-builder',
+    label: 'Creador de NPC',
+    path: '/oraculo/npc-builder',
+    component: OraculoNpcBuilder,
+    navGroup: 'oracle',
+  },
   {
     id: 'oraculo-hero-dossier',
     label: 'Dossier ORÁCULO',

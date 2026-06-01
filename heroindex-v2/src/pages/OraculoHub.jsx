@@ -168,6 +168,11 @@ function OraculoHub({ onNavigate }) {
   const error = heroesError || corporationsError || missionCalculationsError
   const quickLinks = [
     {
+      description: 'Crear héroes NPC con perfil público y hoja privada.',
+      label: 'Creador de NPC',
+      routeId: 'oraculo-npc-builder',
+    },
+    {
       description: 'Calcular impacto de misión y proyección de ranking.',
       label: 'Mission Calculator',
       routeId: 'mission-calculator',

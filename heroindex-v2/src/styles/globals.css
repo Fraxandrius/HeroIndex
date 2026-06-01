@@ -4264,3 +4264,220 @@ button {
     flex-direction: column;
   }
 }
+
+/* NPC Hero Builder-v1 */
+.oraculo-npc-builder-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: min(1320px, 100%);
+  width: 100%;
+}
+
+.oraculo-npc-builder-hero,
+.oraculo-npc-builder-result,
+.oraculo-npc-builder-block {
+  background:
+    linear-gradient(135deg, rgba(104, 216, 255, 0.1), rgba(245, 190, 92, 0.08)),
+    rgba(7, 12, 25, 0.62);
+  border: 1px solid rgba(104, 216, 255, 0.2);
+  border-radius: 1.45rem;
+  padding: 1.25rem;
+}
+
+.oraculo-npc-builder-hero {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.oraculo-npc-builder-hero h2,
+.oraculo-npc-builder-hero p,
+.oraculo-npc-builder-block h3,
+.oraculo-npc-builder-block p,
+.oraculo-npc-builder-result h3,
+.oraculo-npc-builder-result p {
+  margin: 0;
+}
+
+.oraculo-npc-builder-hero__subtitle,
+.oraculo-npc-builder-block h3,
+.oraculo-npc-builder-result h3 {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.oraculo-npc-builder-form,
+.oraculo-npc-builder-block {
+  display: grid;
+  gap: 1rem;
+}
+
+.oraculo-npc-builder-block--private {
+  border-color: rgba(245, 190, 92, 0.24);
+}
+
+.oraculo-npc-builder-block__header {
+  align-items: start;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.oraculo-npc-builder-block__header > span,
+.oraculo-npc-builder-result span {
+  background: rgba(104, 216, 255, 0.14);
+  border: 1px solid rgba(104, 216, 255, 0.24);
+  border-radius: 999px;
+  color: #bdefff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  padding: 0.28rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.oraculo-npc-builder-grid,
+.oraculo-npc-builder-text-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.oraculo-npc-builder-grid--attributes {
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.oraculo-npc-builder-wide-field,
+.oraculo-npc-builder-grid label,
+.oraculo-npc-builder-text-grid label,
+.oraculo-npc-builder-fieldset label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.oraculo-npc-builder-wide-field span,
+.oraculo-npc-builder-grid label span,
+.oraculo-npc-builder-text-grid label span,
+.oraculo-npc-builder-fieldset label span,
+.oraculo-npc-builder-fieldset legend {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.oraculo-npc-builder-grid input,
+.oraculo-npc-builder-grid select,
+.oraculo-npc-builder-wide-field textarea,
+.oraculo-npc-builder-text-grid textarea,
+.oraculo-npc-builder-fieldset input {
+  background: rgba(7, 12, 25, 0.88);
+  border: 1px solid rgba(151, 164, 205, 0.24);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  font: inherit;
+  min-width: 0;
+  padding: 0.78rem 0.85rem;
+}
+
+.oraculo-npc-builder-grid select option {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.oraculo-npc-builder-wide-field textarea,
+.oraculo-npc-builder-text-grid textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.oraculo-npc-builder-check {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 0.85rem;
+  display: flex !important;
+  gap: 0.55rem;
+  padding: 0.78rem 0.85rem;
+}
+
+.oraculo-npc-builder-check input {
+  width: auto;
+}
+
+.oraculo-npc-builder-fieldset {
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 1rem;
+}
+
+.oraculo-npc-builder-note,
+.oraculo-npc-builder-message {
+  border-radius: 1rem;
+  font-weight: 800;
+  margin: 0;
+  padding: 0.85rem;
+}
+
+.oraculo-npc-builder-note {
+  background: rgba(245, 190, 92, 0.08);
+  border: 1px solid rgba(245, 190, 92, 0.16);
+  color: #ffe2a1;
+}
+
+.oraculo-npc-builder-message--error {
+  background: rgba(255, 116, 116, 0.12);
+  border: 1px solid rgba(255, 116, 116, 0.24);
+  color: #ffb4b4;
+}
+
+.oraculo-npc-builder-actions,
+.oraculo-npc-builder-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.oraculo-npc-builder-actions button,
+.oraculo-npc-builder-result__actions button {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.18), rgba(245, 190, 92, 0.14));
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.72rem 1rem;
+}
+
+.oraculo-npc-builder-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.oraculo-npc-builder-result {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (max-width: 760px) {
+  .oraculo-npc-builder-result,
+  .oraculo-npc-builder-block__header {
+    grid-template-columns: 1fr;
+  }
+
+  .oraculo-npc-builder-block__header,
+  .oraculo-npc-builder-actions,
+  .oraculo-npc-builder-result__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .oraculo-npc-builder-actions button,
+  .oraculo-npc-builder-result__actions button {
+    width: 100%;
+  }
+}
