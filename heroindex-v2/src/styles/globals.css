@@ -4481,3 +4481,182 @@ button {
     width: 100%;
   }
 }
+
+/* NPC Bulk Import-v1 */
+.oraculo-npc-import-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: min(1320px, 100%);
+  width: 100%;
+}
+
+.oraculo-npc-import-hero,
+.oraculo-npc-import-panel {
+  background:
+    linear-gradient(135deg, rgba(104, 216, 255, 0.1), rgba(245, 190, 92, 0.08)),
+    rgba(7, 12, 25, 0.62);
+  border: 1px solid rgba(104, 216, 255, 0.2);
+  border-radius: 1.45rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.oraculo-npc-import-hero h2,
+.oraculo-npc-import-hero p,
+.oraculo-npc-import-panel h3,
+.oraculo-npc-import-panel p {
+  margin: 0;
+}
+
+.oraculo-npc-import-hero__subtitle,
+.oraculo-npc-import-panel h3 {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.oraculo-npc-import-file {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.oraculo-npc-import-file span {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.oraculo-npc-import-file input {
+  background: rgba(7, 12, 25, 0.88);
+  border: 1px solid rgba(151, 164, 205, 0.24);
+  border-radius: 0.85rem;
+  color: #ffffff;
+  font: inherit;
+  padding: 0.78rem 0.85rem;
+}
+
+.oraculo-npc-import-state {
+  background: rgba(104, 216, 255, 0.08);
+  border: 1px solid rgba(104, 216, 255, 0.18);
+  border-radius: 0.9rem;
+  color: #bdefff;
+  font-weight: 800;
+  padding: 0.75rem;
+}
+
+.oraculo-npc-import-state--error {
+  background: rgba(255, 116, 116, 0.12);
+  border-color: rgba(255, 116, 116, 0.24);
+  color: #ffb4b4;
+}
+
+.oraculo-npc-import-panel__header {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.oraculo-npc-import-panel button,
+.oraculo-npc-import-created-list button {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.18), rgba(245, 190, 92, 0.14));
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.72rem 1rem;
+}
+
+.oraculo-npc-import-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.oraculo-npc-import-table-wrap {
+  overflow-x: auto;
+}
+
+.oraculo-npc-import-table {
+  border-collapse: collapse;
+  min-width: 66rem;
+  width: 100%;
+}
+
+.oraculo-npc-import-table th,
+.oraculo-npc-import-table td {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  color: #d7def3;
+  padding: 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.oraculo-npc-import-table th {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.oraculo-npc-import-table tr.is-invalid td {
+  background: rgba(255, 116, 116, 0.08);
+  color: #ffcdcd;
+}
+
+.oraculo-npc-import-result {
+  border-color: rgba(245, 190, 92, 0.28);
+}
+
+.oraculo-npc-import-created-list,
+.oraculo-npc-import-errors {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.oraculo-npc-import-created-list article {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.oraculo-npc-import-created-list strong {
+  color: #ffffff;
+  display: block;
+}
+
+.oraculo-npc-import-created-list span {
+  color: #8ea0ce;
+  font-weight: 800;
+}
+
+.oraculo-npc-import-errors p {
+  background: rgba(255, 116, 116, 0.12);
+  border: 1px solid rgba(255, 116, 116, 0.24);
+  border-radius: 0.9rem;
+  color: #ffb4b4;
+  padding: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .oraculo-npc-import-panel__header,
+  .oraculo-npc-import-created-list article {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .oraculo-npc-import-panel button,
+  .oraculo-npc-import-created-list button {
+    width: 100%;
+  }
+}

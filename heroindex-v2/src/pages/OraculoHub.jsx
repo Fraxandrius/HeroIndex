@@ -173,6 +173,11 @@ function OraculoHub({ onNavigate }) {
       routeId: 'oraculo-npc-builder',
     },
     {
+      description: 'Crear múltiples NPCs desde un archivo CSV.',
+      label: 'Importador de NPCs',
+      routeId: 'oraculo-npc-import',
+    },
+    {
       description: 'Calcular impacto de misión y proyección de ranking.',
       label: 'Mission Calculator',
       routeId: 'mission-calculator',

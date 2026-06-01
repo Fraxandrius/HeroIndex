@@ -12,6 +12,7 @@ import News from './pages/News.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
+import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
 import Profiles from './pages/Profiles.jsx'
 import Ranking from './pages/Ranking.jsx'
 
@@ -42,6 +43,13 @@ const routes = [
     label: 'Creador de NPC',
     path: '/oraculo/npc-builder',
     component: OraculoNpcBuilder,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-npc-import',
+    label: 'Importador de NPCs',
+    path: '/oraculo/npc-import',
+    component: OraculoNpcImport,
     navGroup: 'oracle',
   },
   {
