@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { subscribeToCampaignLogs } from '../services/campaignLogsService.js'
 import { subscribeToCharacterSheet } from '../services/characterSheetsService.js'
 import {
@@ -43,7 +44,10 @@ function getManualAmount(value) {
   return Number.isNaN(amount) ? 0 : amount
 }
 
-function Karma() {
+function Karma({ onNavigate }) {
+  const { loading: authLoading, userProfile } = useAuth()
+  const accountHeroId = userProfile?.heroId ?? ''
+  const resolvedHeroId = accountHeroId || playerHeroId
   const [characterSheet, setCharacterSheet] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [campaignLogs, setCampaignLogs] = useState([])
@@ -51,8 +55,8 @@ function Karma() {
   const [manualAmount, setManualAmount] = useState('0')
   const [manualReason, setManualReason] = useState('')
   const [sessionLogId, setSessionLogId] = useState('')
-  const [loading, setLoading] = useState(Boolean(playerHeroId))
-  const [transactionsLoading, setTransactionsLoading] = useState(Boolean(playerHeroId))
+  const [loading, setLoading] = useState(false)
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [campaignLogsLoading, setCampaignLogsLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -72,10 +76,12 @@ function Karma() {
   const estimatedKarma = currentKarma + totalAmount
 
   useEffect(() => {
-    if (!playerHeroId) return undefined
+    if (!resolvedHeroId) {
+      return undefined
+    }
 
     return subscribeToCharacterSheet(
-      playerHeroId,
+      resolvedHeroId,
       (sheet) => {
         setCharacterSheet(sheet)
         setLoading(false)
@@ -85,13 +91,15 @@ function Karma() {
         setLoading(false)
       },
     )
-  }, [])
+  }, [resolvedHeroId])
 
   useEffect(() => {
-    if (!playerHeroId) return undefined
+    if (!resolvedHeroId) {
+      return undefined
+    }
 
     return subscribeToKarmaTransactions(
-      playerHeroId,
+      resolvedHeroId,
       (items) => {
         setTransactions(items)
         setTransactionsLoading(false)
@@ -101,7 +109,7 @@ function Karma() {
         setTransactionsLoading(false)
       },
     )
-  }, [])
+  }, [resolvedHeroId])
 
   useEffect(() => {
     return subscribeToCampaignLogs(
@@ -159,7 +167,7 @@ function Karma() {
 
     try {
       await createKarmaTransaction({
-        heroId: playerHeroId,
+        heroId: resolvedHeroId,
         type: totalAmount >= 0 ? 'gain' : 'penalty',
         amount: totalAmount,
         category: 'session_self_report',
@@ -183,18 +191,23 @@ function Karma() {
     }
   }
 
-  if (!playerHeroId) {
+  if (authLoading || loading || transactionsLoading || campaignLogsLoading) {
     return (
       <section className="page-card page-card--player karma-page hi-page hi-page-wide hi-state-card">
-        <p>No hay héroe de jugador configurado.</p>
+        <p>Cargando datos...</p>
       </section>
     )
   }
 
-  if (loading || transactionsLoading || campaignLogsLoading) {
+  if (!resolvedHeroId) {
     return (
       <section className="page-card page-card--player karma-page hi-page hi-page-wide hi-state-card">
-        <p>Cargando datos...</p>
+          <p>No hay héroe vinculado a esta cuenta.</p>
+        <div className="account-actions">
+          <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('account')} type="button">Vincular héroe</button>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+        </div>
       </section>
     )
   }

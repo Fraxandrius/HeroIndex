@@ -1,4 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app'
+import { getAuth } from 'firebase/auth'
 import { getDatabase } from 'firebase/database'
 
 const env = import.meta.env ?? {}
@@ -26,11 +27,13 @@ const firebaseApp = hasFirebaseConfig()
 export const firebaseClient = firebaseApp
   ? {
       app: firebaseApp,
+      auth: getAuth(firebaseApp),
       database: getDatabase(firebaseApp),
       isConfigured: true,
     }
   : {
       app: null,
+      auth: null,
       database: null,
       isConfigured: false,
     }

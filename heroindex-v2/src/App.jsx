@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import AppShell from './components/layout/AppShell.jsx'
+import Account from './pages/Account.jsx'
 import Corporations from './pages/Corporations.jsx'
 import GMManager from './pages/GMManager.jsx'
 import GMPanel from './pages/GMPanel.jsx'
 import HeroProfile from './pages/HeroProfile.jsx'
 import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
+import Login from './pages/Login.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
 import MyProfile from './pages/MyProfile.jsx'
 import News from './pages/News.jsx'
@@ -17,6 +19,7 @@ import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
 import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
 import Profiles from './pages/Profiles.jsx'
+import Register from './pages/Register.jsx'
 import Ranking from './pages/Ranking.jsx'
 
 const routes = [
@@ -39,8 +42,11 @@ const routes = [
     hiddenFromNav: true,
     navGroup: 'public',
   },
+  { id: 'login', label: 'Iniciar sesión', path: '/login', component: Login, hiddenFromNav: true, navGroup: 'player' },
+  { id: 'register', label: 'Crear cuenta', path: '/register', component: Register, hiddenFromNav: true, navGroup: 'player' },
   { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
+  { id: 'account', label: 'Mi Cuenta', path: '/cuenta', component: Account, navGroup: 'player' },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
   {
      id: 'gm-manager',

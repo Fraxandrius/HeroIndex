@@ -6989,3 +6989,190 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* Player Accounts v1 */
+.auth-page,
+.account-page {
+  display: grid;
+  gap: 1.25rem;
+  margin-inline: auto;
+  max-width: 1180px;
+  width: 100%;
+}
+
+.auth-card {
+  display: grid;
+  gap: 1rem;
+  margin-inline: auto;
+  max-width: 34rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  width: min(100%, 34rem);
+}
+
+.auth-card__header,
+.account-section-heading {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.auth-card__header h2,
+.auth-card__header p,
+.account-section-heading h3,
+.account-section-heading p {
+  margin: 0;
+}
+
+.auth-card__help,
+.auth-card__warning,
+.account-help {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1rem;
+  color: #cbd5e1;
+  margin: 0;
+  padding: 0.85rem;
+}
+
+.auth-card__warning {
+  border-color: rgba(234, 191, 79, 0.3);
+  color: #fef3c7;
+}
+
+.auth-card__internal-id,
+.account-internal-id {
+  background: rgba(8, 15, 31, 0.78);
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem;
+}
+
+.auth-card__internal-id span,
+.account-internal-id span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-card__internal-id strong,
+.account-internal-id strong {
+  color: #bae6fd;
+  overflow-wrap: anywhere;
+}
+
+.account-hero {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.account-hero h2,
+.account-hero p {
+  margin: 0;
+}
+
+.account-identity-card {
+  align-items: center;
+  background: rgba(8, 15, 31, 0.64);
+  border: 1px solid rgba(186, 230, 253, 0.2);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  min-width: 11rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.account-identity-card img,
+.account-identity-card > span {
+  align-items: center;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.32), rgba(234, 191, 79, 0.22));
+  border: 1px solid rgba(186, 230, 253, 0.28);
+  border-radius: 999px;
+  color: #f8fafc;
+  display: flex;
+  font-weight: 900;
+  justify-content: center;
+  object-fit: cover;
+  width: 4rem;
+}
+
+.account-layout {
+  align-items: start;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.42fr);
+}
+
+.account-form,
+.account-linked-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.account-actions,
+.my-profile-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.account-linked-hero h3,
+.account-linked-hero p {
+  margin: 0;
+}
+
+.account-empty-state {
+  display: grid;
+  gap: 1rem;
+}
+
+.sidebar__user {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  display: grid;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.sidebar__user strong,
+.sidebar__user span {
+  color: #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.sidebar__link--subtle {
+  opacity: 0.82;
+}
+
+.my-profile-account-callout {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.my-profile-account-callout p {
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .account-hero,
+  .my-profile-account-callout {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+}

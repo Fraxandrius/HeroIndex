@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth.js'
+
 const navSections = [
   { id: 'public', label: 'Público', description: 'Noticias · Perfiles · Ranking' },
   { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma' },
@@ -5,7 +7,13 @@ const navSections = [
 ]
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
+  const { isLoggedIn, loading, logout, userProfile } = useAuth()
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
+
+  const handleLogout = async () => {
+    await logout()
+    onNavigate('login')
+  }
 
   return (
     <aside className="sidebar" aria-label="Navegación HeroIndex">
@@ -53,6 +61,31 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
           )
         })}
       </nav>
+      
+      <section className="sidebar__user" aria-label="Cuenta de jugador">
+        {loading ? (
+          <span>Cargando cuenta...</span>
+        ) : isLoggedIn ? (
+          <>
+            <strong>{userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'}</strong>
+            <button className="sidebar__link" onClick={() => onNavigate('account')} type="button">
+              Mi Cuenta
+            </button>
+            <button className="sidebar__link sidebar__link--subtle" onClick={handleLogout} type="button">
+              Cerrar sesión
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="sidebar__link" onClick={() => onNavigate('login')} type="button">
+              Iniciar sesión
+            </button>
+            <button className="sidebar__link sidebar__link--subtle" onClick={() => onNavigate('register')} type="button">
+              Crear cuenta
+            </button>
+          </>
+        )}
+      </section>
     </aside>
   )
 }

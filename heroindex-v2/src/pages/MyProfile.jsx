@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { subscribeToCharacterSheet, updateCharacterSheet } from '../services/characterSheetsService.js'
@@ -115,10 +116,14 @@ function createSheetForm(sheet = {}) {
 }
 
 function MyProfile({ onNavigate }) {
+  const { isLoggedIn, loading: authLoading, userProfile } = useAuth()
   const { heroes, loading: heroesLoading, error: heroesError } = useHeroes()
   const { getCorporationById, loading: corporationsLoading, error: corporationsError } = useCorporations()
   const [characterSheet, setCharacterSheet] = useState(null)
-  const [sheetLoading, setSheetLoading] = useState(Boolean(playerHeroId))
+  const accountHeroId = userProfile?.heroId ?? ''
+  const resolvedHeroId = accountHeroId || playerHeroId
+  const isUsingFallbackHero = Boolean(!accountHeroId && playerHeroId)
+  const [sheetLoading, setSheetLoading] = useState(false)
   const [sheetError, setSheetError] = useState(null)
   const [isEditingPublic, setIsEditingPublic] = useState(false)
   const [isSavingPublic, setIsSavingPublic] = useState(false)
@@ -132,12 +137,12 @@ function MyProfile({ onNavigate }) {
   const [sheetSaveError, setSheetSaveError] = useState('')
 
   useEffect(() => {
-    if (!playerHeroId) {
+    if (!resolvedHeroId) {
       return undefined
     }
 
     return subscribeToCharacterSheet(
-      playerHeroId,
+      resolvedHeroId,
       (sheet) => {
         setCharacterSheet(sheet)
         setSheetLoading(false)
@@ -147,7 +152,7 @@ function MyProfile({ onNavigate }) {
         setSheetLoading(false)
       },
     )
-  }, [])
+  }, [resolvedHeroId])
 
   useEffect(() => {
     if (!isSheetOpen) {
@@ -168,13 +173,13 @@ function MyProfile({ onNavigate }) {
   }, [characterSheet, isSheetOpen])
 
   const hero = useMemo(
-    () => heroes.find((item) => String(item.id) === String(playerHeroId)),
-    [heroes],
+    () => heroes.find((item) => String(item.id) === String(resolvedHeroId)),
+    [heroes, resolvedHeroId],
   )
   const corporation = hero?.corporationId ? getCorporationById(hero.corporationId) : null
   const corporationName = corporation?.name ?? hero?.corporationName ?? 'Independiente'
   const publicPowers = getPublicPowers(hero)
-  const isLoading = Boolean(playerHeroId) && (heroesLoading || corporationsLoading || sheetLoading)
+  const isLoading = authLoading || (Boolean(resolvedHeroId) && (heroesLoading || corporationsLoading || sheetLoading))
   const loadError = heroesError || corporationsError || sheetError
 
   const closeSheetPanel = () => {
@@ -293,22 +298,27 @@ function MyProfile({ onNavigate }) {
     }
   }
 
-  if (!playerHeroId) {
-    return (
-      <div className="page-card my-profile-page my-profile-state">
-        <span className="section-kicker">Módulo de jugador</span>
-        <h2>Mi Perfil</h2>
-        <p>No hay héroe de jugador configurado.</p>
-      </div>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="page-card my-profile-page my-profile-state">
         <span className="section-kicker">Módulo de jugador</span>
         <h2>Mi Perfil</h2>
         <p>Cargando Mi Perfil...</p>
+      </div>
+    )
+  }
+
+  if (!resolvedHeroId) {
+    return (
+      <div className="page-card my-profile-page my-profile-state">
+        <span className="section-kicker">Módulo de jugador</span>
+        <h2>Mi Perfil</h2>
+        <p>No hay héroe vinculado a esta cuenta.</p>
+        <div className="my-profile-state__actions">
+          <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('account')} type="button">Vincular héroe</button>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+        </div>
       </div>
     )
   }
@@ -328,7 +338,7 @@ function MyProfile({ onNavigate }) {
       <div className="page-card my-profile-page my-profile-state">
         <span className="section-kicker">Módulo de jugador</span>
         <h2>Mi Perfil</h2>
-        <p>No se encontró el héroe configurado.</p>
+        <p>No se encontró el héroe vinculado.</p>
       </div>
     )
   }
@@ -374,7 +384,17 @@ function MyProfile({ onNavigate }) {
         </div>
       </header>
 
-<div className="hi-dashboard-grid my-profile-dashboard">
+      {isLoggedIn && !accountHeroId && isUsingFallbackHero ? (
+        <section className="hi-state-card my-profile-account-callout">
+          <p>Tu cuenta aún no tiene un héroe vinculado.</p>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">
+            Ir a Mi Cuenta
+          </button>
+        </section>
+      ) : null}
+
+
+      <div className="hi-dashboard-grid my-profile-dashboard">
         <main className="hi-main-column my-profile-dashboard__main">
           <section className="page-card hi-card hi-card-player my-profile-panel">
             <div className="my-profile-panel__header">
