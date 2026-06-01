@@ -555,6 +555,8 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
         category: karmaForm.category,
         reason: karmaForm.reason,
         notes: karmaForm.notes,
+        source: 'oraculo',
+        status: 'accepted',
         createdBy: 'ORÁCULO/GM',
       })
       setKarmaMessage('Movimiento de Karma registrado correctamente.')
@@ -1046,8 +1048,11 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
 <section className="oraculo-dossier-panel oraculo-karma-management">
             <div className="oraculo-dossier-panel__header">
               <div>
-                <h3>Gestión de Karma</h3>
+                <h3>Karma</h3>
                 <p>Karma es progresión RPG. No modifica Ranking HeroIndex ni aprobación ciudadana.</p>
+                  <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('oraculo-karma-manager')} type="button">
+                  Abrir Gestor de Karma
+                </button>
               </div>
               <strong className="oraculo-karma-management__value">
                 {getNumericValue(characterSheet?.karma)} Karma
@@ -1112,7 +1117,7 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                       <strong>{formatKarmaAmount(transaction.amount)}</strong>
                     </div>
                     <p>{transaction.reason || 'Movimiento sin motivo'}</p>
-                    <small>{formatDate(transaction.createdAt)} · {transaction.notes || 'Sin notas'}</small>
+                    <small>{formatDate(transaction.createdAt)} · {transaction.source === 'player' ? 'Jugador' : 'ORÁCULO'} · {transaction.notes || 'Sin notas'}</small>
                   </article>
                 ))
               ) : (

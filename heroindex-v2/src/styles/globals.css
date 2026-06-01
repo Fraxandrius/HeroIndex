@@ -6002,3 +6002,144 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.karma-self-assignment,
+.oraculo-karma-manager {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.karma-self-form,
+.oraculo-karma-manager__layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.karma-self-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.karma-self-form__wide {
+  grid-column: 1 / -1;
+}
+
+.karma-criteria-group {
+  border: 1px solid var(--hi-border);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem;
+}
+
+.karma-criteria-group legend {
+  color: var(--hi-label);
+  font-weight: 950;
+  padding: 0 0.4rem;
+}
+
+.karma-criteria {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.85rem;
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.karma-criteria span {
+  color: var(--hi-text-soft);
+  font-weight: 750;
+}
+
+.karma-summary-card {
+  background: rgba(8, 15, 31, 0.42);
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  border-radius: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.karma-summary-card strong {
+  color: var(--hi-gold);
+}
+
+.is-danger {
+  color: var(--hi-danger) !important;
+}
+
+.oraculo-karma-manager__layout {
+  align-items: start;
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1fr) minmax(18rem, 0.75fr);
+}
+
+.oraculo-karma-manager__hero,
+.oraculo-karma-manager__heroes,
+.oraculo-karma-manager__criteria,
+.oraculo-karma-manager__summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.oraculo-karma-manager__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.oraculo-karma-hero-list {
+  display: grid;
+  gap: 0.65rem;
+  max-height: 32rem;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.oraculo-karma-hero-row,
+.karma-summary-row {
+  background: rgba(8, 15, 31, 0.42);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.85rem;
+}
+
+.oraculo-karma-hero-row {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.oraculo-karma-hero-row span,
+.karma-summary-row {
+  color: var(--hi-text-soft);
+}
+
+.oraculo-karma-hero-row strong,
+.karma-summary-row strong {
+  color: var(--hi-text);
+  display: block;
+}
+
+.oraculo-karma-hero-row small {
+  color: var(--hi-muted);
+  display: block;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 1180px) {
+  .oraculo-karma-manager__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .karma-self-form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -15,17 +15,16 @@ const gainOptions = [
   { category: 'responsibilities', label: 'Cumplió responsabilidades', amount: 1 },
   { category: 'drawback_challenge', label: 'Superó desafío de drawback', amount: 1 },
   { category: 'extraordinary_action', label: 'Acción extraordinaria aprobada por el grupo', amount: 1 },
-  { category: 'other_gain', label: 'Otro mérito', amount: 1, manual: true },
 ]
 
-const costOptions = [
+const spendOptions = [
   { category: 'attribute_plus_one', label: 'Subir atributo +1', amount: -10 },
   { category: 'power_level', label: 'Subir power level', amount: -20 },
   { category: 'power_boost', label: 'Nuevo power boost', amount: -20 },
   { category: 'new_talent', label: 'Nuevo talent', amount: -10 },
   { category: 'remove_drawback', label: 'Remover drawback', amount: -10 },
   { category: 'base_upgrade', label: 'Base upgrade', amount: -10 },
-  { category: 'other_spend', label: 'Otro gasto', amount: -1, manual: true },
+  { category: 'manual_spend', label: 'Gasto manual', amount: -1, manual: true },
 ]
 
 const penaltyOptions = [
@@ -34,7 +33,7 @@ const penaltyOptions = [
   { category: 'neglected_responsibilities', label: 'Descuidó responsabilidades', amount: -1 },
   { category: 'immoral_action', label: 'Actuó de forma inmoral', amount: -1 },
   { category: 'killed_someone', label: 'Mató a alguien', amount: -1 },
-  { category: 'gm_penalty', label: 'Penalización GM', amount: -1, manual: true },
+  { category: 'gm_penalty', label: 'Penalización ORÁCULO/GM', amount: -1, manual: true },
 ]
 
 function normalizeTransaction(id, transaction = {}) {
@@ -42,6 +41,9 @@ function normalizeTransaction(id, transaction = {}) {
     id,
     ...transaction,
     amount: Number(transaction.amount ?? 0),
+    criteria: Array.isArray(transaction.criteria) ? transaction.criteria : [],
+    source: transaction.source ?? 'oraculo',
+    status: transaction.status ?? 'accepted',
   }
 }
 
@@ -70,27 +72,54 @@ function getAmountValue(value) {
   return amount
 }
 
+async function getCharacterSheet(database, heroId) {
+  const sheetSnapshot = await get(ref(database, `${CHARACTER_SHEETS_PATH}/${heroId}`))
+
+  return sheetSnapshot.val()
+}
+
+function buildTransactionPayload(transactionRef, transactionData, amount, timestamp) {
+  return {
+    id: transactionRef.key,
+    heroId: transactionData.heroId,
+    type: transactionData.type ?? (amount >= 0 ? 'gain' : 'spend'),
+    amount,
+    category: transactionData.category ?? '',
+    reason: transactionData.reason ?? '',
+    notes: transactionData.notes ?? '',
+    criteria: Array.isArray(transactionData.criteria) ? transactionData.criteria : [],
+    source: transactionData.source ?? 'oraculo',
+    status: transactionData.status ?? 'accepted',
+    sessionLogId: transactionData.sessionLogId ?? '',
+    missionCalculationId: transactionData.missionCalculationId ?? '',
+    createdBy: transactionData.createdBy ?? (transactionData.source === 'player' ? 'Jugador' : 'ORÁCULO/GM'),
+    createdAt: timestamp,
+    reviewedBy: transactionData.reviewedBy ?? '',
+    reviewedAt: transactionData.reviewedAt ?? '',
+  }
+}
+
 export function subscribeToKarmaTransactions(heroId, callback, onError) {
+  return subscribeToAllKarmaTransactions(
+    (transactions) => {
+      callback?.(transactions.filter((transaction) => String(transaction.heroId) === String(heroId)))
+    },
+    onError,
+  )
+}
+
+export function subscribeToAllKarmaTransactions(callback, onError) {
   const { database, isConfigured } = getFirebaseClient()
 
-  if (!heroId || !isConfigured || !database) {
+  if (!isConfigured || !database) {
     callback?.([])
     return () => {}
   }
 
-  const transactionsRef = ref(database, KARMA_TRANSACTIONS_PATH)
-
   return onValue(
-    transactionsRef,
-    (snapshot) => {
-      const transactions = normalizeSnapshot(snapshot.val()).filter(
-        (transaction) => String(transaction.heroId) === String(heroId),
-      )
-      callback?.(transactions)
-    },
-    (error) => {
-      onError?.(error)
-    },
+    ref(database, KARMA_TRANSACTIONS_PATH),
+    (snapshot) => callback?.(normalizeSnapshot(snapshot.val())),
+    (error) => onError?.(error),
   )
 }
 
@@ -106,9 +135,8 @@ export async function createKarmaTransaction(transactionData = {}) {
   }
 
   const amount = getAmountValue(transactionData.amount)
-  const sheetRef = ref(database, `${CHARACTER_SHEETS_PATH}/${heroId}`)
-  const sheetSnapshot = await get(sheetRef)
-  const currentKarma = Number(sheetSnapshot.val()?.karma ?? 0)
+  const characterSheet = await getCharacterSheet(database, heroId)
+  const currentKarma = Number(characterSheet?.karma ?? 0)
   const nextKarma = currentKarma + amount
 
   if (nextKarma < 0) {
@@ -117,19 +145,7 @@ export async function createKarmaTransaction(transactionData = {}) {
 
   const timestamp = Date.now()
   const transactionRef = push(ref(database, KARMA_TRANSACTIONS_PATH))
-  const payload = {
-    id: transactionRef.key,
-    heroId,
-    type: transactionData.type ?? 'adjustment',
-    amount,
-    category: transactionData.category ?? '',
-    reason: transactionData.reason ?? '',
-    notes: transactionData.notes ?? '',
-    sessionLogId: transactionData.sessionLogId ?? '',
-    missionCalculationId: transactionData.missionCalculationId ?? '',
-    createdBy: transactionData.createdBy ?? 'ORÁCULO/GM',
-    createdAt: timestamp,
-  }
+  const payload = buildTransactionPayload(transactionRef, { ...transactionData, heroId }, amount, timestamp)
 
   await update(ref(database), {
     [`${KARMA_TRANSACTIONS_PATH}/${transactionRef.key}`]: payload,
@@ -138,6 +154,49 @@ export async function createKarmaTransaction(transactionData = {}) {
   })
 
   return payload
+}
+
+export async function createKarmaBatchTransactions(heroIds = [], batchData = {}) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  assertFirebase(database, isConfigured)
+
+  const uniqueHeroIds = [...new Set(heroIds.filter(Boolean).map(String))]
+  const amount = getAmountValue(batchData.amount)
+  const timestamp = Date.now()
+  const updates = {}
+  const createdTransactions = []
+  const skippedHeroIds = []
+
+  for (const heroId of uniqueHeroIds) {
+    const characterSheet = await getCharacterSheet(database, heroId)
+
+    if (!characterSheet) {
+      skippedHeroIds.push(heroId)
+      continue
+    }
+
+    const currentKarma = Number(characterSheet.karma ?? 0)
+    const nextKarma = currentKarma + amount
+
+    if (nextKarma < 0) {
+      throw new Error(`El movimiento dejaría Karma negativo para ${heroId}.`)
+    }
+
+    const transactionRef = push(ref(database, KARMA_TRANSACTIONS_PATH))
+    const payload = buildTransactionPayload(transactionRef, { ...batchData, heroId }, amount, timestamp)
+
+    updates[`${KARMA_TRANSACTIONS_PATH}/${transactionRef.key}`] = payload
+    updates[`${CHARACTER_SHEETS_PATH}/${heroId}/karma`] = nextKarma
+    updates[`${CHARACTER_SHEETS_PATH}/${heroId}/updatedAt`] = timestamp
+    createdTransactions.push(payload)
+  }
+
+  if (createdTransactions.length > 0) {
+    await update(ref(database), updates)
+  }
+
+  return { createdTransactions, skippedHeroIds }
 }
 
 export async function deleteKarmaTransaction(transactionId) {
@@ -157,9 +216,8 @@ export async function deleteKarmaTransaction(transactionId) {
 
   const heroId = transaction.heroId
   const amount = Number(transaction.amount ?? 0)
-  const sheetRef = ref(database, `${CHARACTER_SHEETS_PATH}/${heroId}`)
-  const sheetSnapshot = await get(sheetRef)
-  const currentKarma = Number(sheetSnapshot.val()?.karma ?? 0)
+  const characterSheet = await getCharacterSheet(database, heroId)
+  const currentKarma = Number(characterSheet?.karma ?? 0)
   const nextKarma = currentKarma - amount
 
   if (nextKarma < 0) {
@@ -173,14 +231,18 @@ export async function deleteKarmaTransaction(transactionId) {
   await remove(transactionRef)
 }
 
-export function getKarmaCostOptions() {
-  return costOptions
-}
-
 export function getKarmaGainOptions() {
   return gainOptions
 }
 
 export function getKarmaPenaltyOptions() {
   return penaltyOptions
+}
+
+export function getKarmaSpendOptions() {
+  return spendOptions
+}
+
+export function getKarmaCostOptions() {
+  return spendOptions
 }

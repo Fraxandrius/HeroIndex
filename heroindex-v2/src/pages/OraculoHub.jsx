@@ -4,6 +4,7 @@ import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
 import { subscribeToCharacterSheets } from '../services/characterSheetsService.js'
 import { subscribeToCampaignLogs } from '../services/campaignLogsService.js'
+import { subscribeToAllKarmaTransactions } from '../services/karmaService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
 const heroFilters = [
@@ -109,6 +110,8 @@ function OraculoHub({ onNavigate }) {
   const [campaignLogs, setCampaignLogs] = useState([])
   const [campaignLogsLoading, setCampaignLogsLoading] = useState(true)
   const [campaignLogsError, setCampaignLogsError] = useState(null)
+  const [karmaTransactions, setKarmaTransactions] = useState([])
+  const [karmaTransactionsLoading, setKarmaTransactionsLoading] = useState(true)
   const [characterSheets, setCharacterSheets] = useState([])
   const [characterSheetsLoading, setCharacterSheetsLoading] = useState(true)
   const [characterSheetsError, setCharacterSheetsError] = useState(null)
@@ -131,6 +134,19 @@ function OraculoHub({ onNavigate }) {
       (error) => {
         setMissionCalculationsError(error)
         setMissionCalculationsLoading(false)
+      },
+    )
+  }, [])
+
+   useEffect(() => {
+    return subscribeToAllKarmaTransactions(
+      (items) => {
+        setKarmaTransactions(items)
+        setKarmaTransactionsLoading(false)
+      },
+      () => {
+        setKarmaTransactions([])
+        setKarmaTransactionsLoading(false)
       },
     )
   }, [])
@@ -195,6 +211,7 @@ function OraculoHub({ onNavigate }) {
     .slice(0, 5)
   const highlightedHeroes = [...activeHeroes].sort(sortHeroesByRankingPoints).slice(0, 5)
   const recentCampaignLogs = campaignLogs.slice(0, 3)
+  const recentPlayerKarmaTransactions = karmaTransactions.filter((transaction) => transaction.source === 'player').slice(0, 3)
   const activeHeroCount = activeHeroes.length
   const inactiveHeroCount = allHeroes.filter((hero) => hero.active === false).length
   const missingSheetCount = activeHeroes.filter((hero) => !sheetsByHeroId.has(String(hero.id))).length
@@ -227,13 +244,19 @@ function OraculoHub({ onNavigate }) {
     newsLoading ||
     missionCalculationsLoading ||
     characterSheetsLoading ||
-    campaignLogsLoading
+    campaignLogsLoading ||
+    karmaTransactionsLoading
   const error = heroesError || corporationsError || newsError || missionCalculationsError || campaignLogsError
   const quickLinks = [
     {
       description: 'Registrar sesiones, misiones y consecuencias narrativas.',
       label: 'Registro de Campaña',
       routeId: 'oraculo-campaign-log',
+    },
+     {
+      description: 'Asignar, revisar y corregir movimientos de Karma.',
+      label: 'Gestor de Karma',
+      routeId: 'oraculo-karma-manager',
     },
     {
       description: 'Crear héroes NPC con perfil público y hoja privada.',
@@ -334,7 +357,10 @@ function OraculoHub({ onNavigate }) {
           <span>Registros de campaña</span>
           <strong>{campaignLogs.length}</strong>
         </article>
-
+<article>
+          <span>Movimientos de Karma</span>
+          <strong>{karmaTransactions.length}</strong>
+        </article>
       </section>
 
       {allHeroes.length === 0 ? <p className="oraculo-hub-state">No hay héroes registrados.</p> : null}
@@ -495,6 +521,36 @@ function OraculoHub({ onNavigate }) {
               </div>
             ) : (
               <p className="oraculo-hub-state">No hay evaluaciones aprobadas pendientes.</p>
+            )}
+          </section>
+
+ <section className="oraculo-hub-panel">
+            <div className="oraculo-hub-panel__header">
+              <div>
+                <h3>Gestor de Karma</h3>
+                <p>Movimientos recientes registrados por jugadores.</p>
+              </div>
+              <button onClick={() => onNavigate?.('oraculo-karma-manager')} type="button">
+                Abrir gestor
+              </button>
+            </div>
+            {recentPlayerKarmaTransactions.length > 0 ? (
+              <div className="oraculo-hub-compact-list">
+                {recentPlayerKarmaTransactions.map((transaction) => (
+                  <article key={transaction.id}>
+                    <div>
+                      <strong>{transaction.reason || 'Movimiento de jugador'}</strong>
+                      <span>{Number(transaction.amount ?? 0) > 0 ? `+${transaction.amount}` : transaction.amount} Karma</span>
+                      <small>{formatDate(transaction.createdAt)}</small>
+                    </div>
+                    <button onClick={() => onNavigate?.('oraculo-karma-manager')} type="button">
+                      Revisar
+                    </button>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="oraculo-hub-state">No hay movimientos de jugador recientes.</p>
             )}
           </section>
 

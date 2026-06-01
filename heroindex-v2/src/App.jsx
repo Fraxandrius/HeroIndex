@@ -13,6 +13,7 @@ import News from './pages/News.jsx'
 import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
+import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
 import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
 import Profiles from './pages/Profiles.jsx'
@@ -46,6 +47,13 @@ const routes = [
     label: 'Registro de Campaña',
     path: '/oraculo/campaign-log',
     component: OraculoCampaignLog,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-karma-manager',
+    label: 'Gestor de Karma',
+    path: '/oraculo/karma-manager',
+    component: OraculoKarmaManager,
     navGroup: 'oracle',
   },
   {
