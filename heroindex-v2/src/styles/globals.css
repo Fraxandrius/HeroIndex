@@ -3994,3 +3994,139 @@ button {
   border-color: rgba(245, 190, 92, 0.48);
   transform: translateY(-1px);
 }
+
+/* GM Manager UX-v2 */
+.gm-manager-page {
+  max-width: min(1320px, 100%);
+}
+
+.gm-manager-hero {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.gm-manager-hero__actions,
+.gm-manager-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.gm-manager-hero__actions {
+  justify-content: flex-end;
+}
+
+.gm-manager-section-nav {
+  background: rgba(7, 11, 23, 0.64);
+  border: 1px solid rgba(104, 216, 255, 0.2);
+  border-radius: 1.25rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  position: sticky;
+  top: 0.75rem;
+  z-index: 3;
+}
+
+.gm-manager-section-nav__item {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 999px;
+  color: #d7def3;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0.65rem 0.9rem;
+}
+
+.gm-manager-section-nav__item:hover,
+.gm-manager-section-nav__item:focus-visible,
+.gm-manager-action:hover,
+.gm-manager-action:focus-visible {
+  border-color: rgba(255, 210, 110, 0.58);
+  color: #ffffff;
+  outline: none;
+}
+
+.gm-manager-summary {
+  background: linear-gradient(145deg, rgba(104, 216, 255, 0.1), rgba(7, 11, 23, 0.58));
+}
+
+.gm-manager-summary__stats {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.gm-manager-summary__stats div {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 0.85rem;
+  padding: 0.65rem;
+}
+
+.gm-manager-summary__stats dt {
+  color: #8ea0ce;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gm-manager-summary__stats dd {
+  color: #ffffff;
+  font-weight: 900;
+  margin: 0.15rem 0 0;
+}
+
+.gm-manager-workspace {
+  scroll-margin-top: 5.5rem;
+}
+
+.gm-manager-workspace--overview {
+  border-color: rgba(104, 216, 255, 0.24);
+}
+
+.gm-manager-table {
+  min-width: 52rem;
+}
+
+.gm-manager-table th,
+.gm-manager-table td {
+  padding: 0.65rem;
+}
+
+.gm-manager-table td:last-child {
+  min-width: 14rem;
+}
+
+.gm-manager-create,
+.gm-manager-detail,
+.gm-manager-tools,
+.gm-manager-file-result {
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
+}
+
+@media (max-width: 980px) {
+  .gm-manager-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .gm-manager-hero__actions {
+    justify-content: flex-start;
+  }
+
+  .gm-manager-summary__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .gm-manager-section-nav {
+    position: static;
+  }
+
+  .gm-manager-section-nav__item {
+    width: 100%;
+  }
+}

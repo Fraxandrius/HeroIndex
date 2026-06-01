@@ -129,7 +129,7 @@ function getValue(value) {
   }
 
   if (typeof value === 'boolean') {
-    return value ? 'true' : 'false'
+    return value ? 'Sí' : 'No'
   }
 
   return value
@@ -141,7 +141,7 @@ function getDetailValue(value) {
   }
 
   if (typeof value === 'boolean') {
-    return value ? 'true' : 'false'
+    return value ? 'Sí' : 'No'
   }
 
   if (Array.isArray(value) || typeof value === 'object') {
@@ -149,6 +149,31 @@ function getDetailValue(value) {
   }
 
   return String(value)
+}
+
+function countActiveItems(items) {
+  return items.filter((item) => item.active !== false).length
+}
+
+function getLatestUpdatedAt(items) {
+  return items.reduce((latestDate, item) => {
+    const rawDate = item.updatedAt ?? item.createdAt
+    const timestamp = Number(rawDate) || Date.parse(rawDate) || 0
+
+    return timestamp > latestDate ? timestamp : latestDate
+  }, 0)
+}
+
+function formatManagerDate(value) {
+  if (!value) {
+    return 'Sin registro'
+  }
+
+  return new Intl.DateTimeFormat('es', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value))
 }
 
 
@@ -170,6 +195,12 @@ const statusFilters = [
 ]
 
 const imageFolderOptions = ['news', 'heroes', 'corporations', 'uploads']
+
+const contentTypeLabels = {
+  corporation: 'Corporación',
+  hero: 'Héroe',
+  news: 'News',
+}
 
 function getSearchValue(item, fields) {
   return fields
@@ -201,14 +232,33 @@ function filterReviewItems(items, searchQuery, statusFilter, fields) {
   })
 }
 
-function GMManagerSummary({ count, error, label, loading }) {
+function GMManagerSummary({ activeCount, count, error, inactiveCount, label, loading, updatedAt }) {
   const status = getStatus({ error, loading })
+  const statusLabel = {
+    error: 'Error',
+    loading: 'Cargando',
+    ready: 'Listo',
+  }[status]
 
   return (
     <article className="gm-manager-summary">
       <p className="page-card__kicker">{label}</p>
       <strong>{count}</strong>
-      <span>Status: {status}</span>
+      <span>Estado: {statusLabel}</span>
+      <dl className="gm-manager-summary__stats">
+        <div>
+          <dt>Activos</dt>
+          <dd>{activeCount}</dd>
+        </div>
+        <div>
+          <dt>Inactivos</dt>
+          <dd>{inactiveCount}</dd>
+        </div>
+        <div>
+          <dt>Actualización</dt>
+          <dd>{formatManagerDate(updatedAt)}</dd>
+        </div>
+      </dl>
       {error ? <small>{error.message ?? String(error)}</small> : null}
     </article>
   )
@@ -218,7 +268,7 @@ function GMManagerSection({ children, title }) {
   return (
     <section className="gm-manager-section">
       <div className="gm-manager-title">
-        <p className="page-card__kicker">Review</p>
+        <p className="page-card__kicker">Revisión</p>
         <h3>{title}</h3>
       </div>
       <div className="gm-manager-table-wrap">{children}</div>
@@ -433,7 +483,7 @@ const handleUseLatestImage = (setForm, field) => {
     try {
       const nextActive = await toggleHandler(item.id, item.active)
       setToggleStatusMessage(
-        `${type} ${nextActive ? 'activated' : 'deactivated'} successfully.`,
+        `${contentTypeLabels[type] ?? 'Registro'} ${nextActive ? 'activado' : 'desactivado'} correctamente.`,
       )
     } catch (error) {
       setToggleErrorMessage(error.message ?? String(error))
@@ -459,7 +509,7 @@ const handleNewsFieldChange = (event) => {
     event.preventDefault()
 
     if (!newsForm.title.trim() || !newsForm.summary.trim()) {
-      setNewsFormError('Title and summary are required.')
+      setNewsFormError('Título y resumen son obligatorios.')
       setNewsFormSuccess('')
       return
     }
@@ -481,7 +531,7 @@ const handleNewsFieldChange = (event) => {
         title: newsForm.title.trim(),
       })
       setNewsForm(emptyNewsForm)
-      setNewsFormSuccess('News created successfully.')
+      setNewsFormSuccess('News creada correctamente.')
     } catch (error) {
       setNewsFormError(error.message ?? String(error))
     } finally {
@@ -518,7 +568,7 @@ const handleNewsFieldChange = (event) => {
     event.preventDefault()
 
     if (!editNewsForm.title.trim() || !editNewsForm.summary.trim()) {
-      setEditNewsError('Title and summary are required.')
+      setEditNewsError('Título y resumen son obligatorios.')
       setEditNewsSuccess('')
       return
     }
@@ -541,7 +591,7 @@ const handleNewsFieldChange = (event) => {
       })
       setEditingNewsId(null)
       setEditNewsForm(emptyNewsForm)
-      setEditNewsSuccess('News updated successfully.')
+      setEditNewsSuccess('News actualizada correctamente.')
     } catch (error) {
       setEditNewsError(error.message ?? String(error))
     } finally {
@@ -790,7 +840,7 @@ const handleNewsFieldChange = (event) => {
     try {
       await createCorporation(corporationPayload)
       setCorporationForm(emptyCorporationForm)
-      setCorporationFormSuccess('Corporation created successfully.')
+      setCorporationFormSuccess('Corporation creada correctamente.')
     } catch (error) {
       setCorporationFormError(error.message ?? String(error))
     } finally {
@@ -869,11 +919,12 @@ const handleNewsFieldChange = (event) => {
     setEditCorporationError('')
     setEditCorporationSuccess('')
 
+
     try {
       await updateCorporation(editingCorporationId, corporationPayload)
       setEditingCorporationId(null)
       setEditCorporationForm(emptyCorporationForm)
-      setEditCorporationSuccess('Corporation updated successfully.')
+      setEditCorporationSuccess('Corporation actualizada correctamente.')
     } catch (error) {
       setEditCorporationError(error.message ?? String(error))
     } finally {
@@ -906,6 +957,12 @@ const handleNewsFieldChange = (event) => {
     ['name', 'tagline', 'sector', 'country', 'description'],
   )
   const canUseLatestImage = Boolean(latestUploadedImageUrl)
+  const newsActiveCount = countActiveItems(feedNews)
+  const heroesActiveCount = countActiveItems(heroes)
+  const corporationsActiveCount = countActiveItems(corporations)
+  const handleManagerSectionJump = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   const getHeroRelationLabel = (hero) => {
     const publicIdentity = hero.alias || hero.publicName || hero.codename || hero.name
     return hero.heroTitle ? `${publicIdentity} · ${hero.heroTitle}` : publicIdentity
@@ -916,107 +973,80 @@ const handleNewsFieldChange = (event) => {
   return (
     <section className="page-card gm-manager-page">
       <div className="gm-manager-hero">
-        <p className="page-card__kicker">ORÁCULO / Content Control</p>
-        <h2>GM Manager</h2>
-        <p>Panel interno de gestión de HeroIndex.</p>
-        <p className="gm-manager-hero__note">
-          ORÁCULO content control interface for managing public HeroIndex data.
-        </p>
-      </div>
+        <div>
+          <p className="page-card__kicker">ORÁCULO / Control de contenido</p>
+          <h2>GM Manager</h2>
+          <p>Interfaz ORÁCULO para gestión de contenido público HeroIndex.</p>
+          <p className="gm-manager-hero__note">
+            Administra noticias, héroes, corporaciones, vínculos, imágenes y estados de publicación.
+          </p>
+        </div>
+        <div className="gm-manager-hero__actions" aria-label="Accesos rápidos de GM Manager">
+          <button className="gm-manager-action" onClick={() => onNavigate?.('oraculo-hub')} type="button">
+            Ir a ORÁCULO Hub
+          </button>
+          <button className="gm-manager-action" onClick={() => onNavigate?.('mission-calculator')} type="button">
+            Mission Calculator
+          </button>
+          <button className="gm-manager-action" onClick={() => onNavigate?.('ranking')} type="button">
+            Ranking público
+          </button>
+        </div>
+</div>
 
-      <section className="gm-manager-workspace gm-manager-workspace--overview">
+      <section className="gm-manager-workspace gm-manager-workspace--overview" id="gm-manager-overview">
         <div className="gm-manager-workspace__top">
-          <p className="page-card__kicker">Overview</p>
-          <h3>Overview</h3>
+          <p className="page-card__kicker">Resumen</p>
+          <h3>Vista general</h3>
+          <p>Lectura rápida del volumen editorial y estado de publicación de las colecciones principales.</p>
         </div>
         <div className="gm-manager-grid">
           <GMManagerSummary
+            activeCount={newsActiveCount}
             count={feedNews.length}
             error={newsError}
-            label="News"
+            inactiveCount={feedNews.length - newsActiveCount}
+            label="Noticias"
             loading={newsLoading}
+            updatedAt={getLatestUpdatedAt(feedNews)}
           />
           <GMManagerSummary
+            activeCount={heroesActiveCount}
             count={heroes.length}
             error={heroesError}
-            label="Heroes"
+            inactiveCount={heroes.length - heroesActiveCount}
+            label="Héroes"
             loading={heroesLoading}
+            updatedAt={getLatestUpdatedAt(heroes)}
           />
           <GMManagerSummary
+            activeCount={corporationsActiveCount}
             count={corporations.length}
             error={corporationsError}
-            label="Corporations"
+            inactiveCount={corporations.length - corporationsActiveCount}
+            label="Corporaciones"
             loading={corporationsLoading}
+            updatedAt={getLatestUpdatedAt(corporations)}
           />
         </div>
       </section>
 
-<section className="gm-manager-workspace">
-        <div className="gm-manager-workspace__top">
-          <p className="page-card__kicker">Subir imagen</p>
-          <h3>Subir imagen</h3>
-          <p>Sube una imagen a Firebase Storage y copia su downloadURL para usarla manualmente.</p>
-        </div>
-        <form className="gm-manager-form" onSubmit={handleUploadImage}>
-          <div className="gm-manager-form__grid">
-            <label>
-              <span>Carpeta</span>
-              <select
-                name="imageFolder"
-                onChange={(event) => setImageFolder(event.target.value)}
-                value={imageFolder}
-              >
-                {imageFolderOptions.map((folder) => (
-                  <option key={folder} value={folder}>
-                    {folder}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Imagen</span>
-              <input
-                accept="image/*"
-                onChange={handleImageFileChange}
-                ref={imageInputRef}
-                type="file"
-              />
-            </label>
-          </div>
-          {imageFile ? <p className="gm-manager-count">Archivo seleccionado: {imageFile.name}</p> : null}
-          {imageUploadError ? <p className="gm-manager-message gm-manager-message--error">{imageUploadError}</p> : null}
-          {imageUploadSuccess ? <p className="gm-manager-message gm-manager-message--success">{imageUploadSuccess}</p> : null}
-          <button className="gm-manager-action" disabled={isUploadingImage} type="submit">
-            {isUploadingImage ? 'Subiendo…' : 'Subir imagen'}
-          </button>
-        </form>
-        {latestUploadedImageUrl ? (
-          <div className="gm-manager-file-result">
-            <label>
-              <span>Download URL</span>
-              <input
-                onFocus={(event) => event.target.select()}
-                readOnly
-                type="text"
-                  value={latestUploadedImageUrl}
-              />
-            </label>
-            <a href={latestUploadedImageUrl} rel="noreferrer" target="_blank">
-              Abrir imagen
-            </a>
-             <img
-              alt="Preview de imagen subida"
-              loading="lazy"
-              onError={(event) => {
-                event.currentTarget.hidden = true
-              }}
-              src={latestUploadedImageUrl}
-            />
-          </div>
-        ) : null}
-      </section>
+      <nav className="gm-manager-section-nav" aria-label="Navegación interna de GM Manager">
+        <button className="gm-manager-section-nav__item" onClick={() => handleManagerSectionJump('gm-manager-create')} type="button">
+          Crear contenido
+        </button>
+        <button className="gm-manager-section-nav__item" onClick={() => handleManagerSectionJump('gm-manager-review')} type="button">
+          Revisar contenido
+        </button>
+        <button className="gm-manager-section-nav__item" onClick={() => handleManagerSectionJump('gm-manager-upload')} type="button">
+          Subir imágenes
+        </button>
+        <button className="gm-manager-section-nav__item" onClick={() => handleManagerSectionJump('gm-manager-detail')} type="button">
+          Detalle / Edición
+        </button>
+      </nav>
 
-      <section className="gm-manager-workspace">
+      <section className="gm-manager-workspace" id="gm-manager-create">
         <div className="gm-manager-workspace__top">
           <p className="page-card__kicker">Crear contenido</p>
           <h3>Crear contenido</h3>
@@ -1043,15 +1073,14 @@ const handleNewsFieldChange = (event) => {
           </GMManagerTab>
         </div>
         {activeCreatePanel === 'news' ? (
-
       <section className="gm-manager-create">
         <div className="gm-manager-title">
-          <p className="page-card__kicker">Create</p>
+          <p className="page-card__kicker">Crear</p>
           <h3>Crear News</h3>
         </div>
         <form className="gm-manager-form" onSubmit={handleCreateNews}>
           <label>
-            <span>Title *</span>
+            <span>Título *</span>
             <input
               name="title"
               onChange={handleNewsFieldChange}
@@ -1060,7 +1089,7 @@ const handleNewsFieldChange = (event) => {
             />
           </label>
           <label>
-            <span>Summary *</span>
+            <span>Resumen *</span>
             <textarea
               name="summary"
               onChange={handleNewsFieldChange}
@@ -1069,7 +1098,7 @@ const handleNewsFieldChange = (event) => {
             />
           </label>
           <label>
-            <span>Body</span>
+            <span>Cuerpo</span>
             <textarea
               name="body"
               onChange={handleNewsFieldChange}
@@ -1079,7 +1108,7 @@ const handleNewsFieldChange = (event) => {
           </label>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Category</span>
+              <span>Categoría</span>
               <input
                 name="category"
                 onChange={handleNewsFieldChange}
@@ -1088,7 +1117,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Layer</span>
+              <span>Capa</span>
               <input
                 name="layer"
                 onChange={handleNewsFieldChange}
@@ -1098,7 +1127,7 @@ const handleNewsFieldChange = (event) => {
             </label>
           </div>
           <label>
-            <span>Image URL</span>
+            <span>URL de imagen</span>
             <input
               name="imageUrl"
               onChange={handleNewsFieldChange}
@@ -1116,7 +1145,7 @@ const handleNewsFieldChange = (event) => {
               Usar última imagen subida
             </button>
           </div>
-          <GMManagerMediaPreview label="Preview de News" url={newsForm.imageUrl} />
+          <GMManagerMediaPreview label="Vista previa de News" url={newsForm.imageUrl} />
           <GMManagerRelationSelector
             getLabel={getHeroRelationLabel}
             items={reviewHeroes}
@@ -1145,15 +1174,15 @@ const handleNewsFieldChange = (event) => {
           {newsFormError ? <p className="gm-manager-message gm-manager-message--error">{newsFormError}</p> : null}
           {newsFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{newsFormSuccess}</p> : null}
           <button className="gm-manager-action" disabled={isCreatingNews} type="submit">
-            {isCreatingNews ? 'Creating…' : 'Crear News'}
+            {isCreatingNews ? 'Creando…' : 'Crear News'}
           </button>
         </form>
       </section>
-) : null}
+        ) : null}
         {activeCreatePanel === 'hero' ? (
-<section className="gm-manager-create">
+      <section className="gm-manager-create">
         <div className="gm-manager-title">
-          <p className="page-card__kicker">Create</p>
+          <p className="page-card__kicker">Crear</p>
           <h3>Crear Hero</h3>
         </div>
         <form className="gm-manager-form" onSubmit={handleCreateHero}>
@@ -1228,7 +1257,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Trust Score interno</span>
+              <span>Índice de confianza interno</span>
               <input
                 name="trustScore"
                 onChange={handleHeroFieldChange}
@@ -1316,8 +1345,8 @@ const handleNewsFieldChange = (event) => {
             </button>
           </div>
           <div className="gm-manager-file-previews">
-            <GMManagerMediaPreview label="Preview de avatar" url={heroForm.avatarUrl} />
-            <GMManagerMediaPreview label="Preview de portada" url={heroForm.bannerUrl} />
+            <GMManagerMediaPreview label="Vista previa de avatar" url={heroForm.avatarUrl} />
+            <GMManagerMediaPreview label="Vista previa de portada" url={heroForm.bannerUrl} />
           </div>
           <label className="gm-manager-check">
             <input
@@ -1339,13 +1368,13 @@ const handleNewsFieldChange = (event) => {
         {activeCreatePanel === 'corporation' ? (
  <section className="gm-manager-create">
         <div className="gm-manager-title">
-          <p className="page-card__kicker">Create</p>
+           <p className="page-card__kicker">Crear</p>
           <h3>Crear Corporation</h3>
         </div>
         <form className="gm-manager-form" onSubmit={handleCreateCorporation}>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Name *</span>
+               <span>Nombre *</span>
               <input
                 name="name"
                 onChange={handleCorporationFieldChange}
@@ -1374,7 +1403,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Country</span>
+               <span>País</span>
               <input
                 name="country"
                 onChange={handleCorporationFieldChange}
@@ -1431,12 +1460,12 @@ const handleNewsFieldChange = (event) => {
             </button>
           </div>
           <div className="gm-manager-file-previews">
-            <GMManagerMediaPreview label="Preview de logo" url={corporationForm.logoUrl} />
-            <GMManagerMediaPreview label="Preview de portada" url={corporationForm.bannerUrl} />
+              <GMManagerMediaPreview label="Vista previa de logo" url={corporationForm.logoUrl} />
+            <GMManagerMediaPreview label="Vista previa de portada" url={corporationForm.bannerUrl} />
           </div>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Approval</span>
+              <span>Aprobación</span>
               <input
                 name="approval"
                 onChange={handleCorporationFieldChange}
@@ -1445,7 +1474,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Trust Score</span>
+              <span>Índice de confianza</span>
               <input
                 name="trustScore"
                 onChange={handleCorporationFieldChange}
@@ -1466,14 +1495,14 @@ const handleNewsFieldChange = (event) => {
           {corporationFormError ? <p className="gm-manager-message gm-manager-message--error">{corporationFormError}</p> : null}
           {corporationFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{corporationFormSuccess}</p> : null}
           <button className="gm-manager-action" disabled={isCreatingCorporation} type="submit">
-            {isCreatingCorporation ? 'Creating…' : 'Crear Corporation'}
+            {isCreatingCorporation ? 'Creando…' : 'Crear Corporation'}
           </button>
         </form>
       </section>
    ) : null}
       </section>
 
-<section className="gm-manager-workspace">
+      <section className="gm-manager-workspace" id="gm-manager-review">
         <div className="gm-manager-workspace__top">
           <p className="page-card__kicker">Revisar contenido</p>
           <h3>Revisar contenido</h3>
@@ -1520,19 +1549,19 @@ const handleNewsFieldChange = (event) => {
             active={activeReviewPanel === 'corporation'}
             onClick={() => setActiveReviewPanel('corporation')}
           >
-            Corporations
+            Corporaciones
           </GMManagerTab>
         </div>
           {editNewsSuccess ? <p className="gm-manager-message gm-manager-message--success">{editNewsSuccess}</p> : null}
         {editingNewsId ? (
           <section className="gm-manager-create">
             <div className="gm-manager-title">
-              <p className="page-card__kicker">Edit</p>
+              <p className="page-card__kicker">Edición</p>
               <h3>Editar News</h3>
             </div>
             <form className="gm-manager-form" onSubmit={handleUpdateNews}>
               <label>
-                <span>Title *</span>
+                <span>Título *</span>
                 <input
                   name="title"
                   onChange={handleEditNewsFieldChange}
@@ -1541,7 +1570,7 @@ const handleNewsFieldChange = (event) => {
                 />
               </label>
               <label>
-                <span>Summary *</span>
+                <span>Resumen *</span>
                 <textarea
                   name="summary"
                   onChange={handleEditNewsFieldChange}
@@ -1550,7 +1579,7 @@ const handleNewsFieldChange = (event) => {
                 />
               </label>
               <label>
-                <span>Body</span>
+                <span>Cuerpo</span>
                 <textarea
                   name="body"
                   onChange={handleEditNewsFieldChange}
@@ -1560,7 +1589,7 @@ const handleNewsFieldChange = (event) => {
               </label>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Category</span>
+                  <span>Categoría</span>
                   <input
                     name="category"
                     onChange={handleEditNewsFieldChange}
@@ -1569,7 +1598,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Layer</span>
+                  <span>Capa</span>
                   <input
                     name="layer"
                     onChange={handleEditNewsFieldChange}
@@ -1579,7 +1608,7 @@ const handleNewsFieldChange = (event) => {
                 </label>
               </div>
               <label>
-                <span>Image URL</span>
+                <span>URL de imagen</span>
                 <input
                   name="imageUrl"
                   onChange={handleEditNewsFieldChange}
@@ -1597,7 +1626,7 @@ const handleNewsFieldChange = (event) => {
                   Usar última imagen subida
                 </button>
               </div>
-              <GMManagerMediaPreview label="Preview de News" url={editNewsForm.imageUrl} />
+              <GMManagerMediaPreview label="Vista previa de News" url={editNewsForm.imageUrl} />
               <GMManagerRelationSelector
                 getLabel={getHeroRelationLabel}
                 items={reviewHeroes}
@@ -1626,7 +1655,7 @@ const handleNewsFieldChange = (event) => {
               {editNewsError ? <p className="gm-manager-message gm-manager-message--error">{editNewsError}</p> : null}
               <div className="gm-manager-actions">
                 <button className="gm-manager-action" disabled={isUpdatingNews} type="submit">
-                  {isUpdatingNews ? 'Saving…' : 'Guardar News'}
+                  {isUpdatingNews ? 'Guardando…' : 'Guardar News'}
                 </button>
                 <button
                   className="gm-manager-action"
@@ -1647,13 +1676,13 @@ const handleNewsFieldChange = (event) => {
         <table className="gm-manager-table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Category / Type</th>
-              <th>Heroes</th>
-              <th>Corporations</th>
-              <th>Active</th>
-              <th>Created</th>
-              <th>Actions</th>
+             <th>Título</th>
+              <th>Categoría / Tipo</th>
+              <th>Héroes</th>
+              <th>Corporaciones</th>
+              <th>Activo</th>
+              <th>Creado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -1702,7 +1731,7 @@ const handleNewsFieldChange = (event) => {
         {editingHeroId ? (
           <section className="gm-manager-create">
             <div className="gm-manager-title">
-              <p className="page-card__kicker">Edit</p>
+              <p className="page-card__kicker">Edición</p>
               <h3>Editar Hero</h3>
             </div>
             <form className="gm-manager-form" onSubmit={handleUpdateHero}>
@@ -1775,7 +1804,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Trust Score interno</span>
+                  <span>Índice de confianza interno</span>
                   <input
                     name="trustScore"
                     onChange={handleEditHeroFieldChange}
@@ -1863,8 +1892,8 @@ const handleNewsFieldChange = (event) => {
                 </button>
               </div>
               <div className="gm-manager-file-previews">
-                <GMManagerMediaPreview label="Preview de avatar" url={editHeroForm.avatarUrl} />
-                <GMManagerMediaPreview label="Preview de portada" url={editHeroForm.bannerUrl} />
+                <GMManagerMediaPreview label="Vista previa de avatar" url={editHeroForm.avatarUrl} />
+                <GMManagerMediaPreview label="Vista previa de portada" url={editHeroForm.bannerUrl} />
               </div>
               <label className="gm-manager-check">
                 <input
@@ -1893,7 +1922,7 @@ const handleNewsFieldChange = (event) => {
           </section>
         ) : null}
         {activeReviewPanel === 'hero' ? (
-      <GMManagerSection title="Heroes">
+      <GMManagerSection title="Héroes">
           <p className="gm-manager-count">Mostrando {filteredHeroes.length} de {reviewHeroes.length}</p>
         {filteredHeroes.length > 0 ? (
         <table className="gm-manager-table">
@@ -1929,13 +1958,6 @@ const handleNewsFieldChange = (event) => {
                   </button>
                   <button
                     className="gm-manager-action"
-                    onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })}
-                    type="button"
-                  >
-                    Ver dossier ORÁCULO
-                  </button>
-                  <button
-                    className="gm-manager-action"
                     onClick={() => handleStartEditHero(hero)}
                     type="button"
                   >
@@ -1948,6 +1970,20 @@ const handleNewsFieldChange = (event) => {
                     type="button"
                   >
                     {togglingItemKey === `hero-${hero.id}` ? 'Guardando…' : getToggleLabel(hero)}
+                  </button>
+                   <button
+                    className="gm-manager-action"
+                    onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })}
+                    type="button"
+                  >
+                    Ver dossier ORÁCULO
+                  </button>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                    type="button"
+                  >
+                    Ver perfil público
                   </button>
                 </td>
               </tr>
@@ -1963,13 +1999,13 @@ const handleNewsFieldChange = (event) => {
         {editingCorporationId ? (
           <section className="gm-manager-create">
             <div className="gm-manager-title">
-              <p className="page-card__kicker">Edit</p>
+              <p className="page-card__kicker">Edición</p>
               <h3>Editar Corporation</h3>
             </div>
             <form className="gm-manager-form" onSubmit={handleUpdateCorporation}>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Name *</span>
+                   <span>Nombre *</span>
                   <input
                     name="name"
                     onChange={handleEditCorporationFieldChange}
@@ -1998,7 +2034,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Country</span>
+                  <span>País</span>
                   <input
                     name="country"
                     onChange={handleEditCorporationFieldChange}
@@ -2055,12 +2091,12 @@ const handleNewsFieldChange = (event) => {
                 </button>
               </div>
               <div className="gm-manager-file-previews">
-                <GMManagerMediaPreview label="Preview de logo" url={editCorporationForm.logoUrl} />
-                <GMManagerMediaPreview label="Preview de portada" url={editCorporationForm.bannerUrl} />
+                <GMManagerMediaPreview label="Vista previa de logo" url={editCorporationForm.logoUrl} />
+                <GMManagerMediaPreview label="Vista previa de portada" url={editCorporationForm.bannerUrl} />
               </div>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Approval</span>
+                  <span>Aprobación</span>
                   <input
                     name="approval"
                     onChange={handleEditCorporationFieldChange}
@@ -2069,7 +2105,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Trust Score</span>
+                  <span>Índice de confianza</span>
                   <input
                     name="trustScore"
                     onChange={handleEditCorporationFieldChange}
@@ -2090,7 +2126,7 @@ const handleNewsFieldChange = (event) => {
               {editCorporationError ? <p className="gm-manager-message gm-manager-message--error">{editCorporationError}</p> : null}
               <div className="gm-manager-actions">
                 <button className="gm-manager-action" disabled={isUpdatingCorporation} type="submit">
-                  {isUpdatingCorporation ? 'Saving…' : 'Guardar Corporation'}
+                  {isUpdatingCorporation ? 'Guardando…' : 'Guardar Corporation'}
                 </button>
                 <button
                   className="gm-manager-action"
@@ -2105,20 +2141,19 @@ const handleNewsFieldChange = (event) => {
           </section>
         ) : null}
         {activeReviewPanel === 'corporation' ? (
-      <GMManagerSection title="Corporations">
+      <GMManagerSection title="Corporaciones">
         <p className="gm-manager-count">Mostrando {filteredCorporations.length} de {reviewCorporations.length}</p>
         {filteredCorporations.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
-              <th>Name</th>
+              <th>Nombre</th>
               <th>Sector</th>
-              <th>Country</th>
-              <th>Approval</th>
-              <th>Trust</th>
-              <th>Puntos</th>
-              <th>Active</th>
-              <th>Actions</th>
+              <th>País</th>
+              <th>Aprobación</th>
+              <th>Confianza</th>
+              <th>Activo</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -2165,11 +2200,76 @@ const handleNewsFieldChange = (event) => {
       ) : null}
       </section>
 
-      <section className="gm-manager-workspace gm-manager-workspace--detail">
+       <section className="gm-manager-workspace" id="gm-manager-upload">
         <div className="gm-manager-workspace__top">
-          <p className="page-card__kicker">Detalle seleccionado</p>
-          <h3>Detalle seleccionado</h3>
-          <p>Abre un registro desde Revisar contenido para inspeccionar todos sus campos.</p>
+          <p className="page-card__kicker">Subir imagen</p>
+          <h3>Subir imagen</h3>
+          <p>Sube una imagen a Firebase Storage y copia su downloadURL para usarla manualmente.</p>
+        </div>
+        <form className="gm-manager-form" onSubmit={handleUploadImage}>
+          <div className="gm-manager-form__grid">
+            <label>
+              <span>Carpeta</span>
+              <select
+                name="imageFolder"
+                onChange={(event) => setImageFolder(event.target.value)}
+                value={imageFolder}
+              >
+                {imageFolderOptions.map((folder) => (
+                  <option key={folder} value={folder}>
+                    {folder}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Imagen</span>
+              <input
+                accept="image/*"
+                onChange={handleImageFileChange}
+                ref={imageInputRef}
+                type="file"
+              />
+            </label>
+          </div>
+          {imageFile ? <p className="gm-manager-count">Archivo seleccionado: {imageFile.name}</p> : null}
+          {imageUploadError ? <p className="gm-manager-message gm-manager-message--error">{imageUploadError}</p> : null}
+          {imageUploadSuccess ? <p className="gm-manager-message gm-manager-message--success">{imageUploadSuccess}</p> : null}
+          <button className="gm-manager-action" disabled={isUploadingImage} type="submit">
+            {isUploadingImage ? 'Subiendo…' : 'Subir imagen'}
+          </button>
+        </form>
+        {latestUploadedImageUrl ? (
+          <div className="gm-manager-file-result">
+            <label>
+              <span>URL descargable</span>
+              <input
+                onFocus={(event) => event.target.select()}
+                readOnly
+                type="text"
+                value={latestUploadedImageUrl}
+              />
+            </label>
+            <a href={latestUploadedImageUrl} rel="noreferrer" target="_blank">
+              Abrir imagen
+            </a>
+            <img
+              alt="Vista previa de imagen subida"
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.hidden = true
+              }}
+              src={latestUploadedImageUrl}
+            />
+          </div>
+        ) : null}
+      </section>
+
+      <section className="gm-manager-workspace gm-manager-workspace--detail" id="gm-manager-detail">
+        <div className="gm-manager-workspace__top">
+          <p className="page-card__kicker">Detalle / Edición</p>
+          <h3>Detalle / Edición</h3>
+          <p>Abre un registro desde Revisar contenido para inspeccionar todos sus campos o continúa con el formulario de edición activo.</p>
         </div>
         {selectedItem ? (
 
