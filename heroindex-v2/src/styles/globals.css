@@ -3179,3 +3179,309 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.mission-calculator-dossier-link,
+.oraculo-dossier-actions button {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.18), rgba(245, 190, 92, 0.12));
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.68rem 0.95rem;
+  width: fit-content;
+}
+
+.mission-calculator-dossier-link:hover,
+.oraculo-dossier-actions button:hover {
+  border-color: rgba(245, 190, 92, 0.46);
+  transform: translateY(-1px);
+}
+
+.oraculo-dossier-page {
+  display: grid;
+  gap: 1.35rem;
+  max-width: min(1240px, 100%);
+  width: 100%;
+}
+
+.oraculo-dossier-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: flex-end;
+}
+
+.oraculo-dossier-state {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1rem;
+  color: #d7def3;
+  font-weight: 850;
+  margin: 0;
+  padding: 1rem;
+}
+
+.oraculo-dossier-state--error {
+  border-color: rgba(255, 120, 150, 0.28);
+  color: #ffb4c8;
+}
+
+.oraculo-dossier-cover {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(245, 190, 92, 0.22), transparent 15rem),
+    radial-gradient(circle at 14% 20%, rgba(104, 216, 255, 0.18), transparent 18rem),
+    linear-gradient(135deg, rgba(8, 13, 28, 0.98), rgba(25, 48, 97, 0.9));
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 1.55rem;
+  min-height: clamp(22rem, 38vw, 30rem);
+  overflow: hidden;
+  position: relative;
+}
+
+.oraculo-dossier-cover > img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  opacity: 0.55;
+  position: absolute;
+  width: 100%;
+}
+
+.oraculo-dossier-cover::after {
+  background:
+    linear-gradient(90deg, rgba(7, 12, 25, 0.94), rgba(7, 12, 25, 0.5), rgba(7, 12, 25, 0.86)),
+    linear-gradient(180deg, transparent, rgba(7, 12, 25, 0.9));
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.oraculo-dossier-cover__content {
+  align-items: end;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  inset: auto 0 0;
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+  position: absolute;
+  z-index: 2;
+}
+
+.oraculo-dossier-avatar {
+  align-items: center;
+  background: linear-gradient(135deg, #68d8ff, #7c5cff);
+  border: 4px solid rgba(245, 190, 92, 0.74);
+  border-radius: 1.35rem;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 1.5rem;
+  font-weight: 950;
+  height: clamp(6rem, 10vw, 7.8rem);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-transform: uppercase;
+  width: clamp(6rem, 10vw, 7.8rem);
+}
+
+.oraculo-dossier-avatar span {
+  position: relative;
+  z-index: 1;
+}
+
+.oraculo-dossier-avatar img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 2;
+}
+
+.oraculo-dossier-access {
+  background: rgba(245, 190, 92, 0.16);
+  border: 1px solid rgba(245, 190, 92, 0.34);
+  border-radius: 999px;
+  color: #ffe5a6;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 950;
+  margin-bottom: 0.7rem;
+  padding: 0.38rem 0.62rem;
+  text-transform: uppercase;
+}
+
+.oraculo-dossier-cover h2 {
+  color: #ffffff;
+  font-size: clamp(2.2rem, 5vw, 4.8rem);
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.oraculo-dossier-subtitle {
+  color: #d7def3;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 850;
+  margin: 0.45rem 0 0;
+}
+
+.oraculo-dossier-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.oraculo-dossier-tags span {
+  background: rgba(104, 216, 255, 0.12);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 999px;
+  color: #bdefff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.42rem 0.65rem;
+}
+
+.oraculo-dossier-grid {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.38fr);
+}
+
+.oraculo-dossier-main,
+.oraculo-dossier-side,
+.oraculo-dossier-panel,
+.oraculo-dossier-assessments,
+.oraculo-dossier-news {
+  display: grid;
+  gap: 1rem;
+}
+
+.oraculo-dossier-side {
+  position: sticky;
+  top: 1rem;
+}
+
+.oraculo-dossier-panel {
+  background: rgba(9, 16, 32, 0.68);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1.2rem;
+  padding: clamp(1rem, 2.3vw, 1.3rem);
+}
+
+.oraculo-dossier-panel--internal {
+  border-color: rgba(245, 190, 92, 0.26);
+}
+
+.oraculo-dossier-panel--notice,
+.oraculo-dossier-panel--locked {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.oraculo-dossier-panel h3,
+.oraculo-dossier-panel h4 {
+  color: #ffffff;
+  margin: 0;
+}
+
+.oraculo-dossier-panel p,
+.oraculo-dossier-panel dd,
+.oraculo-dossier-news small {
+  color: #aeb8d8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.oraculo-dossier-summary-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.oraculo-dossier-summary-grid div,
+.oraculo-dossier-assessments article,
+.oraculo-dossier-news article,
+.oraculo-dossier-panel dl div {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  padding: 0.85rem;
+}
+
+.oraculo-dossier-summary-grid span,
+.oraculo-dossier-panel dt,
+.oraculo-dossier-assessments dt {
+  color: #8edfff;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.oraculo-dossier-summary-grid strong,
+.oraculo-dossier-assessments dd {
+  color: #ffffff;
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 950;
+  margin-top: 0.2rem;
+}
+
+.oraculo-dossier-public-list,
+.oraculo-dossier-assessments dl,
+.oraculo-dossier-panel dl {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.oraculo-dossier-assessments article {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.oraculo-dossier-assessments article > div > span,
+.oraculo-dossier-news article > span {
+  color: #ffe5a6;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.oraculo-dossier-news article.is-inactive {
+  border-color: rgba(255, 120, 150, 0.24);
+  opacity: 0.74;
+}
+
+.oraculo-dossier-news article.is-inactive > span {
+  color: #ffb4c8;
+}
+
+@media (max-width: 980px) {
+  .oraculo-dossier-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .oraculo-dossier-side {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .oraculo-dossier-actions {
+    justify-content: stretch;
+  }
+
+  .oraculo-dossier-actions button {
+    flex: 1 1 12rem;
+  }
+
+  .oraculo-dossier-cover__content {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+}

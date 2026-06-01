@@ -217,7 +217,7 @@ function FactorSelect({ description, label, name, onChange, options, value }) {
   )
 }
 
-function MissionCalculator() {
+function MissionCalculator({ onNavigate }) {
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const [formState, setFormState] = useState(initialFormState)
   const [result, setResult] = useState(null)
@@ -548,6 +548,13 @@ function MissionCalculator() {
                   <dd>{selectedHero.corporationId || '—'}</dd>
                 </div>
               </dl>
+              <button
+                className="mission-calculator-dossier-link"
+                onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: selectedHero.id })}
+                type="button"
+              >
+                Ver dossier ORÁCULO
+              </button>
             </aside>
           ) : null}
 

@@ -285,7 +285,7 @@ function GMManagerRelationSelector({ getLabel, items, onToggle, selectedIds, tit
   )
 }
 
-function GMManager() {
+function GMManager({ onNavigate }) {
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedType, setSelectedType] = useState(null)
   const [activeCreatePanel, setActiveCreatePanel] = useState('news')
@@ -1926,6 +1926,13 @@ const handleNewsFieldChange = (event) => {
                     type="button"
                   >
                     Ver detalle
+                  </button>
+                  <button
+                    className="gm-manager-action"
+                    onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })}
+                    type="button"
+                  >
+                    Ver dossier ORÁCULO
                   </button>
                   <button
                     className="gm-manager-action"

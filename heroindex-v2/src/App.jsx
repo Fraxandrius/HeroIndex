@@ -9,6 +9,7 @@ import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
 import News from './pages/News.jsx'
+import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import Profiles from './pages/Profiles.jsx'
 import Ranking from './pages/Ranking.jsx'
 
@@ -34,6 +35,14 @@ const routes = [
   { id: 'news', label: 'News', path: '/news', component: News, navGroup: 'public' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   {
+    id: 'oraculo-hero-dossier',
+    label: 'Dossier ORÁCULO',
+    path: '/oraculo/heroes/:heroId',
+    component: OraculoHeroDossier,
+    hiddenFromNav: true,
+    navGroup: 'oracle',
+  },
+  {
     id: 'gm-manager',
     label: 'GM Manager',
     path: '/gm-manager',
@@ -57,6 +66,12 @@ const routes = [
 ]
 
 function getInitialRouteState() {
+  const oraculoHeroMatch = window.location.pathname.match(/^\/oraculo\/heroes\/([^/]+)$/)
+
+  if (oraculoHeroMatch) {
+    return { id: 'oraculo-hero-dossier', params: { heroId: decodeURIComponent(oraculoHeroMatch[1]) } }
+  }
+
   const heroMatch = window.location.pathname.match(/^\/heroes\/([^/]+)$/)
 
   if (heroMatch) {
@@ -69,6 +84,10 @@ function getInitialRouteState() {
 }
 
 function getRoutePath(routeId, params = {}) {
+  if (routeId === 'oraculo-hero-dossier' && params.heroId) {
+    return `/oraculo/heroes/${encodeURIComponent(params.heroId)}`
+  }
+
   if (routeId === 'hero-profile' && params.heroId) {
     return `/heroes/${encodeURIComponent(params.heroId)}`
   }
