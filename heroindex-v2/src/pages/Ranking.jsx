@@ -239,7 +239,7 @@ function Ranking() {
         <p className="page-card__kicker">Índice oficial HeroIndex</p>
         <h2>Ranking HeroIndex</h2>
         <p className="ranking-hero__subtitle">
-          El índice oficial de reconocimiento heroico, confianza pública y actividad destacada.
+          El índice oficial de reconocimiento heroico, actividad destacada y presencia pública.
         </p>
         <p>
           HeroIndex reúne señales públicas de actividad, respuesta e impacto ciudadano para destacar
@@ -350,7 +350,6 @@ function Ranking() {
                       <dl className="ranking-card-metrics">
                         <RankingMetric label="Puntos HeroIndex" value={getNumericValue(hero.rankingPoints)} />
                         <RankingMetric label="Aprobación ciudadana" value={getNumericValue(hero.approval)} />
-                        <RankingMetric label="Confianza pública" value={getNumericValue(hero.trustScore)} />
                       </dl>
                     </article>
                   )
