@@ -57,7 +57,7 @@ function getCorporationName(hero, getCorporationById) {
 }
 
 function getPublicBio(hero = {}) {
-  return hero.publicBio || hero.description || 'Biografía pública pendiente de actualización.'
+  return hero.publicBio || 'Biografía pública pendiente de actualización.'
 }
 
 function truncateText(value = '', maxLength = 150) {

@@ -106,7 +106,7 @@ function sortHeroesByPublicPosition(firstHero, secondHero) {
   return getHeroDisplayName(firstHero).localeCompare(getHeroDisplayName(secondHero), 'es')
 }
 
-function HeroProfile({ routeParams = {} }) {
+function HeroProfile({ onNavigate, routeParams = {} }) {
   const heroId = routeParams.heroId
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const {
@@ -166,10 +166,20 @@ function HeroProfile({ routeParams = {} }) {
 
   const corporationName = getCorporationName(hero, getCorporationById)
   const publicPowers = getPublicPowers(hero)
-  const publicBio = hero.publicBio || hero.description || 'Biografía pública pendiente de actualización.'
+  const publicBio = hero.publicBio || 'Biografía pública pendiente de actualización.'
+  const heroTier = getHeroTier(hero.rankingPoints)
 
   return (
     <section className="page-card hero-profile-page">
+       <nav className="hero-profile-actions" aria-label="Navegación de perfil">
+        <button onClick={() => onNavigate?.('ranking')} type="button">
+          Volver al ranking
+        </button>
+        <button onClick={() => onNavigate?.('profiles')} type="button">
+          Ver catálogo de héroes
+        </button>
+      </nav>
+
       <header className="hero-profile-cover">
         {hero.bannerUrl ? (
           <img
@@ -196,85 +206,107 @@ function HeroProfile({ routeParams = {} }) {
             ) : null}
           </span>
           <div className="hero-profile-heading">
-            <p className="page-card__kicker">Perfil público HeroIndex</p>
+            <p className="page-card__kicker">Perfil verificado por HeroIndex</p>
             <h2>{displayName}</h2>
             <p>{getHeroTitle(hero)}</p>
             <div className="hero-profile-tags">
+               <span>{heroTier}</span>
               <span>{corporationName}</span>
-              <span>{getHeroTier(hero.rankingPoints)}</span>
+              <span>Trayectoria registrada</span>
             </div>
           </div>
         </div>
       </header>
 
-      <dl className="hero-profile-metrics">
-        <div>
-          <dt>Puntos HeroIndex</dt>
-          <dd>{getNumericValue(hero.rankingPoints)}</dd>
-        </div>
-        <div>
-          <dt>Aprobación ciudadana</dt>
-          <dd>{getNumericValue(hero.approval)}</dd>
-        </div>
-        <div>
-          <dt>Posición pública</dt>
-          <dd>{publicPosition > 0 ? `#${publicPosition}` : '—'}</dd>
-        </div>
-        <div>
-          <dt>Afiliación</dt>
-          <dd>{corporationName}</dd>
-        </div>
-      </dl>
+<div className="hero-profile-layout">
+        <main className="hero-profile-main">
+          <section className="hero-profile-section hero-profile-section--lead">
+            <p className="page-card__kicker">Biografía pública</p>
+            <p>{publicBio}</p>
+          </section>
 
-      <section className="hero-profile-section">
-        <p className="page-card__kicker">Biografía pública</p>
-        <p>{publicBio}</p>
-      </section>
+          <section className="hero-profile-section">
+            <p className="page-card__kicker">Poderes visibles</p>
+            {publicPowers.length > 0 ? (
+              <div className="hero-profile-powers">
+                {publicPowers.map((power) => (
+                  <span key={power}>{power}</span>
+                ))}
+              </div>
+            ) : (
+              <p>Sin poderes públicos registrados.</p>
+            )}
+          </section>
 
-      <section className="hero-profile-section">
-        <p className="page-card__kicker">Poderes visibles</p>
-        {publicPowers.length > 0 ? (
-          <div className="hero-profile-powers">
-            {publicPowers.map((power) => (
-              <span key={power}>{power}</span>
-            ))}
-          </div>
-        ) : (
-          <p>Sin poderes públicos registrados.</p>
-        )}
-      </section>
+          <section className="hero-profile-section">
+            <div className="hero-profile-section__heading">
+              <p className="page-card__kicker">Noticias relacionadas</p>
+              <span>Actividad pública destacada</span>
+            </div>
+            {relatedNews.length > 0 ? (
+              <div className="hero-profile-news">
+                {relatedNews.map((newsItem) => (
+                  <article className="hero-profile-news__item" key={newsItem.id}>
+                    {newsItem.imageUrl ? (
+                      <img
+                        alt={newsItem.title}
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true
+                        }}
+                        src={newsItem.imageUrl}
+                      />
+                    ) : null}
+                    <div>
+                      <span>{newsItem.category || newsItem.layer || 'HeroIndex News'}</span>
+                      <h3>{newsItem.title}</h3>
+                      <p>{getNewsSummary(newsItem)}</p>
+                      <time dateTime={newsItem.createdAt ? new Date(toTimestamp(newsItem.createdAt)).toISOString() : undefined}>
+                        {formatDate(newsItem.createdAt)}
+                      </time>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p>Sin noticias relacionadas.</p>
+            )}
+          </section>
+        </main>
 
-      <section className="hero-profile-section">
-        <p className="page-card__kicker">Noticias relacionadas</p>
-        {relatedNews.length > 0 ? (
-          <div className="hero-profile-news">
-            {relatedNews.map((newsItem) => (
-              <article className="hero-profile-news__item" key={newsItem.id}>
-                {newsItem.imageUrl ? (
-                  <img
-                    alt={newsItem.title}
-                    loading="lazy"
-                    onError={(event) => {
-                      event.currentTarget.hidden = true
-                    }}
-                    src={newsItem.imageUrl}
-                  />
-                ) : null}
-                <div>
-                  <span>{newsItem.category || newsItem.layer || 'HeroIndex News'}</span>
-                  <h3>{newsItem.title}</h3>
-                  <p>{getNewsSummary(newsItem)}</p>
-                  <time dateTime={newsItem.createdAt ? new Date(toTimestamp(newsItem.createdAt)).toISOString() : undefined}>
-                    {formatDate(newsItem.createdAt)}
-                  </time>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p>Sin noticias relacionadas.</p>
-        )}
-      </section>
+        <aside className="hero-profile-sidebar" aria-label="Resumen público del héroe">
+          <section className="hero-profile-panel">
+            <p className="page-card__kicker">Reconocimiento ciudadano</p>
+            <dl className="hero-profile-metrics">
+              <div>
+                <dt>Puntos HeroIndex</dt>
+                <dd>{getNumericValue(hero.rankingPoints)}</dd>
+              </div>
+              <div>
+                <dt>Aprobación ciudadana</dt>
+                <dd>{getNumericValue(hero.approval)}</dd>
+              </div>
+              <div>
+                <dt>Posición pública</dt>
+                <dd>{publicPosition > 0 ? `#${publicPosition}` : '—'}</dd>
+              </div>
+              <div>
+                <dt>Afiliación</dt>
+                <dd>{corporationName}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="hero-profile-panel hero-profile-panel--spotlight">
+            <p className="page-card__kicker">Resumen HeroIndex</p>
+            <h3>{heroTier}</h3>
+            <p>
+              Perfil público con señales de reconocimiento, actividad destacada y presencia registrada
+              en el ecosistema heroico.
+            </p>
+          </section>
+        </aside>
+      </div>
     </section>
   )
 }
