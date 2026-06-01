@@ -1,21 +1,21 @@
 const navSections = [
- { id: 'public', label: 'HeroIndex', description: 'Public intelligence' },
-  { id: 'player', label: 'Player module', description: 'Progression resource' },
-  { id: 'oracle', label: 'ORÁCULO Layer', description: 'Restricted HeroIndex intelligence layer' },
+  { id: 'public', label: 'Público', description: 'Noticias · Perfiles · Ranking' },
+  { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma' },
+  { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas GM' },
 ]
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
 
   return (
-    <aside className="sidebar" aria-label="HeroIndex navigation">
+    <aside className="sidebar" aria-label="Navegación HeroIndex">
       <div className="sidebar__brand">
         <span className="sidebar__logo" aria-hidden="true">
           HI
         </span>
         <div>
           <strong>HeroIndex</strong>
-          <small>v2 Command Center</small>
+          <small>Centro HeroIndex v2</small>
         </div>
       </div>
 

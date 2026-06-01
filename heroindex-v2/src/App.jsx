@@ -8,6 +8,7 @@ import HeroProfile from './pages/HeroProfile.jsx'
 import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
+import MyProfile from './pages/MyProfile.jsx'
 import News from './pages/News.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
@@ -17,7 +18,7 @@ import Profiles from './pages/Profiles.jsx'
 import Ranking from './pages/Ranking.jsx'
 
 const routes = [
-  { id: 'home', label: 'Home', path: '/', component: Home, navGroup: 'public' },
+  { id: 'home', label: 'Inicio', path: '/', component: Home, navGroup: 'public' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
   { id: 'profiles', label: 'Perfiles', path: '/profiles', component: Profiles, navGroup: 'public' },
   {
@@ -30,12 +31,13 @@ const routes = [
   },
   {
     id: 'corporations',
-    label: 'Corporations',
+    label: 'Corporaciones',
     path: '/corporations',
     component: Corporations,
     navGroup: 'public',
   },
-  { id: 'news', label: 'News', path: '/news', component: News, navGroup: 'public' },
+  { id: 'news', label: 'Noticias', path: '/news', component: News, navGroup: 'public' },
+  { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
   {
@@ -69,7 +71,7 @@ const routes = [
   },
   {
     id: 'mission-calculator',
-    label: 'Mission Calculator',
+    label: 'Calculadora de misión',
     path: '/mission-calculator',
     component: MissionCalculator,
     navGroup: 'oracle',
