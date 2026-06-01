@@ -1,0 +1,1 @@
+export const CANONICAL_AD_SLOT_IDS = ['home-sponsor', 'sidebar-rail', 'news-inline']

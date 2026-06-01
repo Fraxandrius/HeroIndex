@@ -1,121 +1,161 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useMemo, useState } from 'react'
+import AdsDebugPanel from './components/debug/AdsDebugPanel.jsx'
+import AppShell from './components/layout/AppShell.jsx'
+import Corporations from './pages/Corporations.jsx'
+import GMManager from './pages/GMManager.jsx'
+import GMPanel from './pages/GMPanel.jsx'
+import HeroProfile from './pages/HeroProfile.jsx'
+import Home from './pages/Home.jsx'
+import Karma from './pages/Karma.jsx'
+import MissionCalculator from './pages/MissionCalculator.jsx'
+import MyProfile from './pages/MyProfile.jsx'
+import News from './pages/News.jsx'
+import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
+import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
+import OraculoHub from './pages/OraculoHub.jsx'
+import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
+import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
+import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
+import Profiles from './pages/Profiles.jsx'
+import Ranking from './pages/Ranking.jsx'
+
+const routes = [
+  { id: 'home', label: 'Inicio', path: '/', component: Home, navGroup: 'public' },
+  { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
+  { id: 'profiles', label: 'Perfiles', path: '/profiles', component: Profiles, navGroup: 'public' },
+  {
+    id: 'hero-profile',
+    label: 'Perfil HeroIndex',
+    path: '/heroes/:heroId',
+    component: HeroProfile,
+    hiddenFromNav: true,
+    navGroup: 'public',
+  },
+  {
+    id: 'corporations',
+    label: 'Corporaciones',
+    path: '/corporations',
+    component: Corporations,
+    navGroup: 'public',
+  },
+  { id: 'news', label: 'Noticias', path: '/news', component: News, navGroup: 'public' },
+  { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
+  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
+  { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
+  {
+    id: 'oraculo-campaign-log',
+    label: 'Registro de Campaña',
+    path: '/oraculo/campaign-log',
+    component: OraculoCampaignLog,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-karma-manager',
+    label: 'Gestor de Karma',
+    path: '/oraculo/karma-manager',
+    component: OraculoKarmaManager,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-npc-builder',
+    label: 'Creador de NPC',
+    path: '/oraculo/npc-builder',
+    component: OraculoNpcBuilder,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-npc-import',
+    label: 'Importador de NPCs',
+    path: '/oraculo/npc-import',
+    component: OraculoNpcImport,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-hero-dossier',
+    label: 'Dossier ORÁCULO',
+    path: '/oraculo/heroes/:heroId',
+    component: OraculoHeroDossier,
+    hiddenFromNav: true,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'gm-manager',
+    label: 'GM Manager',
+    path: '/gm-manager',
+    component: GMManager,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'mission-calculator',
+    label: 'Calculadora de misión',
+    path: '/mission-calculator',
+    component: MissionCalculator,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'gm-panel',
+    label: 'GM Panel',
+    path: '/gm-panel',
+    component: GMPanel,
+    hiddenFromNav: true,
+  },
+]
+
+function getInitialRouteState() {
+  const oraculoHeroMatch = window.location.pathname.match(/^\/oraculo\/heroes\/([^/]+)$/)
+
+  if (oraculoHeroMatch) {
+    return { id: 'oraculo-hero-dossier', params: { heroId: decodeURIComponent(oraculoHeroMatch[1]) } }
+  }
+
+  const heroMatch = window.location.pathname.match(/^\/heroes\/([^/]+)$/)
+
+  if (heroMatch) {
+    return { id: 'hero-profile', params: { heroId: decodeURIComponent(heroMatch[1]) } }
+  }
+
+  const route = routes.find((item) => item.path === window.location.pathname)
+
+  return { id: route?.id ?? 'home', params: {} }
+}
+
+function getRoutePath(routeId, params = {}) {
+  if (routeId === 'oraculo-hero-dossier' && params.heroId) {
+    return `/oraculo/heroes/${encodeURIComponent(params.heroId)}`
+  }
+
+  if (routeId === 'hero-profile' && params.heroId) {
+    return `/heroes/${encodeURIComponent(params.heroId)}`
+  }
+
+  return routes.find((route) => route.id === routeId)?.path ?? '/'
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeRouteState, setActiveRouteState] = useState(getInitialRouteState)
+
+  const activeRoute = useMemo(
+    () => routes.find((route) => route.id === activeRouteState.id) ?? routes[0],
+    [activeRouteState.id],
+  )
+  const ActivePage = activeRoute.component
+
+  const handleNavigate = (routeId, params = {}) => {
+    const nextPath = getRoutePath(routeId, params)
+
+    window.history.pushState({}, '', nextPath)
+    setActiveRouteState({ id: routeId, params })
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <AppShell
+      activeRouteId={activeRoute.id}
+      routes={routes}
+      onNavigate={handleNavigate}
+    >
+      <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
+      <AdsDebugPanel />
+    </AppShell>
   )
 }
 

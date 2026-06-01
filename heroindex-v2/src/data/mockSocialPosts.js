@@ -1,0 +1,33 @@
+export const mockSocialPosts = [
+  {
+    id: 'feed-1',
+    author: 'Sentinel Dispatch',
+    handle: '@sentinelwire',
+    time: '12m',
+    title: 'Nova Sentinel breaks the skyline patrol record',
+    body: 'The north loop was cleared in under six minutes with zero civilian alerts triggered.',
+    metric: '24.8K cheers',
+    tag: 'City Watch',
+  },
+  {
+    id: 'feed-2',
+    author: 'HeroIndex Studio',
+    handle: '@heroindex',
+    time: '34m',
+    title: 'Featured clip: Onyx Vale disables a rogue drone swarm',
+    body: 'A clean shadow-step sequence is trending across tactical breakdown channels today.',
+    metric: '8.2K reposts',
+    tag: 'Clip Drop',
+    inlineAdSlotId: 'news-inline',
+  },
+  {
+    id: 'feed-3',
+    author: 'Karma Council',
+    handle: '@karmawatch',
+    time: '1h',
+    title: 'Community karma spikes after waterfront rescue chain',
+    body: 'Local heroes coordinated shelter, transport, and medical triage in a single public thread.',
+    metric: '+19 karma avg',
+    tag: 'Reputation',
+  },
+]

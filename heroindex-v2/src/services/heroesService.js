@@ -1,26 +1,27 @@
 import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
-export const NEWS_PATH = 'news'
+export const HEROES_PATH = 'heroes'
+const CHARACTER_SHEETS_PATH = 'characterSheets'
 
-function normalizeNewsItem(id, newsItem) {
+function normalizeHero(id, hero) {
   return {
     id,
-    ...newsItem,
+    ...hero,
   }
 }
 
-export function normalizeNewsSnapshot(snapshotValue) {
+export function normalizeHeroesSnapshot(snapshotValue) {
   if (!snapshotValue) {
     return []
   }
 
   return Object.entries(snapshotValue)
-    .filter(([, newsItem]) => newsItem && typeof newsItem === 'object')
-    .map(([id, newsItem]) => normalizeNewsItem(id, newsItem))
+    .filter(([, hero]) => hero && typeof hero === 'object')
+    .map(([id, hero]) => normalizeHero(id, hero))
 }
 
-export function subscribeToNews({ onData, onError }) {
+export function subscribeToHeroes({ onData, onError }) {
   const { database, isConfigured } = getFirebaseClient()
 
   if (!isConfigured || !database) {
@@ -28,12 +29,12 @@ export function subscribeToNews({ onData, onError }) {
     return () => {}
   }
 
-  const newsRef = ref(database, NEWS_PATH)
+  const heroesRef = ref(database, HEROES_PATH)
 
   return onValue(
-    newsRef,
+    heroesRef,
     (snapshot) => {
-      onData?.(normalizeNewsSnapshot(snapshot.val()))
+      onData?.(normalizeHeroesSnapshot(snapshot.val()))
     },
     (error) => {
       onError?.(error)
@@ -41,7 +42,7 @@ export function subscribeToNews({ onData, onError }) {
   )
 }
 
-export async function createNews(newsData) {
+export async function createHero(heroData) {
   const { database, isConfigured } = getFirebaseClient()
 
   if (!isConfigured || !database) {
@@ -49,45 +50,45 @@ export async function createNews(newsData) {
   }
 
   const timestamp = Date.now()
-  const newsRef = push(ref(database, NEWS_PATH))
+  const heroRef = push(ref(database, HEROES_PATH))
   const payload = {
-    ...newsData,
-    active: newsData.active ?? true,
+    ...heroData,
+    active: heroData.active ?? true,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
 
-  await set(newsRef, payload)
+  await set(heroRef, payload)
 
   return {
-    id: newsRef.key,
+    id: heroRef.key,
     ...payload,
   }
 }
 
-export async function updateNews(newsId, newsData) {
+export async function updateHero(heroId, heroData) {
   const { database, isConfigured } = getFirebaseClient()
 
   if (!isConfigured || !database) {
     throw new Error('Firebase is not configured')
   }
 
-  const itemRef = ref(database, `${NEWS_PATH}/${newsId}`)
+  const itemRef = ref(database, `${HEROES_PATH}/${heroId}`)
 
   await update(itemRef, {
-    ...newsData,
+    ...heroData,
     updatedAt: Date.now(),
   })
 }
 
-export async function toggleNewsActive(newsId, currentActive) {
+export async function toggleHeroActive(heroId, currentActive) {
   const { database, isConfigured } = getFirebaseClient()
 
   if (!isConfigured || !database) {
     throw new Error('Firebase is not configured')
   }
 
-  const itemRef = ref(database, `${NEWS_PATH}/${newsId}`)
+  const itemRef = ref(database, `${HEROES_PATH}/${heroId}`)
   const nextActive = !(currentActive ?? true)
 
   await update(itemRef, {
@@ -99,20 +100,24 @@ export async function toggleNewsActive(newsId, currentActive) {
 }
 
 
-export async function deleteNews(newsId) {
+export async function deleteHero(heroId, options = {}) {
   const { database, isConfigured } = getFirebaseClient()
 
-  if (!newsId) {
-    throw new Error('News id is required')
+  if (!heroId) {
+    throw new Error('Hero id is required')
   }
 
   if (!isConfigured || !database) {
     throw new Error('Firebase is not configured')
   }
 
-  await remove(ref(database, `${NEWS_PATH}/${newsId}`))
+  await remove(ref(database, `${HEROES_PATH}/${heroId}`))
+
+  if (options.deleteCharacterSheet === true) {
+    await remove(ref(database, `${CHARACTER_SHEETS_PATH}/${heroId}`))
+  }
 }
 
-export async function deleteMultipleNews(newsIds = []) {
-  await Promise.all(newsIds.filter(Boolean).map((newsId) => deleteNews(newsId)))
+export async function deleteMultipleHeroes(heroIds = [], options = {}) {
+  await Promise.all(heroIds.filter(Boolean).map((heroId) => deleteHero(heroId, options)))
 }
