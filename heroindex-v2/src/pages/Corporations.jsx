@@ -1,5 +1,9 @@
+import { useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useNews } from '../hooks/useNews.js'
+import { deleteCorporation } from '../services/corporationsService.js'
+
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
 function getInitials(name = '') {
   return name
@@ -46,16 +50,36 @@ function getNewsSummary(newsItem) {
 
 function Corporations() {
   const { corporations, loading, source } = useCorporations()
+  const [deletingCorporationId, setDeletingCorporationId] = useState(null)
+  const [deleteMessage, setDeleteMessage] = useState('')
   const { feedNews, loading: newsLoading } = useNews()
+  const visibleCorporations = corporations.filter((corporation) => corporation.active !== false)
+
+  const handleDeleteCorporation = async (corporation) => {
+    if (!window.confirm('Eliminar corporación. Esta acción no se puede deshacer.')) return
+
+    setDeletingCorporationId(corporation.id)
+    setDeleteMessage('Eliminando...')
+
+    try {
+      await deleteCorporation(corporation.id)
+      setDeleteMessage('Registro eliminado correctamente.')
+    } catch {
+      setDeleteMessage('No fue posible eliminar el registro.')
+    } finally {
+      setDeletingCorporationId(null)
+    }
+  }
 
   return (
     <section className="page-card corporations-page">
       <p className="page-card__kicker">Corporations · {source}</p>
       <h2>Corporations</h2>
+            {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="corporations-list">
         {loading || newsLoading ? <p>Loading...</p> : null}
         {!loading && !newsLoading
-          ? corporations.map((corporation) => {
+        ? visibleCorporations.map((corporation) => {
               const relatedNews = getRelatedNews(corporation.id, feedNews)
 
               return (
@@ -137,6 +161,15 @@ function Corporations() {
                       ) : (
                         <p className="corporation-news__empty">Sin noticias relacionadas.</p>
                       )}
+                       {isOraculoMode ? (
+                      <button
+                        disabled={deletingCorporationId === corporation.id}
+                        onClick={() => handleDeleteCorporation(corporation)}
+                        type="button"
+                      >
+                        {deletingCorporationId === corporation.id ? 'Eliminando...' : 'Eliminar corporación'}
+                      </button>
+                    ) : null}
                     </section>
                   </div>
                 </article>

@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
-
+import { deleteHero } from '../services/heroesService.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
@@ -111,6 +111,9 @@ function sortHeroesByPublicPosition(firstHero, secondHero) {
 
 function HeroProfile({ onNavigate, routeParams = {} }) {
   const heroId = routeParams.heroId
+  const [deleteMessage, setDeleteMessage] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [isDeletingHero, setIsDeletingHero] = useState(false)
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const {
     getCorporationById,
@@ -171,6 +174,29 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
   const publicPowers = getPublicPowers(hero)
   const publicBio = hero.publicBio || 'Biografía pública pendiente de actualización.'
   const heroTier = getHeroTier(hero.rankingPoints)
+
+   const handleDeleteHero = async (deleteCharacterSheet = false) => {
+    const confirmationMessage = deleteCharacterSheet
+      ? 'Eliminar héroe y hoja privada RPG. Esta acción no se puede deshacer.'
+      : 'Eliminar héroe público. Noticias y evaluaciones asociadas no se eliminarán automáticamente. Esta acción no se puede deshacer.'
+
+    if (!window.confirm(confirmationMessage)) return
+
+    setIsDeletingHero(true)
+    setDeleteMessage('Eliminando...')
+    setDeleteError('')
+
+    try {
+      await deleteHero(hero.id, { deleteCharacterSheet })
+      setDeleteMessage('Registro eliminado correctamente.')
+      onNavigate?.('oraculo-hub')
+    } catch {
+      setDeleteError('No fue posible eliminar el registro.')
+      setDeleteMessage('')
+    } finally {
+      setIsDeletingHero(false)
+    }
+  }
 
   return (
     <section className="page-card hero-profile-page">
@@ -327,7 +353,15 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
                 <button onClick={() => onNavigate?.('gm-manager')} type="button">
                   Volver a GM Manager
                 </button>
+                  <button disabled={isDeletingHero} onClick={() => handleDeleteHero(false)} type="button">
+                  {isDeletingHero ? 'Eliminando...' : 'Eliminar héroe'}
+                </button>
+                <button disabled={isDeletingHero} onClick={() => handleDeleteHero(true)} type="button">
+                  Eliminar héroe y hoja privada RPG
+                </button>
               </div>
+               {deleteError ? <p className="hero-profile-state hero-profile-state--error">{deleteError}</p> : null}
+              {deleteMessage ? <p className="hero-profile-state">{deleteMessage}</p> : null}
             </section>
           ) : null}
         </aside>

@@ -846,6 +846,23 @@ button {
   color: #8ea0ce;
 }
 
+.home-hero-card button {
+  background: rgba(104, 216, 255, 0.12);
+  border: 1px solid rgba(104, 216, 255, 0.24);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  margin-top: 0.55rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.home-hero-card button:hover {
+  background: rgba(104, 216, 255, 0.2);
+}
+
 .clip-card__thumb {
   align-items: center;
   aspect-ratio: 16 / 10;
@@ -1619,6 +1636,20 @@ button {
   cursor: pointer;
   font-weight: 800;
   padding: 0.45rem 0.75rem;
+}
+
+.gm-manager-action--danger {
+  background: rgba(255, 116, 116, 0.12);
+  border-color: rgba(255, 116, 116, 0.34);
+  color: #ffcdcd;
+}
+
+.gm-manager-bulk-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.8rem 0;
 }
 
 .gm-manager-detail {

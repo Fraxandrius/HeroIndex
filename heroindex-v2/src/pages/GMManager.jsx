@@ -4,11 +4,13 @@ import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
 import {
   createCorporation,
+  deleteCorporation,
+  deleteMultipleCorporations,
   toggleCorporationActive,
   updateCorporation,
 } from '../services/corporationsService.js'
-import { createHero, toggleHeroActive, updateHero } from '../services/heroesService.js'
-import { createNews, toggleNewsActive, updateNews } from '../services/newsService.js'
+import { createHero, deleteHero, deleteMultipleHeroes, toggleHeroActive, updateHero } from '../services/heroesService.js'
+import { createNews, deleteMultipleNews, deleteNews, toggleNewsActive, updateNews } from '../services/newsService.js'
 import { uploadImage } from '../services/storageService.js'
 
 const emptyNewsForm = {
@@ -155,6 +157,17 @@ function countActiveItems(items) {
   return items.filter((item) => item.active !== false).length
 }
 
+function countInactiveItems(items) {
+  return items.filter((item) => item.active === false).length
+}
+
+function getReviewEmptyMessage(statusFilter) {
+  if (statusFilter === 'active') return 'No hay registros activos.'
+  if (statusFilter === 'inactive') return 'No hay registros inactivos.'
+
+  return 'No hay registros disponibles.'
+}
+
 function getLatestUpdatedAt(items) {
   return items.reduce((latestDate, item) => {
     const rawDate = item.updatedAt ?? item.createdAt
@@ -189,9 +202,9 @@ function parseCommaList(value) {
 }
 
 const statusFilters = [
-  { id: 'all', label: 'Todos' },
   { id: 'active', label: 'Activos' },
   { id: 'inactive', label: 'Inactivos' },
+  { id: 'all', label: 'Todos' },
 ]
 
 const imageFolderOptions = ['news', 'heroes', 'corporations', 'uploads']
@@ -341,7 +354,7 @@ function GMManager({ onNavigate }) {
   const [activeCreatePanel, setActiveCreatePanel] = useState('news')
   const [activeReviewPanel, setActiveReviewPanel] = useState('news')
   const [reviewSearch, setReviewSearch] = useState('')
-  const [reviewStatusFilter, setReviewStatusFilter] = useState('all')
+  const [reviewStatusFilter, setReviewStatusFilter] = useState('active')
   const [newsForm, setNewsForm] = useState(emptyNewsForm)
   const [newsFormError, setNewsFormError] = useState('')
   const [newsFormSuccess, setNewsFormSuccess] = useState('')
@@ -372,6 +385,10 @@ function GMManager({ onNavigate }) {
   const [toggleStatusMessage, setToggleStatusMessage] = useState('')
   const [toggleErrorMessage, setToggleErrorMessage] = useState('')
   const [togglingItemKey, setTogglingItemKey] = useState(null)
+  const [deleteStatusMessage, setDeleteStatusMessage] = useState('')
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('')
+  const [deletingItemKey, setDeletingItemKey] = useState(null)
+  const [selectedReviewIds, setSelectedReviewIds] = useState({ corporation: [], hero: [], news: [] })
   const [imageFile, setImageFile] = useState(null)
   const [imageFolder, setImageFolder] = useState('uploads')
   const [imageUploadError, setImageUploadError] = useState('')
@@ -493,6 +510,125 @@ const handleUseLatestImage = (setForm, field) => {
   }
 
   const getToggleLabel = (item) => (item.active === false ? 'Activar' : 'Desactivar')
+
+  
+  const getDeleteHandler = (type) => {
+    const deleteHandlers = {
+      corporation: deleteCorporation,
+      hero: deleteHero,
+      news: deleteNews,
+    }
+
+    return deleteHandlers[type]
+  }
+
+  const getBulkDeleteHandler = (type) => {
+    const deleteHandlers = {
+      corporation: deleteMultipleCorporations,
+      hero: deleteMultipleHeroes,
+      news: deleteMultipleNews,
+    }
+
+    return deleteHandlers[type]
+  }
+
+  const clearSelection = (type, message = 'Selección limpiada.') => {
+    setSelectedReviewIds((currentSelection) => ({
+      ...currentSelection,
+      [type]: [],
+    }))
+    if (message) {
+      setDeleteStatusMessage(message)
+      setDeleteErrorMessage('')
+    }
+  }
+
+  const toggleSelection = (type, itemId) => {
+    setSelectedReviewIds((currentSelection) => {
+      const currentIds = currentSelection[type] ?? []
+      const nextIds = currentIds.includes(itemId)
+        ? currentIds.filter((currentId) => currentId !== itemId)
+        : [...currentIds, itemId]
+
+      return {
+        ...currentSelection,
+        [type]: nextIds,
+      }
+    })
+    setDeleteStatusMessage('')
+    setDeleteErrorMessage('')
+  }
+
+  const selectVisibleItems = (type, items) => {
+    setSelectedReviewIds((currentSelection) => ({
+      ...currentSelection,
+      [type]: items.map((item) => item.id),
+    }))
+    setDeleteStatusMessage(`${items.length} registros visibles seleccionados.`)
+    setDeleteErrorMessage('')
+  }
+
+  const handleDeleteItem = async (type, item) => {
+    const deleteHandler = getDeleteHandler(type)
+    const label = contentTypeLabels[type] ?? 'Registro'
+
+    if (!deleteHandler) return
+
+    const deleteCharacterSheet =
+      type === 'hero' &&
+      window.confirm('¿Eliminar también hoja privada RPG? Aceptar elimina /characterSheets asociado; cancelar conserva la hoja.')
+    const confirmationMessage =
+      type === 'hero'
+        ? 'Esta acción eliminará el héroe público. Las noticias y evaluaciones asociadas no se eliminarán automáticamente. No se puede deshacer.'
+        : 'Esta acción eliminará permanentemente el registro. No se puede deshacer.'
+
+    if (!window.confirm(confirmationMessage)) return
+
+    setDeletingItemKey(`${type}-${item.id}`)
+    setDeleteStatusMessage('Eliminando...')
+    setDeleteErrorMessage('')
+
+    try {
+      await deleteHandler(item.id, { deleteCharacterSheet })
+      clearSelection(type, '')
+      setDeleteStatusMessage(`${label} eliminado correctamente.`)
+      if (selectedItem?.id === item.id && selectedType === type) closeDetail()
+    } catch {
+      setDeleteErrorMessage('No fue posible eliminar el registro.')
+      setDeleteStatusMessage('')
+    } finally {
+      setDeletingItemKey(null)
+    }
+  }
+
+  const handleDeleteSelected = async (type) => {
+    const selectedIds = selectedReviewIds[type] ?? []
+    const deleteHandler = getBulkDeleteHandler(type)
+    const label = contentTypeLabels[type] ?? 'Registros'
+
+    if (!deleteHandler || selectedIds.length === 0) return
+
+    const deleteCharacterSheet =
+      type === 'hero' &&
+      window.confirm('¿Eliminar también hojas privadas RPG asociadas? Aceptar elimina /characterSheets; cancelar conserva las hojas.')
+
+    if (!window.confirm(`Eliminar ${selectedIds.length} registros seleccionados. Esta acción no se puede deshacer.`)) return
+
+    setDeletingItemKey(`${type}-bulk`)
+    setDeleteStatusMessage('Eliminando...')
+    setDeleteErrorMessage('')
+
+    try {
+      await deleteHandler(selectedIds, { deleteCharacterSheet })
+      clearSelection(type, '')
+      setDeleteStatusMessage(`${label} eliminados correctamente.`)
+    } catch {
+      setDeleteErrorMessage('No fue posible eliminar el registro.')
+      setDeleteStatusMessage('')
+    } finally {
+      setDeletingItemKey(null)
+    }
+  }
 
 const handleNewsFieldChange = (event) => {
     const { checked, name, type, value } = event.target
@@ -958,8 +1094,11 @@ const handleNewsFieldChange = (event) => {
   )
   const canUseLatestImage = Boolean(latestUploadedImageUrl)
   const newsActiveCount = countActiveItems(feedNews)
+  const newsInactiveCount = countInactiveItems(feedNews)
   const heroesActiveCount = countActiveItems(heroes)
+  const heroesInactiveCount = countInactiveItems(heroes)
   const corporationsActiveCount = countActiveItems(corporations)
+  const corporationsInactiveCount = countInactiveItems(corporations)
   const handleManagerSectionJump = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -1005,7 +1144,7 @@ const handleNewsFieldChange = (event) => {
             activeCount={newsActiveCount}
             count={feedNews.length}
             error={newsError}
-            inactiveCount={feedNews.length - newsActiveCount}
+            inactiveCount={newsInactiveCount}
             label="Noticias"
             loading={newsLoading}
             updatedAt={getLatestUpdatedAt(feedNews)}
@@ -1014,7 +1153,7 @@ const handleNewsFieldChange = (event) => {
             activeCount={heroesActiveCount}
             count={heroes.length}
             error={heroesError}
-            inactiveCount={heroes.length - heroesActiveCount}
+            inactiveCount={heroesInactiveCount}
             label="Héroes"
             loading={heroesLoading}
             updatedAt={getLatestUpdatedAt(heroes)}
@@ -1023,7 +1162,7 @@ const handleNewsFieldChange = (event) => {
             activeCount={corporationsActiveCount}
             count={corporations.length}
             error={corporationsError}
-            inactiveCount={corporations.length - corporationsActiveCount}
+            inactiveCount={corporationsInactiveCount}
             label="Corporaciones"
             loading={corporationsLoading}
             updatedAt={getLatestUpdatedAt(corporations)}
@@ -1510,6 +1649,8 @@ const handleNewsFieldChange = (event) => {
         </div>
  {toggleErrorMessage ? <p className="gm-manager-message gm-manager-message--error">{toggleErrorMessage}</p> : null}
       <div className="gm-manager-tools">
+         {deleteErrorMessage ? <p className="gm-manager-message gm-manager-message--error">{deleteErrorMessage}</p> : null}
+      {deleteStatusMessage ? <p className="gm-manager-message gm-manager-message--success">{deleteStatusMessage}</p> : null}
           <label className="gm-manager-search">
             <span>Buscar</span>
             <input
@@ -1671,11 +1812,17 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'news' ? (
       <GMManagerSection title="News">
-        <p className="gm-manager-count">Mostrando {filteredNews.length} de {feedNews.length}</p>
+         <p className="gm-manager-count">Activos: {newsActiveCount} · Inactivos: {newsInactiveCount} · Total: {feedNews.length} · Mostrando {filteredNews.length}</p>
+        <div className="gm-manager-bulk-actions">
+          <button className="gm-manager-action" disabled={filteredNews.length === 0} onClick={() => selectVisibleItems('news', filteredNews)} type="button">Seleccionar visibles</button>
+          <button className="gm-manager-action" disabled={(selectedReviewIds.news ?? []).length === 0} onClick={() => clearSelection('news')} type="button">Limpiar selección</button>
+          <button className="gm-manager-action gm-manager-action--danger" disabled={(selectedReviewIds.news ?? []).length === 0 || deletingItemKey === 'news-bulk'} onClick={() => handleDeleteSelected('news')} type="button">Eliminar seleccionados ({(selectedReviewIds.news ?? []).length})</button>
+        </div>
         {filteredNews.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
+              <th>Seleccionar</th>
              <th>Título</th>
               <th>Categoría / Tipo</th>
               <th>Héroes</th>
@@ -1688,6 +1835,7 @@ const handleNewsFieldChange = (event) => {
           <tbody>
             {filteredNews.map((newsItem) => (
               <tr key={newsItem.id}>
+                <td><input checked={(selectedReviewIds.news ?? []).includes(newsItem.id)} onChange={() => toggleSelection('news', newsItem.id)} type="checkbox" /></td>
                 <td>{getValue(newsItem.title)}</td>
                 <td>{getValue(newsItem.category ?? newsItem.type)}</td>
                 <td>{normalizeRelationIds(newsItem.heroIds).length}</td>
@@ -1717,13 +1865,21 @@ const handleNewsFieldChange = (event) => {
                   >
                     {togglingItemKey === `news-${newsItem.id}` ? 'Guardando…' : getToggleLabel(newsItem)}
                   </button>
+                  <button
+                    className="gm-manager-action gm-manager-action--danger"
+                    disabled={deletingItemKey === `news-${newsItem.id}`}
+                    onClick={() => handleDeleteItem('news', newsItem)}
+                    type="button"
+                  >
+                    {deletingItemKey === `news-${newsItem.id}` ? 'Eliminando...' : 'Eliminar'}
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
          ) : (
-          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+                    <p className="gm-manager-empty">{getReviewEmptyMessage(reviewStatusFilter)}</p>
         )}
       </GMManagerSection>
       ) : null}
@@ -1923,11 +2079,17 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'hero' ? (
       <GMManagerSection title="Héroes">
-          <p className="gm-manager-count">Mostrando {filteredHeroes.length} de {reviewHeroes.length}</p>
+            <p className="gm-manager-count">Activos: {heroesActiveCount} · Inactivos: {heroesInactiveCount} · Total: {reviewHeroes.length} · Mostrando {filteredHeroes.length}</p>
+        <div className="gm-manager-bulk-actions">
+          <button className="gm-manager-action" disabled={filteredHeroes.length === 0} onClick={() => selectVisibleItems('hero', filteredHeroes)} type="button">Seleccionar visibles</button>
+          <button className="gm-manager-action" disabled={(selectedReviewIds.hero ?? []).length === 0} onClick={() => clearSelection('hero')} type="button">Limpiar selección</button>
+          <button className="gm-manager-action gm-manager-action--danger" disabled={(selectedReviewIds.hero ?? []).length === 0 || deletingItemKey === 'hero-bulk'} onClick={() => handleDeleteSelected('hero')} type="button">Eliminar seleccionados ({(selectedReviewIds.hero ?? []).length})</button>
+        </div>
         {filteredHeroes.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
+              <th>Seleccionar</th>
               <th>Alias</th>
               <th>Nombre público</th>
               <th>Título heroico</th>
@@ -1941,6 +2103,7 @@ const handleNewsFieldChange = (event) => {
           <tbody>
              {filteredHeroes.map((hero) => (
               <tr key={hero.id}>
+                <td><input checked={(selectedReviewIds.hero ?? []).includes(hero.id)} onChange={() => toggleSelection('hero', hero.id)} type="checkbox" /></td>
                 <td>{getValue(hero.alias ?? hero.name)}</td>
                 <td>{getValue(hero.publicName)}</td>
                 <td>{getValue(hero.heroTitle ?? 'Figura HeroIndex')}</td>
@@ -1972,6 +2135,14 @@ const handleNewsFieldChange = (event) => {
                     {togglingItemKey === `hero-${hero.id}` ? 'Guardando…' : getToggleLabel(hero)}
                   </button>
                    <button
+                    className="gm-manager-action gm-manager-action--danger"
+                    disabled={deletingItemKey === `hero-${hero.id}`}
+                    onClick={() => handleDeleteItem('hero', hero)}
+                    type="button"
+                  >
+                    {deletingItemKey === `hero-${hero.id}` ? 'Eliminando...' : 'Eliminar'}
+                  </button>
+                   <button
                     className="gm-manager-action"
                     onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })}
                     type="button"
@@ -1991,7 +2162,7 @@ const handleNewsFieldChange = (event) => {
           </tbody>
         </table>
          ) : (
-          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+           <p className="gm-manager-empty">{getReviewEmptyMessage(reviewStatusFilter)}</p>
         )}
       </GMManagerSection>
  ) : null}
@@ -2142,11 +2313,17 @@ const handleNewsFieldChange = (event) => {
         ) : null}
         {activeReviewPanel === 'corporation' ? (
       <GMManagerSection title="Corporaciones">
-        <p className="gm-manager-count">Mostrando {filteredCorporations.length} de {reviewCorporations.length}</p>
+           <p className="gm-manager-count">Activos: {corporationsActiveCount} · Inactivos: {corporationsInactiveCount} · Total: {reviewCorporations.length} · Mostrando {filteredCorporations.length}</p>
+        <div className="gm-manager-bulk-actions">
+          <button className="gm-manager-action" disabled={filteredCorporations.length === 0} onClick={() => selectVisibleItems('corporation', filteredCorporations)} type="button">Seleccionar visibles</button>
+          <button className="gm-manager-action" disabled={(selectedReviewIds.corporation ?? []).length === 0} onClick={() => clearSelection('corporation')} type="button">Limpiar selección</button>
+          <button className="gm-manager-action gm-manager-action--danger" disabled={(selectedReviewIds.corporation ?? []).length === 0 || deletingItemKey === 'corporation-bulk'} onClick={() => handleDeleteSelected('corporation')} type="button">Eliminar seleccionados ({(selectedReviewIds.corporation ?? []).length})</button>
+        </div>
         {filteredCorporations.length > 0 ? (
         <table className="gm-manager-table">
           <thead>
             <tr>
+              <th>Seleccionar</th>
               <th>Nombre</th>
               <th>Sector</th>
               <th>País</th>
@@ -2159,6 +2336,7 @@ const handleNewsFieldChange = (event) => {
           <tbody>
             {filteredCorporations.map((corporation) => (
               <tr key={corporation.id}>
+                <td><input checked={(selectedReviewIds.corporation ?? []).includes(corporation.id)} onChange={() => toggleSelection('corporation', corporation.id)} type="checkbox" /></td>
                 <td>{getValue(corporation.name)}</td>
                 <td>{getValue(corporation.sector)}</td>
                 <td>{getValue(corporation.country)}</td>
@@ -2188,13 +2366,21 @@ const handleNewsFieldChange = (event) => {
                   >
                     {togglingItemKey === `corporation-${corporation.id}` ? 'Guardando…' : getToggleLabel(corporation)}
                   </button>
+                    <button
+                    className="gm-manager-action gm-manager-action--danger"
+                    disabled={deletingItemKey === `corporation-${corporation.id}`}
+                    onClick={() => handleDeleteItem('corporation', corporation)}
+                    type="button"
+                  >
+                    {deletingItemKey === `corporation-${corporation.id}` ? 'Eliminando...' : 'Eliminar'}
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         ) : (
-          <p className="gm-manager-empty">No hay resultados para los filtros actuales.</p>
+          <p className="gm-manager-empty">{getReviewEmptyMessage(reviewStatusFilter)}</p>
         )}
       </GMManagerSection>
       ) : null}

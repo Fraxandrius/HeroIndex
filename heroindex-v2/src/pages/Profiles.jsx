@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { deleteHero } from '../services/heroesService.js'
+
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
 const profileFilters = [
   { id: 'all', label: 'Todos' },
@@ -128,6 +131,8 @@ function Profiles({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [profileFilter, setProfileFilter] = useState('all')
   const [selectedCorporationId, setSelectedCorporationId] = useState('all')
+const [deletingHeroId, setDeletingHeroId] = useState(null)
+  const [deleteMessage, setDeleteMessage] = useState('')
 
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const { feedNews, loading: newsLoading } = useNews()
@@ -170,6 +175,22 @@ function Profiles({ onNavigate }) {
 
   const loading = heroesLoading || corporationsLoading || newsLoading
   const error = heroesError || corporationsError
+
+   const handleDeleteHero = async (hero) => {
+    if (!window.confirm('Eliminar héroe público. Esta acción no se puede deshacer.')) return
+
+    setDeletingHeroId(hero.id)
+    setDeleteMessage('Eliminando...')
+
+    try {
+      await deleteHero(hero.id)
+      setDeleteMessage('Registro eliminado correctamente.')
+    } catch {
+      setDeleteMessage('No fue posible eliminar el registro.')
+    } finally {
+      setDeletingHeroId(null)
+    }
+  }
 
   return (
     <section className="page-card profiles-page profiles-page--catalog">
@@ -233,6 +254,7 @@ function Profiles({ onNavigate }) {
         </div>
       </section>
 
+      {deleteMessage && isOraculoMode ? <p className="profiles-state">{deleteMessage}</p> : null}
       {loading ? <p className="profiles-state">Cargando perfiles HeroIndex...</p> : null}
       {!loading && error && activeHeroes.length === 0 ? (
         <p className="profiles-state profiles-state--error">No fue posible cargar los perfiles.</p>
@@ -321,6 +343,16 @@ function Profiles({ onNavigate }) {
                   >
                     Ver perfil
                   </button>
+                   {isOraculoMode ? (
+                    <button
+                      className="hero-profile-link hero-profile-link--internal"
+                      disabled={deletingHeroId === hero.id}
+                      onClick={() => handleDeleteHero(hero)}
+                      type="button"
+                    >
+                      {deletingHeroId === hero.id ? 'Eliminando...' : 'Eliminar'}
+                    </button>
+                  ) : null}
                 </div>
               </article>
             )

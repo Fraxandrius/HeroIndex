@@ -1,4 +1,4 @@
-import { onValue, push, ref, set, update } from 'firebase/database'
+import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const NEWS_PATH = 'news'
@@ -96,4 +96,23 @@ export async function toggleNewsActive(newsId, currentActive) {
   })
 
   return nextActive
+}
+
+
+export async function deleteNews(newsId) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!newsId) {
+    throw new Error('News id is required')
+  }
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  await remove(ref(database, `${NEWS_PATH}/${newsId}`))
+}
+
+export async function deleteMultipleNews(newsIds = []) {
+  await Promise.all(newsIds.filter(Boolean).map((newsId) => deleteNews(newsId)))
 }

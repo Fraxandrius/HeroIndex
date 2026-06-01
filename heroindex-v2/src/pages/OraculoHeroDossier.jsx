@@ -7,6 +7,7 @@ import {
   subscribeToCharacterSheet,
   updateCharacterSheet,
 } from '../services/characterSheetsService.js'
+import { deleteHero } from '../services/heroesService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
 const statusLabels = {
@@ -285,6 +286,9 @@ const [characterSheet, setCharacterSheet] = useState(null)
   const [isSavingCharacterSheet, setIsSavingCharacterSheet] = useState(false)
   const [characterSheetMessage, setCharacterSheetMessage] = useState('')
   const [characterSheetSaveError, setCharacterSheetSaveError] = useState('')
+ const [deleteMessage, setDeleteMessage] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [isDeletingHero, setIsDeletingHero] = useState(false)
 
   useEffect(() => {
     return subscribeToMissionCalculations(
@@ -343,7 +347,7 @@ const [characterSheet, setCharacterSheet] = useState(null)
     try {
       await createOrUpdateCharacterSheet(hero.id, createBaseCharacterSheet(hero.id))
       setCharacterSheetMessage('Hoja privada creada correctamente.')
-    } catch (error) {
+     } catch {
       setCharacterSheetSaveError(error.message ?? String(error))
     } finally {
       setIsCreatingCharacterSheet(false)
@@ -388,6 +392,29 @@ const [characterSheet, setCharacterSheet] = useState(null)
     setCharacterSheetMessage('')
   }
 
+  const handleDeleteHero = async (deleteCharacterSheet = false) => {
+    const confirmationMessage = deleteCharacterSheet
+      ? 'Eliminar héroe y hoja privada RPG. Esta acción no se puede deshacer.'
+      : 'Eliminar héroe público. Las noticias y evaluaciones asociadas no se eliminarán automáticamente. Esta acción no se puede deshacer.'
+
+    if (!window.confirm(confirmationMessage)) return
+
+    setIsDeletingHero(true)
+    setDeleteMessage('Eliminando...')
+    setDeleteError('')
+
+    try {
+      await deleteHero(hero.id, { deleteCharacterSheet })
+      setDeleteMessage('Registro eliminado correctamente.')
+      onNavigate?.('oraculo-hub')
+    } catch {
+      setDeleteError('No fue posible eliminar el registro.')
+      setDeleteMessage('')
+    } finally {
+      setIsDeletingHero(false)
+    }
+  }
+
   const handleSaveCharacterSheet = async (event) => {
     event.preventDefault()
     setIsSavingCharacterSheet(true)
@@ -398,7 +425,7 @@ const [characterSheet, setCharacterSheet] = useState(null)
       await updateCharacterSheet(hero.id, getSheetPayload(characterSheetForm))
       setCharacterSheetMessage('Hoja privada guardada correctamente.')
       setIsEditingCharacterSheet(false)
-    } catch (error) {
+     } catch {
       setCharacterSheetSaveError(error.message ?? String(error))
     } finally {
       setIsSavingCharacterSheet(false)
@@ -459,8 +486,16 @@ const [characterSheet, setCharacterSheet] = useState(null)
         <button onClick={() => onNavigate?.('mission-calculator')} type="button">
           Volver a Mission Calculator
         </button>
+         <button disabled={isDeletingHero} onClick={() => handleDeleteHero(false)} type="button">
+          {isDeletingHero ? 'Eliminando...' : 'Eliminar héroe'}
+        </button>
+        <button disabled={isDeletingHero} onClick={() => handleDeleteHero(true)} type="button">
+          Eliminar héroe y hoja privada RPG
+        </button>
       </nav>
 
+ {deleteError ? <p className="oraculo-dossier-state oraculo-dossier-state--error">{deleteError}</p> : null}
+      {deleteMessage ? <p className="oraculo-dossier-state">{deleteMessage}</p> : null}
       <header className="oraculo-dossier-cover">
         {hero.bannerUrl ? (
           <img

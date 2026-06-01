@@ -1,4 +1,4 @@
-import { onValue, push, ref, set, update } from 'firebase/database'
+import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const CORPORATIONS_PATH = 'corporations'
@@ -96,4 +96,23 @@ export async function toggleCorporationActive(corporationId, currentActive) {
   })
 
   return nextActive
+}
+
+
+export async function deleteCorporation(corporationId) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!corporationId) {
+    throw new Error('Corporation id is required')
+  }
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  await remove(ref(database, `${CORPORATIONS_PATH}/${corporationId}`))
+}
+
+export async function deleteMultipleCorporations(corporationIds = []) {
+  await Promise.all(corporationIds.filter(Boolean).map((corporationId) => deleteCorporation(corporationId)))
 }

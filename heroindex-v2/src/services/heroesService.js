@@ -1,7 +1,8 @@
-import { onValue, push, ref, set, update } from 'firebase/database'
+import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
 
 export const HEROES_PATH = 'heroes'
+const CHARACTER_SHEETS_PATH = 'characterSheets'
 
 function normalizeHero(id, hero) {
   return {
@@ -40,7 +41,6 @@ export function subscribeToHeroes({ onData, onError }) {
     },
   )
 }
-
 
 export async function createHero(heroData) {
   const { database, isConfigured } = getFirebaseClient()
@@ -97,4 +97,27 @@ export async function toggleHeroActive(heroId, currentActive) {
   })
 
   return nextActive
+}
+
+
+export async function deleteHero(heroId, options = {}) {
+  const { database, isConfigured } = getFirebaseClient()
+
+  if (!heroId) {
+    throw new Error('Hero id is required')
+  }
+
+  if (!isConfigured || !database) {
+    throw new Error('Firebase is not configured')
+  }
+
+  await remove(ref(database, `${HEROES_PATH}/${heroId}`))
+
+  if (options.deleteCharacterSheet === true) {
+    await remove(ref(database, `${CHARACTER_SHEETS_PATH}/${heroId}`))
+  }
+}
+
+export async function deleteMultipleHeroes(heroIds = [], options = {}) {
+  await Promise.all(heroIds.filter(Boolean).map((heroId) => deleteHero(heroId, options)))
 }

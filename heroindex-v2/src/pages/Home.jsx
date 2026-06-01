@@ -12,7 +12,11 @@ function getInitials(name = '') {
 }
 
 function getNewsSummary(newsItem) {
-  return newsItem.summary ?? newsItem.body ?? 'HeroIndex newsroom update.'
+  return newsItem.summary ?? newsItem.body ?? 'Actualización editorial de HeroIndex.'
+}
+
+function getHeroDisplayName(hero) {
+  return hero.alias ?? hero.publicName ?? hero.codename ?? hero.name ?? 'Figura HeroIndex'
 }
 
 function getScore(value) {
@@ -21,7 +25,7 @@ function getScore(value) {
   return Number.isNaN(score) ? 0 : score
 }
 
-function Home() {
+function Home({ onNavigate }) {
   const { feedNews, loading: newsLoading, trendingNews } = useNews()
   const {
     corporations,
@@ -35,11 +39,14 @@ function Home() {
     visibleFeedNews.length > 3 ? visibleFeedNews.slice(1, 6) : visibleFeedNews.slice(0, 5)
   const visibleTrendingNews = trendingNews.filter((item) => item.active !== false)
   const featuredHeroes = rankingHeroes.slice(0, 5)
+  const citizenFeaturedHeroes = rankingHeroes
+    .filter((hero) => hero.active !== false)
+    .sort((firstHero, secondHero) => getScore(secondHero.approval) - getScore(firstHero.approval))
+    .slice(0, 3)
   const featuredCorporations = [...corporations]
     .sort(
       (firstCorporation, secondCorporation) =>
-        getScore(secondCorporation.trustScore ?? secondCorporation.approval) -
-        getScore(firstCorporation.trustScore ?? firstCorporation.approval),
+      getScore(secondCorporation.approval) - getScore(firstCorporation.approval),
     )
     .slice(0, 3)
 
@@ -50,15 +57,17 @@ function Home() {
         {!heroesLoading && !corporationsLoading
           ? featuredHeroes.map((hero) => {
               const corporationName =
-                getCorporationById(hero.corporationId)?.name ?? hero.corporationId
+                getCorporationById(hero.corporationId)?.name ??
+                hero.corporationId ??
+                'Independiente'
 
               return (
                 <article className="story-card" key={hero.id}>
                   <span className="story-card__avatar">
-                    <span>{getInitials(hero.name)}</span>
+                    <span>{getInitials(getHeroDisplayName(hero))}</span>
                     {hero.avatarUrl ? (
                       <img
-                        alt={hero.alias ?? hero.name}
+                        alt={getHeroDisplayName(hero)}
                         loading="lazy"
                         onError={(event) => {
                           event.currentTarget.hidden = true
@@ -67,10 +76,10 @@ function Home() {
                       />
                     ) : null}
                   </span>
-                  <strong>{hero.name}</strong>
-                  {hero.alias ? <small>{hero.alias}</small> : null}
+                  <strong>{getHeroDisplayName(hero)}</strong>
+                  {hero.heroTitle ? <small>{hero.heroTitle}</small> : null}
                   <small>
-                    {corporationName} · {hero.approval ?? hero.trustScore ?? 0}
+                    {corporationName} · Aprobación ciudadana {getScore(hero.approval)}
                   </small>
                 </article>
               )
@@ -198,19 +207,20 @@ function Home() {
 
           <section className="side-panel">
             <div className="section-heading">
-              <p className="page-card__kicker">Hero watch</p>
-              <h2>Top approval</h2>
+               <p className="page-card__kicker">Reconocimiento ciudadano</p>
+              <h2>Héroes destacados por la ciudadanía</h2>
+              <p>Figuras con alto reconocimiento público dentro de HeroIndex.</p>
             </div>
             <div className="home-hero-list">
               {heroesLoading || corporationsLoading ? <p>Loading...</p> : null}
               {!heroesLoading && !corporationsLoading
-                ? featuredHeroes.slice(0, 3).map((hero) => (
+                ? citizenFeaturedHeroes.map((hero) => (
                     <article className="home-hero-card" key={hero.id}>
                       <span className="home-hero-card__avatar">
-                        <span>{getInitials(hero.name)}</span>
+                        <span>{getInitials(getHeroDisplayName(hero))}</span>
                         {hero.avatarUrl ? (
                           <img
-                            alt={hero.alias ?? hero.name}
+                            alt={getHeroDisplayName(hero)}
                             loading="lazy"
                             onError={(event) => {
                               event.currentTarget.hidden = true
@@ -220,12 +230,20 @@ function Home() {
                         ) : null}
                       </span>
                       <div>
-                        <strong>{hero.name}</strong>
-                        {hero.alias ? <span>{hero.alias}</span> : null}
+                        <strong>{getHeroDisplayName(hero)}</strong>
+                        <span>{hero.heroTitle ?? 'Figura HeroIndex'}</span>
                         <small>
-                          {getCorporationById(hero.corporationId)?.name ?? hero.corporationId} ·{' '}
-                          {hero.approval ?? hero.trustScore ?? 0}
+                          {getCorporationById(hero.corporationId)?.name ??
+                            hero.corporationId ??
+                            'Independiente'}{' '}
+                          · Aprobación ciudadana {getScore(hero.approval)}
                         </small>
+                        <button
+                          onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                          type="button"
+                        >
+                          Ver perfil
+                        </button>
                       </div>
                     </article>
                   ))
@@ -260,7 +278,7 @@ function Home() {
                         <strong>{corporation.name}</strong>
                         <span>{corporation.sector}</span>
                         <small>
-                          {corporation.tagline} · {corporation.trustScore ?? corporation.approval} trust
+                          {corporation.tagline} · Aprobación {getScore(corporation.approval)}
                         </small>
                       </div>
                     </article>

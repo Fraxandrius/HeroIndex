@@ -1,13 +1,36 @@
+import { useState } from 'react'
 import { useNews } from '../hooks/useNews.js'
+import { deleteNews } from '../services/newsService.js'
+
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
 function News() {
   const { feedNews, loading, source } = useNews()
+  const [deletingNewsId, setDeletingNewsId] = useState(null)
+  const [deleteMessage, setDeleteMessage] = useState('')
   const visibleNews = feedNews.filter((item) => item.active !== false)
+
+  const handleDeleteNews = async (newsItem) => {
+    if (!window.confirm('Eliminar noticia. Esta acción no se puede deshacer.')) return
+
+    setDeletingNewsId(newsItem.id)
+    setDeleteMessage('Eliminando...')
+
+    try {
+      await deleteNews(newsItem.id)
+      setDeleteMessage('Registro eliminado correctamente.')
+    } catch {
+      setDeleteMessage('No fue posible eliminar el registro.')
+    } finally {
+      setDeletingNewsId(null)
+    }
+  }
 
   return (
     <section className="page-card news-page">
       <p className="page-card__kicker">Updates · {source}</p>
       <h2>News</h2>
+      {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="news-list">
         {loading ? <p>Loading...</p> : null}
         {!loading
@@ -30,6 +53,11 @@ function News() {
                 <footer>
                   {newsItem.source} · {newsItem.time}
                 </footer>
+                {isOraculoMode ? (
+                  <button disabled={deletingNewsId === newsItem.id} onClick={() => handleDeleteNews(newsItem)} type="button">
+                    {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar noticia'}
+                  </button>
+                ) : null}
               </article>
             ))
           : null}
