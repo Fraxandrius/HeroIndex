@@ -1755,6 +1755,27 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
+.gm-manager-legacy-fields {
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 0.95rem;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.gm-manager-legacy-fields summary {
+  color: #aeb8d8;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gm-manager-legacy-fields label {
+  margin-top: 0.75rem;
+}
+
 .gm-manager-check {
   align-items: center;
   display: flex !important;
@@ -2534,4 +2555,246 @@ button {
 .mission-calculator-history__hint {
   color: #8796c3;
   font-size: 0.78rem;
+}
+
+.hero-profile-link {
+  background: linear-gradient(135deg, rgba(104, 216, 255, 0.18), rgba(245, 190, 92, 0.14));
+  border: 1px solid rgba(104, 216, 255, 0.32);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.62rem 0.9rem;
+  width: fit-content;
+}
+
+.hero-profile-link:hover {
+  border-color: rgba(245, 190, 92, 0.48);
+  transform: translateY(-1px);
+}
+
+.profile-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0.85rem 0 0;
+}
+
+.hero-profile-page {
+  display: grid;
+  gap: 1.4rem;
+  max-width: min(1080px, 100%);
+  width: 100%;
+}
+
+.hero-profile-state {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.16);
+  border-radius: 1rem;
+  color: #d7def3;
+  font-weight: 800;
+  margin: 0;
+  padding: 1rem;
+}
+
+.hero-profile-state--error {
+  border-color: rgba(255, 120, 150, 0.28);
+  color: #ffb4c8;
+}
+
+.hero-profile-cover {
+  background:
+    radial-gradient(circle at 82% 18%, rgba(245, 190, 92, 0.25), transparent 14rem),
+    linear-gradient(135deg, rgba(25, 48, 97, 0.84), rgba(9, 16, 32, 0.92));
+  border: 1px solid rgba(151, 164, 205, 0.22);
+  border-radius: 1.5rem;
+  min-height: 22rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-profile-cover > img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+.hero-profile-cover::after {
+  background: linear-gradient(180deg, rgba(8, 13, 28, 0.12), rgba(8, 13, 28, 0.88));
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.hero-profile-cover__overlay {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  inset: auto 0 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  position: absolute;
+  z-index: 2;
+}
+
+.hero-profile-avatar {
+  align-items: center;
+  background: linear-gradient(135deg, #68d8ff, #7c5cff);
+  border: 3px solid rgba(255, 255, 255, 0.82);
+  border-radius: 1.35rem;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1.45rem;
+  font-weight: 950;
+  height: 6rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-transform: uppercase;
+  width: 6rem;
+}
+
+.hero-profile-avatar span {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-profile-avatar img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 2;
+}
+
+.hero-profile-heading {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.hero-profile-heading h2 {
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.98;
+  margin: 0;
+}
+
+.hero-profile-heading p {
+  color: #d7def3;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 800;
+  margin: 0;
+}
+
+.hero-profile-tags,
+.hero-profile-powers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.hero-profile-tags span,
+.hero-profile-powers span {
+  background: rgba(104, 216, 255, 0.12);
+  border: 1px solid rgba(104, 216, 255, 0.22);
+  border-radius: 999px;
+  color: #bdefff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.42rem 0.65rem;
+}
+
+.hero-profile-metrics {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  margin: 0;
+}
+
+.hero-profile-metrics div,
+.hero-profile-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(151, 164, 205, 0.15);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.hero-profile-metrics dt {
+  color: #8edfff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-profile-metrics dd {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 950;
+  margin: 0.25rem 0 0;
+}
+
+.hero-profile-section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.hero-profile-section p,
+.hero-profile-news__item p,
+.hero-profile-news__item time {
+  color: #aeb8d8;
+  margin: 0;
+}
+
+.hero-profile-news {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.hero-profile-news__item {
+  background: rgba(7, 12, 25, 0.38);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  padding: 0.85rem;
+}
+
+.hero-profile-news__item img {
+  aspect-ratio: 16 / 10;
+  border-radius: 0.75rem;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.hero-profile-news__item span {
+  color: #68d8ff;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.hero-profile-news__item h3 {
+  color: #ffffff;
+  margin: 0 0 0.35rem;
+}
+
+@media (max-width: 760px) {
+  .hero-profile-cover__overlay,
+  .hero-profile-news__item {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-profile-cover__overlay {
+    align-items: start;
+    flex-direction: column;
+  }
 }

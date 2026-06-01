@@ -47,13 +47,20 @@ const emptyHeroForm = {
   approval: '',
   avatarUrl: '',
   bannerUrl: '',
+  codename: '',
   corporationId: '',
-  description: '',
+  heroTitle: '',
   name: '',
   powerClass: '',
-  powers: '',
+  publicBio: '',
+  publicName: '',
+  publicPowers: '',
   rankingPoints: '',
   trustScore: '',
+}
+
+function stringifyListField(value) {
+  return Array.isArray(value) ? value.join(', ') : value ?? ''
 }
 
 function getHeroFormValues(hero = {}) {
@@ -63,11 +70,14 @@ function getHeroFormValues(hero = {}) {
     approval: hero.approval ?? '',
     avatarUrl: hero.avatarUrl ?? '',
     bannerUrl: hero.bannerUrl ?? '',
+    codename: hero.codename ?? '',
     corporationId: hero.corporationId ?? '',
-    description: hero.description ?? '',
+    heroTitle: hero.heroTitle ?? '',
     name: hero.name ?? '',
     powerClass: hero.powerClass ?? '',
-    powers: Array.isArray(hero.powers) ? hero.powers.join(', ') : hero.powers ?? '',
+    publicBio: hero.publicBio ?? hero.description ?? '',
+    publicName: hero.publicName ?? '',
+    publicPowers: stringifyListField(hero.publicPowers ?? hero.visiblePowers ?? hero.powers),
     rankingPoints: hero.rankingPoints ?? '',
     trustScore: hero.trustScore ?? '',
   }
@@ -139,6 +149,18 @@ function getDetailValue(value) {
   }
 
   return String(value)
+}
+
+
+function getPublicHeroIdentity(form) {
+  return form.alias.trim() || form.publicName.trim() || form.codename.trim() || form.name.trim()
+}
+
+function parseCommaList(value) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 const statusFilters = [
@@ -541,8 +563,10 @@ const handleNewsFieldChange = (event) => {
   const handleCreateHero = async (event) => {
     event.preventDefault()
 
-    if (!heroForm.name.trim() || !heroForm.powerClass.trim()) {
-      setHeroFormError('Name and powerClass are required.')
+    const publicIdentity = getPublicHeroIdentity(heroForm)
+
+    if (!publicIdentity) {
+      setHeroFormError('Alias, nombre público o código es obligatorio.')
       setHeroFormSuccess('')
       return
     }
@@ -559,25 +583,30 @@ const handleNewsFieldChange = (event) => {
       (trustScore !== '' && Number.isNaN(parsedTrustScore)) ||
       Number.isNaN(parsedRankingPoints)
     ) {
-      setHeroFormError('Approval, trustScore, and rankingPoints must be valid numbers.')
+      setHeroFormError('Aprobación ciudadana, trustScore y Puntos HeroIndex deben ser números válidos.')
       setHeroFormSuccess('')
       return
     }
 
+    const publicPowers = parseCommaList(heroForm.publicPowers)
+    const publicBio = heroForm.publicBio.trim()
     const heroPayload = {
       active: heroForm.active,
       alias: heroForm.alias.trim(),
       avatarUrl: heroForm.avatarUrl.trim(),
       bannerUrl: heroForm.bannerUrl.trim(),
+      codename: heroForm.codename.trim(),
       corporationId: heroForm.corporationId.trim(),
-      description: heroForm.description.trim(),
-      name: heroForm.name.trim(),
+      description: publicBio,
+      heroTitle: heroForm.heroTitle.trim(),
+      name: heroForm.name.trim() || publicIdentity,
       powerClass: heroForm.powerClass.trim(),
+      publicBio,
+      publicName: heroForm.publicName.trim(),
+      publicPowers,
       rankingPoints: parsedRankingPoints,
-      powers: heroForm.powers
-        .split(',')
-        .map((power) => power.trim())
-        .filter(Boolean),
+      powers: publicPowers,
+      visiblePowers: publicPowers,
     }
 
     if (approval !== '') {
@@ -595,7 +624,7 @@ const handleNewsFieldChange = (event) => {
     try {
       await createHero(heroPayload)
       setHeroForm(emptyHeroForm)
-      setHeroFormSuccess('Hero created successfully.')
+      setHeroFormSuccess('Hero creado correctamente.')
     } catch (error) {
       setHeroFormError(error.message ?? String(error))
     } finally {
@@ -631,8 +660,10 @@ const handleNewsFieldChange = (event) => {
   const handleUpdateHero = async (event) => {
     event.preventDefault()
 
-    if (!editHeroForm.name.trim() || !editHeroForm.powerClass.trim()) {
-      setEditHeroError('Name and powerClass are required.')
+    const publicIdentity = getPublicHeroIdentity(editHeroForm)
+
+    if (!publicIdentity) {
+      setEditHeroError('Alias, nombre público o código es obligatorio.')
       setEditHeroSuccess('')
       return
     }
@@ -649,25 +680,30 @@ const handleNewsFieldChange = (event) => {
       (trustScore !== '' && Number.isNaN(parsedTrustScore)) ||
       Number.isNaN(parsedRankingPoints)
     ) {
-      setEditHeroError('Approval, trustScore, and rankingPoints must be valid numbers.')
+      setEditHeroError('Aprobación ciudadana, trustScore y Puntos HeroIndex deben ser números válidos.')
       setEditHeroSuccess('')
       return
     }
 
+    const publicPowers = parseCommaList(editHeroForm.publicPowers)
+    const publicBio = editHeroForm.publicBio.trim()
     const heroPayload = {
       active: editHeroForm.active,
       alias: editHeroForm.alias.trim(),
       avatarUrl: editHeroForm.avatarUrl.trim(),
       bannerUrl: editHeroForm.bannerUrl.trim(),
+      codename: editHeroForm.codename.trim(),
       corporationId: editHeroForm.corporationId.trim(),
-      description: editHeroForm.description.trim(),
-      name: editHeroForm.name.trim(),
+      description: publicBio,
+      heroTitle: editHeroForm.heroTitle.trim(),
+      name: editHeroForm.name.trim() || publicIdentity,
       powerClass: editHeroForm.powerClass.trim(),
-        rankingPoints: parsedRankingPoints,
-      powers: editHeroForm.powers
-        .split(',')
-        .map((power) => power.trim())
-        .filter(Boolean),
+      publicBio,
+      publicName: editHeroForm.publicName.trim(),
+      publicPowers,
+      rankingPoints: parsedRankingPoints,
+      powers: publicPowers,
+      visiblePowers: publicPowers,
     }
 
     if (approval !== '') {
@@ -686,7 +722,7 @@ const handleNewsFieldChange = (event) => {
       await updateHero(editingHeroId, heroPayload)
       setEditingHeroId(null)
       setEditHeroForm(emptyHeroForm)
-      setEditHeroSuccess('Hero updated successfully.')
+      setEditHeroSuccess('Hero actualizado correctamente.')
     } catch (error) {
       setEditHeroError(error.message ?? String(error))
     } finally {
@@ -845,7 +881,7 @@ const handleNewsFieldChange = (event) => {
     }
   }
 
-   const reviewHeroes = firebaseHeroes.length > 0 ? firebaseHeroes : heroes
+  const reviewHeroes = firebaseHeroes.length > 0 ? firebaseHeroes : heroes
   const reviewCorporations =
     firebaseCorporations.length > 0 ? firebaseCorporations : corporations
   const filteredNews = filterReviewItems(feedNews, reviewSearch, reviewStatusFilter, [
@@ -855,11 +891,13 @@ const handleNewsFieldChange = (event) => {
     'layer',
   ])
   const filteredHeroes = filterReviewItems(reviewHeroes, reviewSearch, reviewStatusFilter, [
-    'name',
     'alias',
-    'powerClass',
+    'publicName',
+    'codename',
+    'heroTitle',
     'corporationId',
-    'description',
+    'publicBio',
+    'name',
   ])
   const filteredCorporations = filterReviewItems(
     reviewCorporations,
@@ -868,23 +906,25 @@ const handleNewsFieldChange = (event) => {
     ['name', 'tagline', 'sector', 'country', 'description'],
   )
   const canUseLatestImage = Boolean(latestUploadedImageUrl)
-  const getHeroRelationLabel = (hero) =>
-    hero.alias ? `${hero.name} · ${hero.alias}` : hero.name
+  const getHeroRelationLabel = (hero) => {
+    const publicIdentity = hero.alias || hero.publicName || hero.codename || hero.name
+    return hero.heroTitle ? `${publicIdentity} · ${hero.heroTitle}` : publicIdentity
+  }
   const getCorporationRelationLabel = (corporation) =>
     corporation.sector ? `${corporation.name} · ${corporation.sector}` : corporation.name
 
   return (
     <section className="page-card gm-manager-page">
       <div className="gm-manager-hero">
-         <p className="page-card__kicker">ORÁCULO / Content Control</p>
+        <p className="page-card__kicker">ORÁCULO / Content Control</p>
         <h2>GM Manager</h2>
         <p>Panel interno de gestión de HeroIndex.</p>
         <p className="gm-manager-hero__note">
           ORÁCULO content control interface for managing public HeroIndex data.
         </p>
       </div>
-      
-       <section className="gm-manager-workspace gm-manager-workspace--overview">
+
+      <section className="gm-manager-workspace gm-manager-workspace--overview">
         <div className="gm-manager-workspace__top">
           <p className="page-card__kicker">Overview</p>
           <h3>Overview</h3>
@@ -1100,7 +1140,7 @@ const handleNewsFieldChange = (event) => {
               onChange={handleNewsFieldChange}
               type="checkbox"
             />
-            <span>Active</span>
+            <span>Activo</span>
           </label>
           {newsFormError ? <p className="gm-manager-message gm-manager-message--error">{newsFormError}</p> : null}
           {newsFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{newsFormSuccess}</p> : null}
@@ -1119,27 +1159,47 @@ const handleNewsFieldChange = (event) => {
         <form className="gm-manager-form" onSubmit={handleCreateHero}>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Name *</span>
-              <input
-                name="name"
-                onChange={handleHeroFieldChange}
-                type="text"
-                value={heroForm.name}
-              />
-            </label>
-            <label>
-              <span>Alias</span>
+              <span>Alias *</span>
               <input
                 name="alias"
                 onChange={handleHeroFieldChange}
+                placeholder="Centinela Prime"
                 type="text"
                 value={heroForm.alias}
+              />
+            </label>
+            <label>
+              <span>Nombre público</span>
+              <input
+                name="publicName"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.publicName}
+              />
+            </label>
+            <label>
+              <span>Código / nombre clave</span>
+              <input
+                name="codename"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.codename}
               />
             </label>
           </div>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Corporation ID</span>
+                   <span>Título heroico</span>
+              <input
+                name="heroTitle"
+                onChange={handleHeroFieldChange}
+                placeholder="Centinela Dorado"
+                type="text"
+                value={heroForm.heroTitle}
+              />
+            </label>
+            <label>
+              <span>Corporación</span>
               <input
                 name="corporationId"
                 onChange={handleHeroFieldChange}
@@ -1148,18 +1208,18 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Power Class *</span>
+              <span>Nombre interno / legacy</span>
               <input
-                name="powerClass"
+                name="name"
                 onChange={handleHeroFieldChange}
                 type="text"
-                value={heroForm.powerClass}
+                value={heroForm.name}
               />
             </label>
           </div>
           <div className="gm-manager-form__grid">
             <label>
-              <span>Approval</span>
+              <span>Aprobación ciudadana</span>
               <input
                 name="approval"
                 onChange={handleHeroFieldChange}
@@ -1168,7 +1228,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Trust Score</span>
+              <span>Trust Score interno</span>
               <input
                 name="trustScore"
                 onChange={handleHeroFieldChange}
@@ -1177,7 +1237,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
              <label>
-              <span>Puntos de ranking</span>
+              <span>Puntos HeroIndex</span>
               <input
                 name="rankingPoints"
                 onChange={handleHeroFieldChange}
@@ -1187,24 +1247,36 @@ const handleNewsFieldChange = (event) => {
             </label>
           </div>
           <label>
-            <span>Description</span>
+            <span>Biografía pública</span>
             <textarea
-              name="description"
+              name="publicBio"
               onChange={handleHeroFieldChange}
               rows="4"
-              value={heroForm.description}
+              value={heroForm.publicBio}
             />
           </label>
           <label>
-            <span>Powers</span>
+            <span>Poderes visibles</span>
             <input
-              name="powers"
+              name="publicPowers"
               onChange={handleHeroFieldChange}
-              placeholder="Flight, strength, tactical analysis"
+              placeholder="Vuelo, barrera de luz, rescate aéreo"
               type="text"
-              value={heroForm.powers}
+              value={heroForm.publicPowers}
             />
           </label>
+          <details className="gm-manager-legacy-fields">
+            <summary>Campos legacy internos</summary>
+            <label>
+              <span>Power Class</span>
+              <input
+                name="powerClass"
+                onChange={handleHeroFieldChange}
+                type="text"
+                value={heroForm.powerClass}
+              />
+            </label>
+          </details>
           <div className="gm-manager-form__grid">
             <label>
               <span>Avatar URL</span>
@@ -1216,7 +1288,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Cover URL</span>
+              <span>Portada URL</span>
               <input
                 name="bannerUrl"
                 onChange={handleHeroFieldChange}
@@ -1254,12 +1326,12 @@ const handleNewsFieldChange = (event) => {
               onChange={handleHeroFieldChange}
               type="checkbox"
             />
-            <span>Active</span>
+            <span>Activo</span>
           </label>
           {heroFormError ? <p className="gm-manager-message gm-manager-message--error">{heroFormError}</p> : null}
           {heroFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{heroFormSuccess}</p> : null}
           <button className="gm-manager-action" disabled={isCreatingHero} type="submit">
-            {isCreatingHero ? 'Creating…' : 'Crear Hero'}
+             {isCreatingHero ? 'Creando…' : 'Crear Hero'}
           </button>
         </form>
       </section>
@@ -1331,7 +1403,7 @@ const handleNewsFieldChange = (event) => {
               />
             </label>
             <label>
-              <span>Cover URL</span>
+              <span>Portada URL</span>
               <input
                 name="bannerUrl"
                 onChange={handleCorporationFieldChange}
@@ -1389,7 +1461,7 @@ const handleNewsFieldChange = (event) => {
               onChange={handleCorporationFieldChange}
               type="checkbox"
             />
-            <span>Active</span>
+            <span>Activo</span>
           </label>
           {corporationFormError ? <p className="gm-manager-message gm-manager-message--error">{corporationFormError}</p> : null}
           {corporationFormSuccess ? <p className="gm-manager-message gm-manager-message--success">{corporationFormSuccess}</p> : null}
@@ -1549,7 +1621,7 @@ const handleNewsFieldChange = (event) => {
                   onChange={handleEditNewsFieldChange}
                   type="checkbox"
                 />
-                <span>Active</span>
+                <span>Activo</span>
               </label>
               {editNewsError ? <p className="gm-manager-message gm-manager-message--error">{editNewsError}</p> : null}
               <div className="gm-manager-actions">
@@ -1636,16 +1708,7 @@ const handleNewsFieldChange = (event) => {
             <form className="gm-manager-form" onSubmit={handleUpdateHero}>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Name *</span>
-                  <input
-                    name="name"
-                    onChange={handleEditHeroFieldChange}
-                    type="text"
-                    value={editHeroForm.name}
-                  />
-                </label>
-                <label>
-                  <span>Alias</span>
+                  <span>Alias *</span>
                   <input
                     name="alias"
                     onChange={handleEditHeroFieldChange}
@@ -1653,10 +1716,37 @@ const handleNewsFieldChange = (event) => {
                     value={editHeroForm.alias}
                   />
                 </label>
+                <label>
+                  <span>Nombre público</span>
+                  <input
+                    name="publicName"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                     value={editHeroForm.publicName}
+                  />
+                </label>
+                <label>
+                  <span>Código / nombre clave</span>
+                  <input
+                    name="codename"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.codename}
+                  />
+                </label>
               </div>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Corporation ID</span>
+                  <span>Título heroico</span>
+                  <input
+                    name="heroTitle"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.heroTitle}
+                  />
+                </label>
+                <label>
+                  <span>Corporación</span>
                   <input
                     name="corporationId"
                     onChange={handleEditHeroFieldChange}
@@ -1665,18 +1755,18 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Power Class *</span>
+                   <span>Nombre interno / legacy</span>
                   <input
-                    name="powerClass"
+                     name="name"
                     onChange={handleEditHeroFieldChange}
                     type="text"
-                    value={editHeroForm.powerClass}
+                    value={editHeroForm.name}
                   />
                 </label>
               </div>
               <div className="gm-manager-form__grid">
                 <label>
-                  <span>Approval</span>
+                  <span>Aprobación ciudadana</span>
                   <input
                     name="approval"
                     onChange={handleEditHeroFieldChange}
@@ -1685,7 +1775,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Trust Score</span>
+                  <span>Trust Score interno</span>
                   <input
                     name="trustScore"
                     onChange={handleEditHeroFieldChange}
@@ -1694,7 +1784,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                  <label>
-                  <span>Puntos de ranking</span>
+                  <span>Puntos HeroIndex</span>
                   <input
                     name="rankingPoints"
                     onChange={handleEditHeroFieldChange}
@@ -1704,24 +1794,36 @@ const handleNewsFieldChange = (event) => {
                 </label>
               </div>
               <label>
-                <span>Description</span>
+                <span>Biografía pública</span>
                 <textarea
-                  name="description"
+                  name="publicBio"
                   onChange={handleEditHeroFieldChange}
                   rows="4"
-                  value={editHeroForm.description}
+                  value={editHeroForm.publicBio}
                 />
               </label>
               <label>
-                <span>Powers</span>
+                <span>Poderes visibles</span>
                 <input
-                  name="powers"
+                  name="publicPowers"
                   onChange={handleEditHeroFieldChange}
-                  placeholder="Flight, strength, tactical analysis"
+                  placeholder="Vuelo, barrera de luz, rescate aéreo"
                   type="text"
-                  value={editHeroForm.powers}
+                  value={editHeroForm.publicPowers}
                 />
               </label>
+              <details className="gm-manager-legacy-fields">
+                <summary>Campos legacy internos</summary>
+                <label>
+                  <span>Power Class</span>
+                  <input
+                    name="powerClass"
+                    onChange={handleEditHeroFieldChange}
+                    type="text"
+                    value={editHeroForm.powerClass}
+                  />
+                </label>
+              </details>
               <div className="gm-manager-form__grid">
                 <label>
                   <span>Avatar URL</span>
@@ -1733,7 +1835,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Cover URL</span>
+                  <span>Portada URL</span>
                   <input
                     name="bannerUrl"
                     onChange={handleEditHeroFieldChange}
@@ -1771,12 +1873,12 @@ const handleNewsFieldChange = (event) => {
                   onChange={handleEditHeroFieldChange}
                   type="checkbox"
                 />
-                <span>Active</span>
+                <span>Activo</span>
               </label>
               {editHeroError ? <p className="gm-manager-message gm-manager-message--error">{editHeroError}</p> : null}
               <div className="gm-manager-actions">
                 <button className="gm-manager-action" disabled={isUpdatingHero} type="submit">
-                  {isUpdatingHero ? 'Saving…' : 'Guardar Hero'}
+                  {isUpdatingHero ? 'Guardando…' : 'Guardar Hero'}
                 </button>
                 <button
                   className="gm-manager-action"
@@ -1797,24 +1899,24 @@ const handleNewsFieldChange = (event) => {
         <table className="gm-manager-table">
           <thead>
             <tr>
-              <th>Name</th>
               <th>Alias</th>
-              <th>Corporation</th>
-              <th>Approval</th>
-              <th>Trust</th>
-              <th>Puntos</th>
-              <th>Active</th>
-              <th>Actions</th>
+              <th>Nombre público</th>
+              <th>Título heroico</th>
+              <th>Corporación</th>
+              <th>Aprobación</th>
+              <th>Puntos HeroIndex</th>
+              <th>Activo</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
              {filteredHeroes.map((hero) => (
               <tr key={hero.id}>
-                <td>{getValue(hero.name)}</td>
-                <td>{getValue(hero.alias)}</td>
+                <td>{getValue(hero.alias ?? hero.name)}</td>
+                <td>{getValue(hero.publicName)}</td>
+                <td>{getValue(hero.heroTitle ?? 'Figura HeroIndex')}</td>
                 <td>{getValue(hero.corporationId)}</td>
                 <td>{getValue(hero.approval)}</td>
-                <td>{getValue(hero.trustScore)}</td>
                 <td>{getValue(hero.rankingPoints)}</td>
                 <td>{getValue(hero.active)}</td>
                 <td>
@@ -1918,7 +2020,7 @@ const handleNewsFieldChange = (event) => {
                   />
                 </label>
                 <label>
-                  <span>Cover URL</span>
+                  <span>Portada URL</span>
                   <input
                     name="bannerUrl"
                     onChange={handleEditCorporationFieldChange}
@@ -1976,7 +2078,7 @@ const handleNewsFieldChange = (event) => {
                   onChange={handleEditCorporationFieldChange}
                   type="checkbox"
                 />
-                <span>Active</span>
+                <span>Activo</span>
               </label>
               {editCorporationError ? <p className="gm-manager-message gm-manager-message--error">{editCorporationError}</p> : null}
               <div className="gm-manager-actions">

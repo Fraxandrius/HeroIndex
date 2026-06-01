@@ -4,6 +4,7 @@ import AppShell from './components/layout/AppShell.jsx'
 import Corporations from './pages/Corporations.jsx'
 import GMManager from './pages/GMManager.jsx'
 import GMPanel from './pages/GMPanel.jsx'
+import HeroProfile from './pages/HeroProfile.jsx'
 import Home from './pages/Home.jsx'
 import Karma from './pages/Karma.jsx'
 import MissionCalculator from './pages/MissionCalculator.jsx'
@@ -14,7 +15,15 @@ import Ranking from './pages/Ranking.jsx'
 const routes = [
   { id: 'home', label: 'Home', path: '/', component: Home, navGroup: 'public' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
-  { id: 'profiles', label: 'Profiles', path: '/profiles', component: Profiles, navGroup: 'public' },
+  { id: 'profiles', label: 'Perfiles', path: '/profiles', component: Profiles, navGroup: 'public' },
+  {
+    id: 'hero-profile',
+    label: 'Perfil HeroIndex',
+    path: '/heroes/:heroId',
+    component: HeroProfile,
+    hiddenFromNav: true,
+    navGroup: 'public',
+  },
   {
     id: 'corporations',
     label: 'Corporations',
@@ -47,22 +56,49 @@ const routes = [
   },
 ]
 
+function getInitialRouteState() {
+  const heroMatch = window.location.pathname.match(/^\/heroes\/([^/]+)$/)
+
+  if (heroMatch) {
+    return { id: 'hero-profile', params: { heroId: decodeURIComponent(heroMatch[1]) } }
+  }
+
+  const route = routes.find((item) => item.path === window.location.pathname)
+
+  return { id: route?.id ?? 'home', params: {} }
+}
+
+function getRoutePath(routeId, params = {}) {
+  if (routeId === 'hero-profile' && params.heroId) {
+    return `/heroes/${encodeURIComponent(params.heroId)}`
+  }
+
+  return routes.find((route) => route.id === routeId)?.path ?? '/'
+}
+
 function App() {
-  const [activeRouteId, setActiveRouteId] = useState('home')
+  const [activeRouteState, setActiveRouteState] = useState(getInitialRouteState)
 
   const activeRoute = useMemo(
-    () => routes.find((route) => route.id === activeRouteId) ?? routes[0],
-    [activeRouteId],
+    () => routes.find((route) => route.id === activeRouteState.id) ?? routes[0],
+    [activeRouteState.id],
   )
   const ActivePage = activeRoute.component
+
+  const handleNavigate = (routeId, params = {}) => {
+    const nextPath = getRoutePath(routeId, params)
+
+    window.history.pushState({}, '', nextPath)
+    setActiveRouteState({ id: routeId, params })
+  }
 
   return (
     <AppShell
       activeRouteId={activeRoute.id}
       routes={routes}
-      onNavigate={setActiveRouteId}
+      onNavigate={handleNavigate}
     >
-      <ActivePage />
+      <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
       <AdsDebugPanel />
     </AppShell>
   )

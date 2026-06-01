@@ -145,7 +145,7 @@ function RankingMetric({ label, value }) {
   )
 }
 
-function Ranking() {
+function Ranking({ onNavigate }) {
   const [activeMode, setActiveMode] = useState('global')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRegion, setSelectedRegion] = useState('all')
@@ -351,6 +351,13 @@ function Ranking() {
                         <RankingMetric label="Puntos HeroIndex" value={getNumericValue(hero.rankingPoints)} />
                         <RankingMetric label="Aprobación ciudadana" value={getNumericValue(hero.approval)} />
                       </dl>
+                      <button
+                        className="hero-profile-link"
+                        onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                        type="button"
+                      >
+                        Ver perfil
+                      </button>
                     </article>
                   )
                 })}
@@ -387,6 +394,13 @@ function Ranking() {
                         <RankingMetric label="Puntos HeroIndex" value={getNumericValue(hero.rankingPoints)} />
                         <RankingMetric label="Aprobación ciudadana" value={getNumericValue(hero.approval)} />
                         <RankingMetric label="Confianza pública" value={getNumericValue(hero.trustScore)} />
+                          <button
+                        className="hero-profile-link"
+                        onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                        type="button"
+                      >
+                        Ver perfil
+                      </button>
                       </dl>
                     </li>
                   )

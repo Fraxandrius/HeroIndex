@@ -6,8 +6,9 @@ function getInitials(name = '') {
   return name
     .split(' ')
     .filter(Boolean)
+    .slice(0, 2)
     .map((part) => part[0])
-    .join('')
+    .join('') || 'HI'
 }
 
 function toTimestamp(value) {
@@ -22,6 +23,26 @@ function toTimestamp(value) {
   const parsed = Date.parse(value)
 
   return Number.isNaN(parsed) ? 0 : parsed
+}
+
+function getHeroDisplayName(hero = {}) {
+  return hero.alias || hero.publicName || hero.codename || hero.name || 'Identidad HeroIndex'
+}
+
+function getHeroTitle(hero = {}) {
+  return hero.heroTitle || 'Figura HeroIndex'
+}
+
+function getCorporationName(hero, getCorporationById) {
+  if (hero.independent === true || !hero.corporationId || hero.corporationId === 'independent') {
+    return 'Independiente'
+  }
+
+  return getCorporationById(hero.corporationId)?.name || hero.corporationId
+}
+
+function getPublicBio(hero = {}) {
+  return hero.publicBio || hero.description || 'Biografía pública pendiente de actualización.'
 }
 
 function getRelatedNews(heroId, newsItems) {
@@ -45,7 +66,7 @@ function getNewsSummary(newsItem) {
   return summary.length > 140 ? `${summary.slice(0, 137)}...` : summary
 }
 
-function Profiles() {
+function Profiles({ onNavigate }) {
   const { heroes, loading: heroesLoading, source } = useHeroes()
   const { feedNews, loading: newsLoading } = useNews()
   const {
@@ -57,22 +78,24 @@ function Profiles() {
   return (
     <section className="page-card profiles-page">
       <p className="page-card__kicker">
-        Players · {source} heroes · {corporationsSource} corporations
+        Perfiles públicos · héroes {source} · corporaciones {corporationsSource}
       </p>
-      <h2>Profiles</h2>
+      <h2>Perfiles públicos</h2>
       <div className="profiles-list">
-        {heroesLoading || corporationsLoading || newsLoading ? <p>Loading...</p> : null}
+        {heroesLoading || corporationsLoading || newsLoading ? <p>Cargando perfiles HeroIndex...</p> : null}
         {!heroesLoading && !corporationsLoading && !newsLoading
           ? heroes.map((hero) => {
               const relatedNews = getRelatedNews(hero.id, feedNews)
+              const displayName = getHeroDisplayName(hero)
+              const corporationName = getCorporationName(hero, getCorporationById)
 
               return (
                 <article className="profile-card" key={hero.id}>
                   <div className="profile-card__avatar">
-                    <span>{getInitials(hero.name)}</span>
+                    <span>{getInitials(displayName)}</span>
                     {hero.avatarUrl ? (
                       <img
-                        alt={hero.alias ?? hero.name}
+                        alt={`Avatar público de ${displayName}`}
                         loading="lazy"
                         onError={(event) => {
                           event.currentTarget.hidden = true
@@ -84,7 +107,7 @@ function Profiles() {
                   <div>
                     {hero.bannerUrl ? (
                       <img
-                        alt={hero.alias ?? hero.name}
+                        alt={`Portada pública de ${displayName}`}
                         className="profile-card__cover"
                         loading="lazy"
                         onError={(event) => {
@@ -93,15 +116,22 @@ function Profiles() {
                         src={hero.bannerUrl}
                       />
                     ) : null}
-                    <p className="page-card__kicker">{hero.powerClass}</p>
-                    <h3>{hero.name}</h3>
-                    <p>{hero.description}</p>
-                    <small>
-                      {getCorporationById(hero.corporationId)?.name ?? hero.corporationId}
-                    </small>
+                    <p className="page-card__kicker">{getHeroTitle(hero)}</p>
+                    <h3>{displayName}</h3>
+                    <p>{getPublicBio(hero)}</p>
+                    <small>{corporationName}</small>
+                    <div className="profile-card__actions">
+                      <button
+                        className="hero-profile-link"
+                        onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                        type="button"
+                      >
+                        Ver perfil
+                      </button>
+                    </div>
                     <section
                       className="profile-news"
-                      aria-label={`Noticias relacionadas de ${hero.name}`}
+                      aria-label={`Noticias relacionadas de ${displayName}`}
                     >
                       <div className="profile-news__top">
                         <p className="page-card__kicker">Noticias relacionadas</p>
