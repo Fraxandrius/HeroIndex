@@ -3,7 +3,9 @@ import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { subscribeToCharacterSheet, updateCharacterSheet } from '../services/characterSheetsService.js'
-import { updateHero } from '../services/heroesService.js'
+import { createHero, updateHero } from '../services/heroesService.js'
+import { updateUserProfile } from '../services/authService.js'
+import { canSeeOraculoTools } from '../utils/roles.js'
 
 const playerHeroId = import.meta.env.VITE_PLAYER_HERO_ID ?? ''
 
@@ -90,8 +92,10 @@ function createPublicForm(hero = {}) {
     heroTitle: hero.heroTitle ?? '',
     publicBio: hero.publicBio ?? '',
     publicPowers: listToText(hero.publicPowers ?? hero.visiblePowers),
+    affiliationLabel: hero.affiliationLabel ?? hero.corporationName ?? '',
     avatarUrl: hero.avatarUrl ?? '',
-    bannerUrl: hero.bannerUrl ?? '',
+    imageUrl: hero.imageUrl ?? hero.bannerUrl ?? '',
+    visibility: hero.visibility ?? 'public',
   }
 }
 
@@ -116,13 +120,14 @@ function createSheetForm(sheet = {}) {
 }
 
 function MyProfile({ onNavigate }) {
-  const { isLoggedIn, loading: authLoading, userProfile } = useAuth()
+  const { currentUser, isLoggedIn, loading: authLoading, userProfile } = useAuth()
   const { heroes, loading: heroesLoading, error: heroesError } = useHeroes()
   const { getCorporationById, loading: corporationsLoading, error: corporationsError } = useCorporations()
   const [characterSheet, setCharacterSheet] = useState(null)
   const accountHeroId = userProfile?.heroId ?? ''
   const resolvedHeroId = isLoggedIn ? accountHeroId : playerHeroId
   const isUsingFallbackHero = Boolean(!isLoggedIn && playerHeroId)
+  const canViewOraculoLayer = canSeeOraculoTools(userProfile)
   const [sheetLoading, setSheetLoading] = useState(false)
   const [sheetError, setSheetError] = useState(null)
   const [isEditingPublic, setIsEditingPublic] = useState(false)
@@ -135,6 +140,7 @@ function MyProfile({ onNavigate }) {
   const [sheetForm, setSheetForm] = useState(createSheetForm())
   const [sheetMessage, setSheetMessage] = useState('')
   const [sheetSaveError, setSheetSaveError] = useState('')
+
 
   useEffect(() => {
     if (!resolvedHeroId) {
@@ -177,10 +183,16 @@ function MyProfile({ onNavigate }) {
     [heroes, resolvedHeroId],
   )
   const corporation = hero?.corporationId ? getCorporationById(hero.corporationId) : null
-  const corporationName = corporation?.name ?? hero?.corporationName ?? 'Independiente'
+  const corporationName = corporation?.name ?? hero?.affiliationLabel ?? hero?.corporationName ?? 'Independiente'
   const publicPowers = getPublicPowers(hero)
   const isLoading = authLoading || (Boolean(resolvedHeroId) && (heroesLoading || corporationsLoading || sheetLoading))
   const loadError = heroesError || corporationsError || sheetError
+ const canEditCurrentHero = Boolean(
+    isUsingFallbackHero ||
+      canViewOraculoLayer ||
+      (hero?.id && userProfile?.heroId && String(userProfile.heroId) === String(hero.id)) ||
+      (hero?.ownerUid && currentUser?.uid && hero.ownerUid === currentUser.uid),
+  )
 
   const closeSheetPanel = () => {
     setSheetForm(createSheetForm(characterSheet))
@@ -218,25 +230,60 @@ function MyProfile({ onNavigate }) {
   const handleSavePublic = async (event) => {
     event.preventDefault()
 
-    if (!hero?.id) return
+    if (!hero?.id && !isLoggedIn) return
 
     setIsSavingPublic(true)
     setPublicMessage('')
     setPublicError('')
 
     try {
-      await updateHero(hero.id, {
-        alias: publicForm.alias.trim(),
+            const publicPayload = {
+        alias: (publicForm.alias || userProfile?.heroName || userProfile?.displayName || '').trim(),
         publicName: publicForm.publicName.trim(),
         codename: publicForm.codename.trim(),
         heroTitle: publicForm.heroTitle.trim(),
         publicBio: publicForm.publicBio.trim(),
         publicPowers: normalizeList(publicForm.publicPowers),
+        affiliationLabel: publicForm.affiliationLabel.trim(),
         avatarUrl: publicForm.avatarUrl.trim(),
-        bannerUrl: publicForm.bannerUrl.trim(),
-      })
+        mageUrl: publicForm.imageUrl.trim(),
+        bannerUrl: publicForm.imageUrl.trim(),
+        visibility: publicForm.visibility || 'public',
+      }
 
-      setPublicMessage('Configuración pública guardada correctamente.')
+      if (!publicPayload.alias) {
+        setPublicError('Ingresa un nombre de héroe o alias.')
+        setIsSavingPublic(false)
+        return
+      }
+
+      if (!hero?.id) {
+        const createdHero = await createHero({
+          ...publicPayload,
+          active: true,
+          citizenApproval: 50,
+          createdByUid: currentUser.uid,
+          isPlayerHero: true,
+          ownerUid: currentUser.uid,
+          rankingPoints: 0,
+        })
+
+        await updateUserProfile(currentUser.uid, {
+          avatarUrl: userProfile?.avatarUrl ?? '',
+          displayName: userProfile?.displayName || publicPayload.alias,
+          heroId: createdHero.id,
+          heroName: publicPayload.alias,
+        })
+
+        setPublicMessage('Perfil heroico creado.')
+      } else if (!canEditCurrentHero) {
+        setPublicError('No puedes editar este perfil.')
+        return
+      } else {
+        await updateHero(hero.id, publicPayload)
+        setPublicMessage('Perfil actualizado.')
+      }
+
       setIsEditingPublic(false)
     } catch {
       setPublicError('No fue posible guardar los cambios.')
@@ -309,25 +356,43 @@ function MyProfile({ onNavigate }) {
   }
 
   if (!resolvedHeroId) {
-    return (
-      <div className="page-card my-profile-page my-profile-state">
-        <span className="section-kicker">Módulo de jugador</span>
-        <h2>{isLoggedIn ? 'Completa tu vínculo heroico' : 'Mi Perfil'}</h2>
-        <p>{isLoggedIn ? 'Tu cuenta HeroIndex está activa, pero aún no tiene un héroe vinculado.' : 'No hay héroe vinculado a esta sesión.'}</p>
-        <div className="my-profile-state__actions">
-        {isLoggedIn ? (
-            <>
-              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('onboarding')} type="button">Completar onboarding</button>
-              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">Mi Cuenta</button>
-              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('profiles')} type="button">Explorar perfiles</button>
-            </>
-          ) : (
-            <>
-              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
-              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
-            </>
-          )}
+    if (!isLoggedIn) {
+      return (
+        <div className="page-card my-profile-page my-profile-state">
+          <span className="section-kicker">Módulo de jugador</span>
+          <h2>Mi Perfil</h2>
+          <p>Inicia sesión o crea una cuenta para construir tu perfil heroico público.</p>
+          <div className="my-profile-state__actions">
+            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
+            <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+          </div>
         </div>
+         )
+    }
+
+    return (
+      <div className="my-profile-page hi-page hi-page-wide">
+        <section className="page-card hi-card hi-card-player my-profile-panel">
+          <span className="section-kicker">Crear Mi Perfil</span>
+          <h2>Completa tu perfil heroico</h2>
+          <p>Mi Perfil es donde nace tu existencia pública dentro de HeroIndex. Crea tu héroe y luego edita solo su información pública.</p>
+          {publicMessage && <p className="my-profile-feedback my-profile-feedback--success hi-state-card hi-state-card--success">{publicMessage}</p>}
+          {publicError && <p className="my-profile-feedback my-profile-feedback--error hi-state-card hi-state-card--error">{publicError}</p>}
+          <form className="my-profile-form hi-form" onSubmit={handleSavePublic}>
+            <label className="hi-field"><span className="hi-label">Nombre de héroe / alias</span><input className="hi-input" value={publicForm.alias || userProfile?.heroName || userProfile?.displayName || ''} onChange={(event) => handlePublicFormChange('alias', event.target.value)} /></label>
+            <label className="hi-field"><span className="hi-label">Título heroico</span><input className="hi-input" value={publicForm.heroTitle} onChange={(event) => handlePublicFormChange('heroTitle', event.target.value)} /></label>
+            <label className="hi-field my-profile-form__wide"><span className="hi-label">Biografía pública</span><textarea className="hi-textarea" rows="5" value={publicForm.publicBio} onChange={(event) => handlePublicFormChange('publicBio', event.target.value)} /></label>
+            <label className="hi-field my-profile-form__wide"><span className="hi-label">Poderes visibles</span><input className="hi-input" value={publicForm.publicPowers} onChange={(event) => handlePublicFormChange('publicPowers', event.target.value)} placeholder="Separados por coma" /></label>
+            <label className="hi-field"><span className="hi-label">Afiliación pública</span><input className="hi-input" value={publicForm.affiliationLabel} onChange={(event) => handlePublicFormChange('affiliationLabel', event.target.value)} /></label>
+            <label className="hi-field"><span className="hi-label">Avatar URL</span><input className="hi-input" value={publicForm.avatarUrl} onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)} /></label>
+            <label className="hi-field"><span className="hi-label">Imagen URL</span><input className="hi-input" value={publicForm.imageUrl} onChange={(event) => handlePublicFormChange('imageUrl', event.target.value)} /></label>
+            <label className="hi-field"><span className="hi-label">Visibilidad pública</span><select className="hi-input" value={publicForm.visibility} onChange={(event) => handlePublicFormChange('visibility', event.target.value)}><option value="public">Pública</option><option value="private">Privada</option></select></label>
+            <div className="my-profile-form__actions hi-quick-actions">
+              <button className="hi-button hi-button-primary" type="submit" disabled={isSavingPublic}>{isSavingPublic ? 'Guardando...' : 'Crear perfil heroico'}</button>
+              <button className="hi-button hi-button-secondary" type="button" onClick={() => onNavigate?.('account')} disabled={isSavingPublic}>Mi Cuenta</button>
+            </div>
+          </form>
+        </section>
       </div>
     )
   }
@@ -347,7 +412,7 @@ function MyProfile({ onNavigate }) {
       <div className="page-card my-profile-page my-profile-state">
         <span className="section-kicker">Módulo de jugador</span>
         <h2>Mi Perfil</h2>
-        <p>No se encontró el héroe vinculado.</p>
+       <p>No se encontró el héroe asociado a tu cuenta. Puedes completar Mi Perfil para crear uno nuevo.</p>
       </div>
     )
   }
@@ -459,7 +524,7 @@ function MyProfile({ onNavigate }) {
                 <h3>Presentación en HeroIndex</h3>
                 <p>Edita únicamente los campos públicos permitidos de tu identidad heroica.</p>
               </div>
-              {!isEditingPublic && (
+              {!isEditingPublic && canEditCurrentHero && (
                 <button className="hi-button hi-button-secondary" type="button" onClick={handleStartEditPublic}>
                   Editar presentación pública
                 </button>
@@ -472,7 +537,7 @@ function MyProfile({ onNavigate }) {
             {isEditingPublic ? (
               <form className="my-profile-form hi-form" onSubmit={handleSavePublic}>
                 <label className="hi-field">
-                  <span className="hi-label">Alias</span>
+                  <span className="hi-label">Nombre de héroe / alias</span>
                   <input className="hi-input" value={publicForm.alias} onChange={(event) => handlePublicFormChange('alias', event.target.value)} />
                 </label>
                 <label className="hi-field">
@@ -500,8 +565,16 @@ function MyProfile({ onNavigate }) {
                   <input className="hi-input" value={publicForm.avatarUrl} onChange={(event) => handlePublicFormChange('avatarUrl', event.target.value)} />
                 </label>
                 <label className="hi-field">
-                  <span className="hi-label">Portada URL</span>
-                  <input className="hi-input" value={publicForm.bannerUrl} onChange={(event) => handlePublicFormChange('bannerUrl', event.target.value)} />
+                   <span className="hi-label">Afiliación pública</span>
+                  <input className="hi-input" value={publicForm.affiliationLabel} onChange={(event) => handlePublicFormChange('affiliationLabel', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Imagen URL</span>
+                  <input className="hi-input" value={publicForm.imageUrl} onChange={(event) => handlePublicFormChange('imageUrl', event.target.value)} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Visibilidad pública</span>
+                  <select className="hi-input" value={publicForm.visibility} onChange={(event) => handlePublicFormChange('visibility', event.target.value)}><option value="public">Pública</option><option value="private">Privada</option></select>
                 </label>
 
                 <div className="my-profile-form__actions hi-quick-actions">
@@ -534,7 +607,7 @@ function MyProfile({ onNavigate }) {
                 </button>
               ) : (
                 <p className="my-profile-empty-state hi-state-card hi-state-card--error">
-                  No hay hoja RPG vinculada a este héroe. Contacta a ORÁCULO/GM.
+                  No hay hoja RPG disponible para este héroe. Contacta a GM.
                 </p>
               )}
               <button className="hi-button hi-button-secondary" type="button" onClick={handleStartEditPublic}>
@@ -577,6 +650,21 @@ function MyProfile({ onNavigate }) {
               </div>
             </dl>
           </section>
+
+{canViewOraculoLayer ? (
+            <section className="page-card hi-card hi-card-oracle my-profile-private-note">
+              <span className="section-kicker">Capa ORÁCULO</span>
+              <h3>Dossier interno</h3>
+              <p>Esta fase implementa role gate frontend para demo. Para producción, roles y propiedad deben reforzarse con Firebase Security Rules y/o custom claims.</p>
+              <dl className="my-profile-side-metrics">
+                <div><dt>Owner UID</dt><dd>{hero.ownerUid || '—'}</dd></div>
+                <div><dt>Created by UID</dt><dd>{hero.createdByUid || '—'}</dd></div>
+                <div><dt>Riesgo</dt><dd>{hero.risk || 'Sin señal'}</dd></div>
+                <div><dt>Flags</dt><dd>{normalizeList(hero.flags).join(', ') || 'Sin flags'}</dd></div>
+              </dl>
+              {hero.gmNotes ? <p>{hero.gmNotes}</p> : null}
+            </section>
+          ) : null}
 
           <section className="page-card hi-card hi-card-player my-profile-private-note">
             <span className="section-kicker">Privacidad de identidad</span>

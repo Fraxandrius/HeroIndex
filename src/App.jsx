@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { RequireOraculo, RequirePlayer } from './components/auth/RouteGuards.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Account from './pages/Account.jsx'
 import Corporations from './pages/Corporations.jsx'
@@ -45,26 +46,29 @@ const routes = [
     hiddenFromNav: true,
     navGroup: 'public',
   },
-  { id: 'login', label: 'Iniciar sesión', path: '/login', component: Login, hiddenFromNav: true, navGroup: 'player' },
-  { id: 'register', label: 'Crear cuenta', path: '/register', component: Register, hiddenFromNav: true, navGroup: 'player' },
-  { id: 'onboarding', label: 'Onboarding', path: '/onboarding', component: Onboarding, hiddenFromNav: true, navGroup: 'player' },
-  { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
-  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
-  { id: 'account', label: 'Mi Cuenta', path: '/cuenta', component: Account, navGroup: 'player' },
-  { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle' },
+   { id: 'login', label: 'Iniciar sesión', path: '/login', component: Login, navGroup: 'access' },
+  { id: 'register', label: 'Crear cuenta', path: '/register', component: Register, navGroup: 'access' },
+  { id: 'onboarding', label: 'Onboarding', path: '/onboarding', component: Onboarding, hiddenFromNav: true, navGroup: 'player', requiresPlayer: true },
+  { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player', requiresPlayer: true },
+  { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player', requiresPlayer: true },
+  { id: 'account', label: 'Mi Cuenta', path: '/cuenta', component: Account, navGroup: 'player', requiresPlayer: true },
+  { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle', requiresOracle: true },
   {
      id: 'gm-manager',
     label: 'GM Manager',
     path: '/gm-manager',
     component: GMManager,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'mission-calculator',
     label: 'Calculadora de misión',
     path: '/mission-calculator',
     component: MissionCalculator,
+    hiddenFromNav: true,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-karma-manager',
@@ -72,13 +76,16 @@ const routes = [
     path: '/oraculo/karma-manager',
     component: OraculoKarmaManager,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-broadcasts',
     label: 'Señales públicas',
     path: '/oraculo/broadcasts',
     component: OraculoBroadcasts,
+    hiddenFromNav: true,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-newsroom',
@@ -86,6 +93,7 @@ const routes = [
     path: '/oraculo/newsroom',
     component: OraculoNewsroom,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-player-requests',
@@ -93,6 +101,7 @@ const routes = [
     path: '/oraculo/player-requests',
     component: OraculoPlayerRequests,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
    {
     id: 'oraculo-campaign-log',
@@ -100,6 +109,7 @@ const routes = [
     path: '/oraculo/campaign-log',
     component: OraculoCampaignLog,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-npc-builder',
@@ -107,6 +117,7 @@ const routes = [
     path: '/oraculo/npc-builder',
     component: OraculoNpcBuilder,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-npc-import',
@@ -114,6 +125,7 @@ const routes = [
     path: '/oraculo/npc-import',
     component: OraculoNpcImport,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'oraculo-hero-dossier',
@@ -122,6 +134,7 @@ const routes = [
     component: OraculoHeroDossier,
     hiddenFromNav: true,
     navGroup: 'oracle',
+    requiresOracle: true,
   },
   {
     id: 'gm-panel',
@@ -129,6 +142,7 @@ const routes = [
     path: '/gm-panel',
     component: GMPanel,
     hiddenFromNav: true,
+    requiresOracle: true,
   },
 ]
 
@@ -178,12 +192,20 @@ function App() {
     setActiveRouteState({ id: routeId, params })
   }
 
+  const page = <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
+  const guardedPage = activeRoute.requiresOracle ? (
+    <RequireOraculo onNavigate={handleNavigate}>{page}</RequireOraculo>
+  ) : activeRoute.requiresPlayer ? (
+    <RequirePlayer onNavigate={handleNavigate}>{page}</RequirePlayer>
+  ) : page
+
   return (
     <AppShell
       activeRouteId={activeRoute.id}
       routes={routes}
       onNavigate={handleNavigate}
     >
+      {guardedPage}
       <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
     </AppShell>
   )

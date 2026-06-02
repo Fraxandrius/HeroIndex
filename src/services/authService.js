@@ -105,7 +105,7 @@ export async function createOrUpdateUserProfile(uid, data = {}) {
   return payload
 }
 
-export async function registerWithHeroIndexUsername({ displayName, password, username }) {
+export async function registerWithHeroIndexUsername({ displayName, heroName, password, username }) {
   const normalizedUsername = normalizeHeroIndexUsername(username)
 
   if (normalizedUsername.length < 3) {
@@ -128,9 +128,9 @@ export async function registerWithHeroIndexUsername({ displayName, password, use
       authEmail,
       avatarUrl: '',
       createdAt: timestamp,
-      displayName: displayName?.trim() || username.trim(),
+      displayName: (heroName ?? displayName)?.trim() || username.trim(),
       heroId: '',
-      role: 'player',
+      heroName: (heroName ?? displayName)?.trim() || username.trim(),
       username: normalizedUsername,
     })
 
@@ -224,6 +224,7 @@ export async function updateUserProfile(uid, data = {}) {
     displayName: data.displayName ?? '',
     heroId: data.heroId ?? '',
     updatedAt: Date.now(),
+    heroName: data.heroName ?? data.displayName ?? '',
   }
 
   await update(ref(database, `${USERS_PATH}/${uid}`), allowedData)

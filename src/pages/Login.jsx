@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth.js'
 import { getUserProfile, loginWithHeroIndexUsername } from '../services/authService.js'
+import { canSeeOraculoTools } from '../utils/roles.js'
 
 function Login({ onNavigate }) {
   const { isLoggedIn, loading: sessionLoading, logout, userProfile } = useAuth()
@@ -44,7 +45,7 @@ function Login({ onNavigate }) {
     try {
       const user = await loginWithHeroIndexUsername({ password, username })
       const profile = await getUserProfile(user.uid).catch(() => null)
-      onNavigate?.(profile?.heroId ? 'my-profile' : 'onboarding')
+      onNavigate?.(canSeeOraculoTools(profile) ? 'oraculo-hub' : 'my-profile')
     } catch (loginError) {
       setMessage('')
       setError(loginError.message || 'No fue posible iniciar sesión.')
@@ -70,10 +71,10 @@ function Login({ onNavigate }) {
           <p>{userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'} ya forma parte del ecosistema HeroIndex en este dispositivo.</p>
           <div className="account-social-badges">
             <span className="hi-chip">Cuenta HeroIndex activa</span>
-            <span className="hi-chip">{userProfile?.heroId ? 'Héroe vinculado' : 'Vinculación pendiente'}</span>
+            <span className="hi-chip">{userProfile?.heroId ? 'Perfil heroico activo' : 'Perfil heroico incompleto'}</span>
           </div>
           <div className="account-actions">
-            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.(userProfile?.heroId ? 'my-profile' : 'onboarding')} type="button">
+            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('my-profile')} type="button">
               Ir a Mi Perfil
             </button>
             <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">

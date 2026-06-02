@@ -5,13 +5,13 @@ import { buildHeroIndexEmail, normalizeHeroIndexUsername, registerWithHeroIndexU
 function Register({ onNavigate }) {
   const { isLoggedIn, loading: sessionLoading, logout, userProfile } = useAuth()
   const [username, setUsername] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [heroName, setHeroName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
-  const displayNameRef = useRef(null)
+  const heroNameRef = useRef(null)
   const passwordRef = useRef(null)
   const confirmPasswordRef = useRef(null)
 
@@ -66,9 +66,9 @@ function Register({ onNavigate }) {
     setMessage('Creando cuenta HeroIndex...')
 
     try {
-      await registerWithHeroIndexUsername({ displayName, password, username })
+      await registerWithHeroIndexUsername({ heroName, password, username })
       setMessage('Cuenta creada correctamente.')
-      onNavigate?.('onboarding')
+      onNavigate?.('my-profile')
     } catch (registerError) {
       setMessage('')
       setError(registerError.message || 'No fue posible crear la cuenta.')
@@ -94,10 +94,10 @@ function Register({ onNavigate }) {
           <p>{userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'} ya tiene identidad dentro del ecosistema HeroIndex.</p>
           <div className="account-social-badges">
             <span className="hi-chip">Cuenta HeroIndex activa</span>
-            <span className="hi-chip">{userProfile?.heroId ? 'Héroe vinculado' : 'Vinculación pendiente'}</span>
+            <span className="hi-chip">{userProfile?.heroId ? 'Perfil heroico activo' : 'Perfil heroico incompleto'}</span>
           </div>
           <div className="account-actions">
-            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.(userProfile?.heroId ? 'my-profile' : 'onboarding')} type="button">
+            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('my-profile')} type="button">
               Ir a Mi Perfil
             </button>
             <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">
@@ -119,7 +119,7 @@ function Register({ onNavigate }) {
         <header className="auth-card__header">
           <p className="page-card__kicker">Comunidad HeroIndex</p>
           <h2>Crear cuenta HeroIndex</h2>
-          <p>Crea una identidad interna HeroIndex para vincularte a tu héroe y participar en la comunidad.</p>
+          <p>Crea tu identidad HeroIndex. Tu nombre de héroe será la base de tu perfil público.</p>
         </header>
 
         <p className="auth-card__help">
@@ -137,7 +137,7 @@ function Register({ onNavigate }) {
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 event.preventDefault()
-                displayNameRef.current?.focus()
+                heroNameRef.current?.focus()
               }
             }}
             placeholder="Ej: Viento Sur"
@@ -146,20 +146,20 @@ function Register({ onNavigate }) {
           />
         </label>
         <label className="hi-field">
-          <span className="hi-label">Nombre visible</span>
+          <span className="hi-label">Nombre de héroe</span>
           <input
             className="hi-input"
-            onChange={(event) => setDisplayName(event.target.value)}
+            onChange={(event) => setHeroName(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 event.preventDefault()
                 passwordRef.current?.focus()
               }
             }}
-            placeholder="Cómo aparecerás dentro de HeroIndex"
-            ref={displayNameRef}
+            placeholder="Ej: Cóndor Austral"
+            ref={heroNameRef}
             type="text"
-            value={displayName}
+            value={heroName}
           />
         </label>
         <label className="hi-field">
