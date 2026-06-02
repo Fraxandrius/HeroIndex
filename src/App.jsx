@@ -206,7 +206,6 @@ function App() {
       onNavigate={handleNavigate}
     >
       {guardedPage}
-      <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
     </AppShell>
   )
 }
