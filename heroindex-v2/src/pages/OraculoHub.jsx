@@ -248,6 +248,11 @@ function OraculoHub({ onNavigate }) {
     karmaTransactionsLoading
   const error = heroesError || corporationsError || newsError || missionCalculationsError || campaignLogsError
   const quickLinks = [
+    {
+      description: 'Revisar solicitudes de vinculación heroica de jugadores.',
+      label: 'Solicitudes de jugadores',
+      routeId: 'oraculo-player-requests',
+    },
         {
       description: 'Crear y revisar señales públicas institucionales.',
       label: 'Señales públicas',

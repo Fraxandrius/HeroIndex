@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { buildHeroIndexEmail, normalizeHeroIndexUsername, registerWithHeroIndexUsername } from '../services/authService.js'
 
 function Register({ onNavigate }) {
+  const { isLoggedIn, loading: sessionLoading, logout, userProfile } = useAuth()
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
@@ -32,6 +34,23 @@ function Register({ onNavigate }) {
     return ''
   }
 
+  const handleLogout = async () => {
+    setSaving(true)
+    setError('')
+    setMessage('Cerrando sesión...')
+
+    try {
+      await logout()
+      setMessage('')
+      onNavigate?.('login')
+    } catch {
+      setMessage('')
+      setError('No fue posible cerrar sesión.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     const validationError = validate()
@@ -49,7 +68,7 @@ function Register({ onNavigate }) {
     try {
       await registerWithHeroIndexUsername({ displayName, password, username })
       setMessage('Cuenta creada correctamente.')
-      onNavigate?.('account')
+      onNavigate?.('onboarding')
     } catch (registerError) {
       setMessage('')
       setError(registerError.message || 'No fue posible crear la cuenta.')
@@ -58,13 +77,49 @@ function Register({ onNavigate }) {
     }
   }
 
+  if (sessionLoading) {
+    return (
+      <section className="auth-page hi-page hi-page-wide hi-state-card">
+        <p>Restaurando sesión HeroIndex...</p>
+      </section>
+    )
+  }
+
+  if (isLoggedIn) {
+    return (
+      <section className="auth-page hi-page hi-page-wide">
+        <div className="auth-card auth-card--active-session hi-card hi-card-player">
+          <p className="page-card__kicker">Sesión HeroIndex</p>
+          <h2>Ya tienes una sesión activa.</h2>
+          <p>{userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'} ya tiene identidad dentro del ecosistema HeroIndex.</p>
+          <div className="account-social-badges">
+            <span className="hi-chip">Cuenta HeroIndex activa</span>
+            <span className="hi-chip">{userProfile?.heroId ? 'Héroe vinculado' : 'Vinculación pendiente'}</span>
+          </div>
+          <div className="account-actions">
+            <button className="hi-button hi-button-primary" onClick={() => onNavigate?.(userProfile?.heroId ? 'my-profile' : 'onboarding')} type="button">
+              Ir a Mi Perfil
+            </button>
+            <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">
+              Mi Cuenta
+            </button>
+            <button className="hi-button hi-button-danger" disabled={saving} onClick={handleLogout} type="button">
+              Cerrar sesión
+            </button>
+          </div>
+          {error ? <p className="hi-state-card hi-state-card--error">{error}</p> : null}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="auth-page hi-page hi-page-wide">
       <form className="auth-card hi-card hi-card-player hi-form" onSubmit={handleSubmit}>
         <header className="auth-card__header">
           <p className="page-card__kicker">Comunidad HeroIndex</p>
           <h2>Crear cuenta HeroIndex</h2>
-          <p>Registra tu identidad interna y únete a la comunidad HeroIndex.</p>
+          <p>Crea una identidad interna HeroIndex para vincularte a tu héroe y participar en la comunidad.</p>
         </header>
 
         <p className="auth-card__help">

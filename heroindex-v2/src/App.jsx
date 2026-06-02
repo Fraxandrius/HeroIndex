@@ -18,6 +18,8 @@ import OraculoHub from './pages/OraculoHub.jsx'
 import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
 import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
+import OraculoPlayerRequests from './pages/OraculoPlayerRequests.jsx'
+import Onboarding from './pages/Onboarding.jsx'
 import Profiles from './pages/Profiles.jsx'
 import Register from './pages/Register.jsx'
 import Ranking from './pages/Ranking.jsx'
@@ -44,6 +46,7 @@ const routes = [
   },
   { id: 'login', label: 'Iniciar sesión', path: '/login', component: Login, hiddenFromNav: true, navGroup: 'player' },
   { id: 'register', label: 'Crear cuenta', path: '/register', component: Register, hiddenFromNav: true, navGroup: 'player' },
+  { id: 'onboarding', label: 'Onboarding', path: '/onboarding', component: Onboarding, hiddenFromNav: true, navGroup: 'player' },
   { id: 'my-profile', label: 'Mi Perfil', path: '/mi-perfil', component: MyProfile, navGroup: 'player' },
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player' },
   { id: 'account', label: 'Mi Cuenta', path: '/cuenta', component: Account, navGroup: 'player' },
@@ -74,6 +77,13 @@ const routes = [
     label: 'Señales públicas',
     path: '/oraculo/broadcasts',
     component: OraculoBroadcasts,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-player-requests',
+    label: 'Solicitudes de jugadores',
+    path: '/oraculo/player-requests',
+    component: OraculoPlayerRequests,
     navGroup: 'oracle',
   },
    {

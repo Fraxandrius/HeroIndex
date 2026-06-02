@@ -6,9 +6,19 @@ const navSections = [
   { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas GM' },
 ]
 
+function getInitials(value = 'HI') {
+  return value
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
 function Sidebar({ activeRouteId, onNavigate, routes }) {
   const { isLoggedIn, loading, logout, userProfile } = useAuth()
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
+const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
 
   const handleLogout = async () => {
     await logout()
@@ -64,16 +74,37 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
       
       <section className="sidebar__user" aria-label="Cuenta de jugador">
         {loading ? (
-          <span>Cargando cuenta...</span>
+          <span>Restaurando sesión HeroIndex...</span>
         ) : isLoggedIn ? (
           <>
-            <strong>{userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'}</strong>
-            <button className="sidebar__link" onClick={() => onNavigate('account')} type="button">
-              Mi Cuenta
-            </button>
-            <button className="sidebar__link sidebar__link--subtle" onClick={handleLogout} type="button">
-              Cerrar sesión
-            </button>
+            <div className="sidebar-user-card">
+              <div className="sidebar-user-card__avatar">
+                {userProfile?.avatarUrl ? <img alt="Avatar de cuenta" src={userProfile.avatarUrl} /> : <span>{getInitials(userName)}</span>}
+              </div>
+              <div>
+                <strong>{userName}</strong>
+                <small>Cuenta HeroIndex activa</small>
+              </div>
+            </div>
+             {!userProfile?.heroId ? (
+              <button className="sidebar__link sidebar__link--highlight" onClick={() => onNavigate('onboarding')} type="button">
+                Completar onboarding
+              </button>
+            ) : null}
+            <div className="sidebar-user-actions">
+              <button className="sidebar__link" disabled={!userProfile?.heroId} onClick={() => onNavigate('my-profile')} type="button">
+                Mi Perfil
+              </button>
+              <button className="sidebar__link" onClick={() => onNavigate('account')} type="button">
+                Mi Cuenta
+              </button>
+              <button className="sidebar__link" disabled={!userProfile?.heroId} onClick={() => onNavigate('karma')} type="button">
+                Karma
+              </button>
+              <button className="sidebar__link sidebar__link--subtle" onClick={handleLogout} type="button">
+                Cerrar sesión
+              </button>
+            </div>
           </>
         ) : (
           <>

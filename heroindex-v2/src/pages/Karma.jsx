@@ -45,9 +45,9 @@ function getManualAmount(value) {
 }
 
 function Karma({ onNavigate }) {
-  const { loading: authLoading, userProfile } = useAuth()
+   const { isLoggedIn, loading: authLoading, userProfile } = useAuth()
   const accountHeroId = userProfile?.heroId ?? ''
-  const resolvedHeroId = accountHeroId || playerHeroId
+  const resolvedHeroId = isLoggedIn ? accountHeroId : playerHeroId
   const [characterSheet, setCharacterSheet] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [campaignLogs, setCampaignLogs] = useState([])
@@ -202,11 +202,19 @@ function Karma({ onNavigate }) {
   if (!resolvedHeroId) {
     return (
       <section className="page-card page-card--player karma-page hi-page hi-page-wide hi-state-card">
-          <p>No hay héroe vinculado a esta cuenta.</p>
+           <p>{isLoggedIn ? 'Vincula un héroe para revisar tu progreso de Karma.' : 'No hay héroe vinculado a esta sesión.'}</p>
         <div className="account-actions">
-          <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('account')} type="button">Vincular héroe</button>
-          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
-          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+         {isLoggedIn ? (
+            <>
+              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('onboarding')} type="button">Completar onboarding</button>
+              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">Mi Cuenta</button>
+            </>
+          ) : (
+            <>
+              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
+              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+            </>
+          )}
         </div>
       </section>
     )

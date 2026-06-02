@@ -121,8 +121,8 @@ function MyProfile({ onNavigate }) {
   const { getCorporationById, loading: corporationsLoading, error: corporationsError } = useCorporations()
   const [characterSheet, setCharacterSheet] = useState(null)
   const accountHeroId = userProfile?.heroId ?? ''
-  const resolvedHeroId = accountHeroId || playerHeroId
-  const isUsingFallbackHero = Boolean(!accountHeroId && playerHeroId)
+  const resolvedHeroId = isLoggedIn ? accountHeroId : playerHeroId
+  const isUsingFallbackHero = Boolean(!isLoggedIn && playerHeroId)
   const [sheetLoading, setSheetLoading] = useState(false)
   const [sheetError, setSheetError] = useState(null)
   const [isEditingPublic, setIsEditingPublic] = useState(false)
@@ -312,12 +312,21 @@ function MyProfile({ onNavigate }) {
     return (
       <div className="page-card my-profile-page my-profile-state">
         <span className="section-kicker">Módulo de jugador</span>
-        <h2>Mi Perfil</h2>
-        <p>No hay héroe vinculado a esta cuenta.</p>
+        <h2>{isLoggedIn ? 'Completa tu vínculo heroico' : 'Mi Perfil'}</h2>
+        <p>{isLoggedIn ? 'Tu cuenta HeroIndex está activa, pero aún no tiene un héroe vinculado.' : 'No hay héroe vinculado a esta sesión.'}</p>
         <div className="my-profile-state__actions">
-          <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('account')} type="button">Vincular héroe</button>
-          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
-          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+        {isLoggedIn ? (
+            <>
+              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('onboarding')} type="button">Completar onboarding</button>
+              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">Mi Cuenta</button>
+              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('profiles')} type="button">Explorar perfiles</button>
+            </>
+          ) : (
+            <>
+              <button className="hi-button hi-button-primary" onClick={() => onNavigate?.('login')} type="button">Iniciar sesión</button>
+              <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('register')} type="button">Crear cuenta</button>
+            </>
+          )}
         </div>
       </div>
     )
@@ -384,11 +393,11 @@ function MyProfile({ onNavigate }) {
         </div>
       </header>
 
-      {isLoggedIn && !accountHeroId && isUsingFallbackHero ? (
+      {isUsingFallbackHero ? (
         <section className="hi-state-card my-profile-account-callout">
-          <p>Tu cuenta aún no tiene un héroe vinculado.</p>
-          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('account')} type="button">
-            Ir a Mi Cuenta
+          <p>Usando el héroe de desarrollo configurado para esta sesión.</p>
+          <button className="hi-button hi-button-secondary" onClick={() => onNavigate?.('login')} type="button">
+            Iniciar sesión
           </button>
         </section>
       ) : null}

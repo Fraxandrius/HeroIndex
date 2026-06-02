@@ -7176,3 +7176,424 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.onboarding-page,
+.oraculo-player-requests {
+  width: 100%;
+}
+
+.onboarding-hero,
+.oraculo-player-requests__hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  background:
+    radial-gradient(circle at top right, rgba(94, 234, 212, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 17, 32, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.onboarding-hero__lead {
+  color: #f8fafc;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 700;
+}
+
+.onboarding-progress,
+.oraculo-player-requests__metrics,
+.onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.onboarding-panel,
+.oraculo-player-request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onboarding-panel__header h3,
+.oraculo-player-request-card h3 {
+  color: #f8fafc;
+  margin: 0.2rem 0;
+}
+
+.onboarding-identity-card {
+  align-self: flex-start;
+}
+
+.onboarding-hero-list {
+  display: grid;
+  gap: 0.65rem;
+  max-height: 430px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.onboarding-hero-option {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  color: #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.onboarding-hero-option:hover,
+.onboarding-hero-option:focus-visible,
+.onboarding-hero-option--selected {
+  border-color: rgba(94, 234, 212, 0.72);
+  box-shadow: 0 16px 36px rgba(8, 145, 178, 0.18);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.onboarding-hero-option img,
+.onboarding-hero-option > span,
+.onboarding-linked-hero img,
+.onboarding-linked-hero > span {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.3), rgba(234, 191, 79, 0.22));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  color: #f8fafc;
+  display: inline-flex;
+  flex: 0 0 54px;
+  font-weight: 900;
+  height: 54px;
+  justify-content: center;
+  object-fit: cover;
+  width: 54px;
+}
+
+.onboarding-selected,
+.onboarding-pending-request p {
+  color: #bae6fd;
+  font-weight: 700;
+}
+
+.onboarding-panel--confirmation {
+  grid-column: 1 / -1;
+}
+
+.onboarding-linked-hero {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.account-onboarding-callout {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.oraculo-player-requests__list {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.oraculo-player-request-card {
+  background:
+    linear-gradient(135deg, rgba(24, 15, 42, 0.94), rgba(8, 17, 32, 0.96)),
+    radial-gradient(circle at top left, rgba(168, 85, 247, 0.16), transparent 36%);
+}
+
+.oraculo-player-request-card__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 1rem;
+}
+
+.oraculo-player-request-card__meta {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.oraculo-player-request-card__meta div {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  padding: 0.65rem;
+}
+
+.oraculo-player-request-card__meta dt {
+  color: #bae6fd;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.oraculo-player-request-card__meta dd {
+  color: #f8fafc;
+  margin: 0.2rem 0 0;
+}
+
+.oraculo-player-request-card__actions {
+  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) repeat(3, auto);
+  gap: 0.75rem;
+}
+
+.sidebar__link--highlight {
+  border-color: rgba(234, 191, 79, 0.58);
+  color: #fde68a;
+}
+
+@media (max-width: 920px) {
+  .onboarding-hero,
+  .oraculo-player-requests__hero,
+  .account-onboarding-callout,
+  .onboarding-linked-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .onboarding-grid,
+  .oraculo-player-request-card__content,
+  .oraculo-player-request-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-page--social {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-social-hero,
+.auth-card--active-session {
+  background:
+    radial-gradient(circle at top left, rgba(234, 191, 79, 0.16), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 17, 32, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.account-social-hero {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.account-social-identity,
+.sidebar-user-card,
+.account-hero-card {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.account-social-avatar,
+.sidebar-user-card__avatar,
+.account-hero-card > span,
+.account-hero-option > span {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.34), rgba(234, 191, 79, 0.28));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.account-social-avatar,
+.account-social-avatar img {
+  border-radius: 30px;
+  height: 96px;
+  width: 96px;
+}
+
+.account-social-avatar img,
+.sidebar-user-card__avatar img,
+.account-hero-card img,
+.account-hero-option img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.account-social-summary {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 22px;
+  color: #cbd5e1;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 240px;
+  padding: 1rem;
+}
+
+.account-social-summary strong {
+  color: #f8fafc;
+  font-size: 1.1rem;
+}
+
+.account-social-badges,
+.sidebar-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.account-social-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.35fr);
+  gap: 1rem;
+}
+
+.account-social-main,
+.account-social-side,
+.account-hero-selector,
+.account-hero-options {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-social-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-hero-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 22px;
+  padding: 1rem;
+}
+
+.account-hero-card img,
+.account-hero-card > span {
+  border-radius: 22px;
+  flex: 0 0 76px;
+  height: 76px;
+  width: 76px;
+}
+
+.account-hero-card strong,
+.account-selected-hero {
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.account-link-callout {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.account-hero-options {
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.account-hero-option {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  color: #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.account-hero-option:hover,
+.account-hero-option:focus-visible,
+.account-hero-option--selected {
+  border-color: rgba(234, 191, 79, 0.7);
+  box-shadow: 0 16px 34px rgba(234, 191, 79, 0.12);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.account-hero-option img,
+.account-hero-option > span {
+  border-radius: 16px;
+  flex: 0 0 52px;
+  height: 52px;
+  width: 52px;
+}
+
+.account-security-card p {
+  color: #cbd5e1;
+}
+
+.sidebar-user-card {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 0.75rem;
+}
+
+.sidebar-user-card__avatar {
+  border-radius: 14px;
+  flex: 0 0 42px;
+  height: 42px;
+  width: 42px;
+}
+
+.sidebar-user-card small {
+  color: #bae6fd;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.sidebar-user-actions {
+  flex-direction: column;
+  width: 100%;
+}
+
+.onboarding-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.auth-card--active-session {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (max-width: 980px) {
+  .account-social-hero,
+  .account-social-identity {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .account-social-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-social-summary {
+    width: 100%;
+  }
+}
