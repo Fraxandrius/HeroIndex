@@ -116,16 +116,7 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
               </button>
             </div>
           </>
-        ) : (
-          <>
-            <button className="sidebar__link" onClick={() => onNavigate('login')} type="button">
-              Iniciar sesión
-            </button>
-            <button className="sidebar__link sidebar__link--subtle" onClick={() => onNavigate('register')} type="button">
-              Crear cuenta
-            </button>
-          </>
-        )}
+          ) : null}
       </section>
     </aside>
   )
