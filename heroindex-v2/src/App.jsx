@@ -16,6 +16,7 @@ import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
 import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
 import OraculoHub from './pages/OraculoHub.jsx'
 import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
+import OraculoNewsroom from './pages/OraculoNewsroom.jsx'
 import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
 import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
 import OraculoPlayerRequests from './pages/OraculoPlayerRequests.jsx'
@@ -77,6 +78,13 @@ const routes = [
     label: 'Señales públicas',
     path: '/oraculo/broadcasts',
     component: OraculoBroadcasts,
+    navGroup: 'oracle',
+  },
+  {
+    id: 'oraculo-newsroom',
+    label: 'Mesa Editorial',
+    path: '/oraculo/newsroom',
+    component: OraculoNewsroom,
     navGroup: 'oracle',
   },
   {

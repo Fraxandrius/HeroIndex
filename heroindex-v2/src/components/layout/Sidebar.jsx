@@ -1,10 +1,13 @@
+import BrandLogo from '../BrandLogo.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 
 const navSections = [
   { id: 'public', label: 'Público', description: 'Noticias · Perfiles · Ranking' },
-  { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma' },
-  { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas GM' },
+   { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma', requiresLogin: true },
+  { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas GM', requiresOracle: true },
 ]
+
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
 function getInitials(value = 'HI') {
   return value
@@ -17,8 +20,9 @@ function getInitials(value = 'HI') {
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
   const { isLoggedIn, loading, logout, userProfile } = useAuth()
+  const canViewOracle = userProfile?.role === 'oraculo' || isOraculoMode
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
-const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
+ const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
 
   const handleLogout = async () => {
     await logout()
@@ -27,18 +31,20 @@ const userName = userProfile?.displayName || userProfile?.username || 'Jugador H
 
   return (
     <aside className="sidebar" aria-label="Navegación HeroIndex">
-      <div className="sidebar__brand">
-        <span className="sidebar__logo" aria-hidden="true">
-          HI
-        </span>
-        <div>
-          <strong>HeroIndex</strong>
-          <small>Centro HeroIndex v2</small>
-        </div>
-      </div>
+      <button className="sidebar__brand" aria-label="Ir al inicio de HeroIndex" onClick={() => onNavigate('home')} type="button">
+        <BrandLogo className="sidebar__brand-mark" size="sidebar" variant="full" />
+      </button>
 
       <nav className="sidebar__nav">
         {navSections.map((section) => {
+          if (section.requiresLogin && !isLoggedIn) {
+            return null
+          }
+
+          if (section.requiresOracle && !canViewOracle) {
+            return null
+          }
+
           const sectionRoutes = visibleRoutes.filter(
             (route) => (route.navGroup ?? 'public') === section.id,
           )

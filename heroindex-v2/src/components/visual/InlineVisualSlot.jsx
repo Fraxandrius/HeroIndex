@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   saveVisualSlot,
   subscribeToVisualSlot,
@@ -24,7 +25,17 @@ function getPositionCss(position) {
   return positionOptions.find((option) => option.value === position)?.cssValue ?? 'center center'
 }
 
-function InlineVisualSlot({ children, className = '', page, section, slotId }) {
+function InlineVisualSlot({
+  activeVisualSlotId = null,
+  children,
+  className = '',
+  isVisualEditorOpen = false,
+  onVisualEditorClose,
+  onVisualEditorOpen,
+  page,
+  section,
+  slotId,
+}) {
   const [slotConfig, setSlotConfig] = useState(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -37,18 +48,33 @@ function InlineVisualSlot({ children, className = '', page, section, slotId }) {
 
   useEffect(() => subscribeToVisualSlot(slotId, setSlotConfig), [slotId])
 
+  const closeEditor = useCallback(() => {
+    setIsEditorOpen(false)
+    onVisualEditorClose?.(slotId)
+  }, [onVisualEditorClose, slotId])
+
   useEffect(() => {
     if (!isEditorOpen) return undefined
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        setIsEditorOpen(false)
+         closeEditor()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [closeEditor, isEditorOpen])
+
+   useEffect(() => {
+    if (!isEditorOpen) return undefined
+
+    document.body.classList.add('visual-editor-open')
+
+    return () => {
+      document.body.classList.remove('visual-editor-open')
+    }
   }, [isEditorOpen])
 
   const previewUrl = useMemo(() => {
@@ -72,6 +98,7 @@ function InlineVisualSlot({ children, className = '', page, section, slotId }) {
     setStatusMessage('')
     setErrorMessage('')
     setIsEditorOpen(true)
+    onVisualEditorOpen?.(slotId)
   }
 
   const handleSave = async () => {
@@ -103,7 +130,7 @@ function InlineVisualSlot({ children, className = '', page, section, slotId }) {
       setSlotConfig(savedSlot)
       setStatusMessage('Imagen actualizada correctamente.')
       setSelectedFile(null)
-      setTimeout(() => setIsEditorOpen(false), 650)
+      setTimeout(closeEditor, 650)
     } catch {
       setErrorMessage('No fue posible actualizar la imagen.')
       setStatusMessage('')
@@ -125,6 +152,92 @@ function InlineVisualSlot({ children, className = '', page, section, slotId }) {
     : undefined
 
   const modalPreviewUrl = previewUrl || slotConfig?.imageUrl || ''
+  const shouldShowControl = isOraculoMode && !isEditorOpen && !isVisualEditorOpen
+  const editorPortalTarget = typeof document === 'undefined' ? null : document.body
+  const editorMarkup = isEditorOpen ? (
+    <div className="visual-editor-root visual-slot-modal" role="dialog" aria-modal="true" aria-labelledby={`visual-slot-title-${slotId}`}>
+      <button
+        aria-label="Cerrar editor visual"
+        className="visual-editor-backdrop visual-slot-modal__scrim"
+        onClick={closeEditor}
+        type="button"
+      />
+      <div className="visual-editor-panel visual-slot-modal__panel">
+        <header>
+          <p className="page-card__kicker">ORÁCULO visual</p>
+          <h2 id={`visual-slot-title-${slotId}`}>Editar imagen</h2>
+          <p>Actualiza el espacio visual sin salir de la página pública.</p>
+        </header>
+
+        <div className="visual-slot-modal__preview">
+          {modalPreviewUrl ? (
+            <img alt={altText || section || 'Vista previa visual'} src={modalPreviewUrl} />
+          ) : (
+            <span>Vista previa pendiente</span>
+          )}
+        </div>
+
+        <div className="visual-slot-modal__form">
+          <label className="hi-field">
+            <span className="hi-label">Imagen</span>
+            <input
+              accept="image/*"
+              className="hi-input"
+              disabled={isSaving}
+              onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+              type="file"
+            />
+          </label>
+
+          <label className="hi-field">
+            <span className="hi-label">Modo de imagen</span>
+            <select className="hi-select" disabled={isSaving} onChange={(event) => setFitMode(event.target.value)} value={fitMode}>
+              {fitOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="hi-field">
+            <span className="hi-label">Posición</span>
+            <select className="hi-select" disabled={isSaving} onChange={(event) => setPosition(event.target.value)} value={position}>
+              {positionOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="hi-field">
+            <span className="hi-label">Texto alternativo / etiqueta interna</span>
+            <input
+              className="hi-input"
+              disabled={isSaving}
+              onChange={(event) => setAltText(event.target.value)}
+              placeholder="Describe el visual para ORÁCULO"
+              type="text"
+              value={altText}
+            />
+          </label>
+        </div>
+
+        {statusMessage ? <p className="visual-slot-modal__status">{statusMessage}</p> : null}
+        {errorMessage ? <p className="visual-slot-modal__error">{errorMessage}</p> : null}
+
+        <footer className="visual-editor-footer visual-slot-modal__actions">
+          <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={closeEditor} type="button">
+            Cerrar
+          </button>
+          <button className="hi-button hi-button-primary" disabled={isSaving} onClick={handleSave} type="button">
+            Guardar visual
+          </button>
+        </footer>
+      </div>
+    </div>
+  ) : null
 
   return (
     <section
@@ -134,96 +247,12 @@ function InlineVisualSlot({ children, className = '', page, section, slotId }) {
     >
       <div className="inline-visual-slot__veil" aria-hidden="true" />
       <div className="inline-visual-slot__content">{children}</div>
-      {isOraculoMode ? (
-        <button className="inline-visual-slot__control" onClick={openEditor} type="button">
+       {shouldShowControl ? (
+        <button className="inline-visual-slot__control" disabled={isVisualEditorOpen && activeVisualSlotId !== slotId} onClick={openEditor} type="button">
           {imageUrl ? 'Cambiar visual' : 'Editar imagen'}
         </button>
       ) : null}
-
-      {isEditorOpen ? (
-        <div className="visual-slot-modal" role="dialog" aria-modal="true" aria-labelledby={`visual-slot-title-${slotId}`}>
-          <button
-            aria-label="Cerrar editor visual"
-            className="visual-slot-modal__scrim"
-            onClick={() => setIsEditorOpen(false)}
-            type="button"
-          />
-          <div className="visual-slot-modal__panel">
-            <header>
-              <p className="page-card__kicker">ORÁCULO visual</p>
-              <h2 id={`visual-slot-title-${slotId}`}>Editar imagen</h2>
-              <p>Actualiza el espacio visual sin salir de la página pública.</p>
-            </header>
-
-            <div className="visual-slot-modal__preview">
-              {modalPreviewUrl ? (
-                <img alt={altText || section || 'Vista previa visual'} src={modalPreviewUrl} />
-              ) : (
-                <span>Vista previa pendiente</span>
-              )}
-            </div>
-
-            <div className="visual-slot-modal__form">
-              <label className="hi-field">
-                <span className="hi-label">Imagen</span>
-                <input
-                  accept="image/*"
-                  className="hi-input"
-                  disabled={isSaving}
-                  onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-                  type="file"
-                />
-              </label>
-
-              <label className="hi-field">
-                <span className="hi-label">Modo de imagen</span>
-                <select className="hi-select" disabled={isSaving} onChange={(event) => setFitMode(event.target.value)} value={fitMode}>
-                  {fitOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="hi-field">
-                <span className="hi-label">Posición</span>
-                <select className="hi-select" disabled={isSaving} onChange={(event) => setPosition(event.target.value)} value={position}>
-                  {positionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="hi-field">
-                <span className="hi-label">Texto alternativo / etiqueta interna</span>
-                <input
-                  className="hi-input"
-                  disabled={isSaving}
-                  onChange={(event) => setAltText(event.target.value)}
-                  placeholder="Describe el visual para ORÁCULO"
-                  type="text"
-                  value={altText}
-                />
-              </label>
-            </div>
-
-            {statusMessage ? <p className="visual-slot-modal__status">{statusMessage}</p> : null}
-            {errorMessage ? <p className="visual-slot-modal__error">{errorMessage}</p> : null}
-
-            <footer className="visual-slot-modal__actions">
-              <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={() => setIsEditorOpen(false)} type="button">
-                Cerrar
-              </button>
-              <button className="hi-button hi-button-primary" disabled={isSaving} onClick={handleSave} type="button">
-                Guardar visual
-              </button>
-            </footer>
-          </div>
-        </div>
-      ) : null}
+      {editorPortalTarget && editorMarkup ? createPortal(editorMarkup, editorPortalTarget) : null}
     </section>
   )
 }

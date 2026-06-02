@@ -18,7 +18,7 @@ function toTimestamp(value) {
 }
 
 function getNewsTimestamp(newsItem) {
-  return toTimestamp(newsItem.createdAt)
+  return toTimestamp(newsItem.updatedAt ?? newsItem.createdAt)
 }
 
 function sortNewsByNewest(firstNewsItem, secondNewsItem) {
@@ -44,7 +44,7 @@ function formatNewsTime(newsItem) {
   const timestamp = getNewsTimestamp(newsItem)
 
   if (!timestamp) {
-    return 'now'
+    return 'ahora'
   }
 
   const elapsedMinutes = Math.max(1, Math.round((Date.now() - timestamp) / 60000))
@@ -71,23 +71,27 @@ function getNewsTag(newsItem) {
     return newsItem.tags[0]
   }
 
-  return 'HeroIndex News'
+  return 'Canal HeroIndex'
 }
 
 function normalizeNewsForUi(newsItem) {
   return {
     ...newsItem,
-    author: newsItem.author ?? newsItem.source ?? 'HeroIndex Newsroom',
+    author: newsItem.author ?? newsItem.sourceLabel ?? newsItem.source ?? 'HeroIndex Newsroom',
     body: newsItem.body ?? newsItem.summary ?? newsItem.excerpt ?? '',
     handle: newsItem.handle ?? '@heroindex',
     inlinePlacementSlotId:
       newsItem.inlinePlacementSlotId ?? newsItem.placementSlotId ?? null,
-    metric: newsItem.metric ?? newsItem.reactionCount ?? 'Live update',
+    metric: newsItem.metric ?? newsItem.reactionCount ?? 'Actualización en vivo',
     movement: newsItem.movement ?? newsItem.move ?? '+1',
-    source: newsItem.source ?? newsItem.author ?? 'HeroIndex Newsroom',
-    tag: getNewsTag(newsItem),
+    editorialTone: newsItem.editorialTone ?? 'verified',
+    homePlacement: newsItem.homePlacement ?? 'feed',
+    priority: Number(newsItem.priority ?? 0),
+    source: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'HeroIndex Newsroom',
+    sourceLabel: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'HeroIndex Newsroom',
+    tag: newsItem.kicker ?? getNewsTag(newsItem),
     time: formatNewsTime(newsItem),
-    title: newsItem.title ?? 'Untitled HeroIndex update',
+    title: newsItem.title ?? 'Actualización HeroIndex sin titular',
   }
 }
 

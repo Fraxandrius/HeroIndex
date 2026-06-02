@@ -1,7 +1,36 @@
 import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
+import { uploadImage } from './storageService.js'
 
 export const NEWS_PATH = 'news'
+
+const NEWS_DEFAULTS = {
+  sourceLabel: 'HeroIndex Newsroom',
+  editorialTone: 'verified',
+  homePlacement: 'feed',
+  priority: 0,
+  imageFit: 'cover',
+  imagePositionX: 50,
+  imagePositionY: 50,
+  imageScale: 1,
+  imageOverlayStrength: 0.55,
+  headlinePlacement: 'bottom-left',
+  active: true,
+}
+
+function withNewsDefaults(newsData = {}) {
+  return {
+    ...NEWS_DEFAULTS,
+    ...newsData,
+    priority: Number(newsData.priority ?? NEWS_DEFAULTS.priority),
+    imagePositionX: Number(newsData.imagePositionX ?? NEWS_DEFAULTS.imagePositionX),
+    imagePositionY: Number(newsData.imagePositionY ?? NEWS_DEFAULTS.imagePositionY),
+    imageScale: Number(newsData.imageScale ?? NEWS_DEFAULTS.imageScale),
+    imageOverlayStrength: Number(newsData.imageOverlayStrength ?? NEWS_DEFAULTS.imageOverlayStrength),
+    sourceLabel: newsData.sourceLabel ?? newsData.source ?? NEWS_DEFAULTS.sourceLabel,
+    active: newsData.active ?? NEWS_DEFAULTS.active,
+  }
+}
 
 function normalizeNewsItem(id, newsItem) {
   return {
@@ -20,7 +49,9 @@ export function normalizeNewsSnapshot(snapshotValue) {
     .map(([id, newsItem]) => normalizeNewsItem(id, newsItem))
 }
 
-export function subscribeToNews({ onData, onError }) {
+export function subscribeToNews(options) {
+  const onData = typeof options === 'function' ? options : options?.onData
+  const onError = typeof options === 'function' ? undefined : options?.onError
   const { database, isConfigured } = getFirebaseClient()
 
   if (!isConfigured || !database) {
@@ -51,8 +82,7 @@ export async function createNews(newsData) {
   const timestamp = Date.now()
   const newsRef = push(ref(database, NEWS_PATH))
   const payload = {
-    ...newsData,
-    active: newsData.active ?? true,
+    ...withNewsDefaults(newsData),
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -116,3 +146,17 @@ export async function deleteNews(newsId) {
 export async function deleteMultipleNews(newsIds = []) {
   await Promise.all(newsIds.filter(Boolean).map((newsId) => deleteNews(newsId)))
 }
+
+
+export function createNewsItem(newsData) {
+  return createNews(newsData)
+}
+
+export function updateNewsItem(newsId, newsData) {
+  return updateNews(newsId, newsData)
+}
+
+export function uploadNewsImage(file) {
+  return uploadImage(file, 'news')
+}
+

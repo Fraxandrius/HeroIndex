@@ -17,7 +17,7 @@ function prioritizeContext(items, heroId, corporationId) {
   })
 }
 
-function BroadcastSlot({ className = '', corporationId, heroId, limit = 1, placement, variant = 'inline' }) {
+function BroadcastSlot({ className = '', corporationId, heroId, isVisualEditorOpen = false, limit = 1, placement, variant = 'inline' }) {
   const [broadcasts, setBroadcasts] = useState([])
 
   useEffect(
@@ -46,7 +46,7 @@ function BroadcastSlot({ className = '', corporationId, heroId, limit = 1, place
 
   return (
     <section className={`broadcast-slot broadcast-slot--${variant} ${className}`.trim()} aria-label="Señal pública HeroIndex">
-      {isOraculoMode ? (
+      {isOraculoMode && !isVisualEditorOpen ? (
         <a className="broadcast-slot__manage" href="/oraculo/broadcasts">
           Gestionar señales
         </a>
