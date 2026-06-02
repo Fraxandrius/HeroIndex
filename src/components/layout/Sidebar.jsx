@@ -7,7 +7,6 @@ const navSections = [
    { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma', requiresLogin: true },
   { id: 'access', label: 'Acceso', description: 'Iniciar sesión · Crear cuenta', requiresGuest: true },
   { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas internas', requiresOracle: true },
-
 ]
 
 function getInitials(value = 'HI') {
@@ -20,6 +19,7 @@ function getInitials(value = 'HI') {
 }
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
+  const { isLoggedIn, loading, logout, userProfile } = useAuth()
   const canViewOracle = canSeeOraculoTools(userProfile)
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
  const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
