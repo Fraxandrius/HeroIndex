@@ -26,6 +26,12 @@ import Profiles from './pages/Profiles.jsx'
 import Register from './pages/Register.jsx'
 import Ranking from './pages/Ranking.jsx'
 
+const routeAliases = {
+  '/noticias': 'news',
+  '/perfiles': 'profiles',
+  '/corporaciones': 'corporations',
+}
+
 const routes = [
   { id: 'home', label: 'Inicio', path: '/', component: Home, navGroup: 'public' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', component: Ranking, navGroup: 'public' },
@@ -160,8 +166,9 @@ function getInitialRouteState() {
   }
 
   const route = routes.find((item) => item.path === window.location.pathname)
+  const aliasRouteId = routeAliases[window.location.pathname]
 
-  return { id: route?.id ?? 'home', params: {} }
+  return { id: route?.id ?? aliasRouteId ?? 'home', params: {} }
 }
 
 function getRoutePath(routeId, params = {}) {
