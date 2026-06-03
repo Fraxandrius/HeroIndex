@@ -12,7 +12,7 @@ function BrandLogo({ className = '', size = 'md', variant = 'symbol' }) {
   const [hasImageError, setHasImageError] = useState(false)
   const sizeClass = sizeClassByValue[size] ?? sizeClassByValue.md
   const label = variant === 'full' ? 'HEROÍNDEX' : 'HI'
-const src = variant === 'symbol' ? '/brand/HeroIndex-symbol.png' : '/brand/HeroIndex.png'
+  const src = variant === 'symbol' ? '/brand/HeroIndex-symbol.png' : '/brand/HeroIndex.png'
 
   return (
     <span className={`brand-logo brand-logo--${variant} ${sizeClass} ${className}`.trim()}>

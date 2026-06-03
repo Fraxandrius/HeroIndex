@@ -528,19 +528,20 @@
   gap: 0.5rem;
   margin-top: 0.25rem;
 }
-/* Sidebar Brand Symbol Lockup-v1 */
+
+/* Sidebar Brand Symbol Lockup-v2 */
 .sidebar__brand {
   align-items: center;
   background:
-    radial-gradient(circle at 50% 18%, rgba(94, 234, 212, 0.16), transparent 7rem),
+    radial-gradient(circle at 50% 18%, rgba(94, 234, 212, 0.18), transparent 8rem),
     linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(8, 15, 31, 0.72));
   border: 1px solid rgba(94, 234, 212, 0.18);
   border-radius: 1.4rem;
   display: grid;
-  gap: 0.75rem;
+  gap: 0.35rem;
   justify-items: center;
   margin: 0 0 1.5rem;
-  padding: 1.25rem 1rem;
+  padding: 0.85rem 0.85rem 1rem;
   text-align: center;
   width: 100%;
 }
@@ -555,9 +556,9 @@
 }
 
 .brand-logo--sidebar-symbol {
-  height: 96px;
+  height: 200px;
   max-height: none;
-  width: 96px;
+  width: 200px;
 }
 
 .brand-logo--sidebar-symbol img {
@@ -575,9 +576,9 @@
 .sidebar__brand-copy strong {
   color: #f8fafc;
   display: block;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   font-weight: 950;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -585,7 +586,7 @@
 .sidebar__brand-copy small {
   color: #93c5fd;
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1.25;
