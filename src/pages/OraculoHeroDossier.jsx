@@ -33,6 +33,8 @@ const attributeLabels = {
 }
 
 const attributeKeys = ['fighting', 'agility', 'strength', 'reason', 'intuition', 'presence']
+const attributeMin = 1
+const attributeMax = 12
 const listFields = ['powers', 'talents', 'drawbacks', 'flags']
 
 const karmaTypeLabels = {
@@ -74,14 +76,32 @@ const baseCharacterSheet = {
   },
   drawbacks: [],
   flags: [],
+  appearance: '',
+  criticalInjuries: '',
+  derived: {
+    baseSlugfestDamage: '',
+    health: 0,
+    resolve: 0,
+  },
   gear: '',
   gmNotes: '',
   health: 0,
+  heroName: '',
   isNpc: true,
   karma: 0,
   ownerId: '',
+  occupation: '',
+  personalStuff: {
+    drive: '',
+    flaw: '',
+    keyRelationships: '',
+    occupation: '',
+    personality: '',
+  },
   personality: '',
+  powerSource: '',
   powers: [],
+  powersAndBoosts: '',
   realName: '',
   relationships: '',
   reputation: '',
@@ -89,12 +109,32 @@ const baseCharacterSheet = {
   resolve: 0,
   role: '',
   talents: [],
+  talentsAndDrawbacks: '',
+  team: '',
 }
 
 function getNumericValue(value) {
   const numberValue = Number(value ?? 0)
 
   return Number.isNaN(numberValue) ? 0 : numberValue
+}
+
+function normalizeAttributeValue(value) {
+  if (value === undefined || value === null || value === '') return attributeMin
+
+  const numberValue = Number(value)
+
+  if (Number.isNaN(numberValue)) return attributeMin
+
+  return Math.min(attributeMax, Math.max(attributeMin, Math.round(numberValue)))
+}
+
+function getBaseSlugfestDamage(attributes = {}, explicitValue = '') {
+  if (explicitValue !== undefined && explicitValue !== null && explicitValue !== '') return explicitValue
+
+  const strength = normalizeAttributeValue(attributes.strength)
+
+  return Math.ceil(strength / 2)
 }
 
 function toTimestamp(value) {
@@ -234,39 +274,101 @@ function getSheetFormValues(sheet = {}) {
       ...baseCharacterSheet.attributes,
       ...(sheet.attributes ?? {}),
     },
+derived: {
+      ...baseCharacterSheet.derived,
+      ...(sheet.derived ?? {}),
+    },
+    personalStuff: {
+      ...baseCharacterSheet.personalStuff,
+      ...(sheet.personalStuff ?? {}),
+    },
+  }
+  const personalStuff = {
+    ...mergedSheet.personalStuff,
+    occupation: mergedSheet.personalStuff.occupation || mergedSheet.occupation || '',
+    personality: mergedSheet.personalStuff.personality || mergedSheet.personality || '',
+    drive: mergedSheet.personalStuff.drive || mergedSheet.drive || '',
+    flaw: mergedSheet.personalStuff.flaw || mergedSheet.flaw || '',
+    keyRelationships: mergedSheet.personalStuff.keyRelationships || mergedSheet.keyRelationships || mergedSheet.relationships || '',
+  }
+  const derived = {
+    ...mergedSheet.derived,
+    baseSlugfestDamage: getBaseSlugfestDamage(mergedSheet.attributes, mergedSheet.derived.baseSlugfestDamage ?? mergedSheet.baseSlugfestDamage),
+    health: mergedSheet.derived.health ?? mergedSheet.health ?? 0,
+    resolve: mergedSheet.derived.resolve ?? mergedSheet.resolve ?? 0,
   }
 
   return {
     ...mergedSheet,
+    civilianName: mergedSheet.civilianName || mergedSheet.realName || '',
     drawbacks: arrayToText(mergedSheet.drawbacks),
     flags: arrayToText(mergedSheet.flags),
+    heroName: mergedSheet.heroName || '',
     powers: arrayToText(mergedSheet.powers),
+    powersAndBoosts: mergedSheet.powersAndBoosts || arrayToText(mergedSheet.powers),
+    realName: mergedSheet.realName || mergedSheet.civilianName || '',
     talents: arrayToText(mergedSheet.talents),
+    talentsAndDrawbacks: mergedSheet.talentsAndDrawbacks || [...normalizeArray(mergedSheet.talents), ...normalizeArray(mergedSheet.drawbacks)].join(', '),
+    derived,
+    health: derived.health,
+    resolve: derived.resolve,
+    personalStuff,
+    occupation: personalStuff.occupation,
+    personality: personalStuff.personality,
+    drive: personalStuff.drive,
+    flaw: personalStuff.flaw,
+    keyRelationships: personalStuff.keyRelationships,
+    relationships: personalStuff.keyRelationships,
   }
 }
 
 function getSheetPayload(formState = {}) {
+  const attributes = Object.fromEntries(
+    attributeKeys.map((key) => [key, normalizeAttributeValue(formState.attributes?.[key] ?? attributeMin)]),
+  )
+  const personalStuff = {
+    occupation: formState.personalStuff?.occupation ?? formState.occupation ?? '',
+    personality: formState.personalStuff?.personality ?? formState.personality ?? '',
+    drive: formState.personalStuff?.drive ?? formState.drive ?? '',
+    flaw: formState.personalStuff?.flaw ?? formState.flaw ?? '',
+    keyRelationships: formState.personalStuff?.keyRelationships ?? formState.keyRelationships ?? formState.relationships ?? '',
+  }
+  const derived = {
+    baseSlugfestDamage: getBaseSlugfestDamage(attributes, formState.derived?.baseSlugfestDamage ?? formState.baseSlugfestDamage),
+    health: getNumericValue(formState.derived?.health ?? formState.health),
+    resolve: getNumericValue(formState.derived?.resolve ?? formState.resolve),
+  }
+
   return {
-    realName: formState.realName ?? '',
-    role: formState.role ?? '',
-    ownerId: formState.ownerId ?? '',
-    isNpc: Boolean(formState.isNpc),
-    attributes: Object.fromEntries(
-      attributeKeys.map((key) => [key, getNumericValue(formState.attributes?.[key] ?? 1)]),
-    ),
-    health: getNumericValue(formState.health),
-    resolve: getNumericValue(formState.resolve),
-    karma: getNumericValue(formState.karma),
-    powers: normalizeArray(formState.powers),
-    talents: normalizeArray(formState.talents),
+    appearance: formState.appearance ?? '',
+    attributes,
+    civilianName: formState.civilianName ?? formState.realName ?? '',
+    criticalInjuries: formState.criticalInjuries ?? '',
+    derived,
     drawbacks: normalizeArray(formState.drawbacks),
     flags: normalizeArray(formState.flags),
-    resources: formState.resources ?? '',
     gear: formState.gear ?? '',
-    reputation: formState.reputation ?? '',
-    personality: formState.personality ?? '',
-    relationships: formState.relationships ?? '',
     gmNotes: formState.gmNotes ?? '',
+    health: derived.health,
+    heroName: formState.heroName ?? '',
+    isNpc: Boolean(formState.isNpc),
+    karma: getNumericValue(formState.karma),
+    occupation: personalStuff.occupation,
+    ownerId: formState.ownerId ?? '',
+    personalStuff,
+    personality: personalStuff.personality,
+    powerSource: formState.powerSource ?? '',
+    powers: normalizeArray(formState.powers),
+    powersAndBoosts: formState.powersAndBoosts ?? '',
+    realName: formState.realName ?? formState.civilianName ?? '',
+    relationships: personalStuff.keyRelationships,
+    reputation: formState.reputation ?? '',
+    resources: formState.resources ?? '',
+    resolve: derived.resolve,
+    role: formState.role ?? '',
+    talents: normalizeArray(formState.talents),
+    talentsAndDrawbacks: formState.talentsAndDrawbacks ?? '',
+    team: formState.team ?? '',
   }
 }
 
@@ -291,9 +393,9 @@ function getSheetOwnershipStatus(sheet = {}) {
 }
 
 function getAttributeScale(value) {
-  const normalizedValue = Math.min(10, Math.max(0, getNumericValue(value)))
+  const normalizedValue = normalizeAttributeValue(value)
 
-  return `${normalizedValue * 10}%`
+  return `${(normalizedValue / attributeMax) * 100}%`
 }
 
 function renderTextValue(value) {
@@ -435,6 +537,20 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
     setCharacterSheetForm((currentForm) => ({
       ...currentForm,
       [name]: type === 'checkbox' ? checked : value,
+    }))
+    setCharacterSheetSaveError('')
+    setCharacterSheetMessage('')
+  }
+
+  const handleCharacterSheetNestedFieldChange = (section) => (event) => {
+    const { name, value } = event.target
+
+    setCharacterSheetForm((currentForm) => ({
+      ...currentForm,
+      [section]: {
+        ...currentForm[section],
+        [name]: value,
+      },
     }))
     setCharacterSheetSaveError('')
     setCharacterSheetMessage('')
@@ -599,16 +715,7 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
   const publicPowers = getPublicPowers(hero)
   const publicBio = hero.publicBio || 'Biografía pública pendiente de actualización.'
   const internalFields = getInternalFields(hero)
-    const displaySheet = characterSheet
-    ? {
-        ...baseCharacterSheet,
-        ...characterSheet,
-        attributes: {
-          ...baseCharacterSheet.attributes,
-          ...(characterSheet.attributes ?? {}),
-        },
-      }
-    : null
+    const displaySheet = characterSheet ? getSheetFormValues(characterSheet) : null
 
   return (
     <section className="page-card oraculo-dossier-page">
@@ -770,16 +877,24 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                   </div>
                   <dl className="oraculo-character-sheet__identity">
                     <div>
-                      <dt>Nombre real</dt>
-                      <dd>{displaySheet.realName || '—'}</dd>
+                      <dt>Hero Name</dt>
+                      <dd>{displaySheet.heroName || displayName || '—'}</dd>
                     </div>
                     <div>
-                      <dt>Rol</dt>
+                      <dt>Civilian Name</dt>
+                      <dd>{displaySheet.civilianName || displaySheet.realName || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Role</dt>
                       <dd>{displaySheet.role || '—'}</dd>
                     </div>
                     <div>
                       <dt>Tipo</dt>
                       <dd>{displaySheet.isNpc ? 'NPC' : 'Jugador'}</dd>
+                    </div>
+                    <div>
+                      <dt>Appearance</dt>
+                      <dd>{displaySheet.appearance || '—'}</dd>
                     </div>
                     <div>
                       <dt>Owner ID</dt>
@@ -805,7 +920,7 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                         <div className="oraculo-character-sheet__attribute-scale" aria-hidden="true">
                           <i style={{ '--attribute-level': getAttributeScale(displaySheet.attributes?.[attribute]) }} />
                         </div>
-                        <small>Escala 1–10</small>
+                        <small>Escala 1–12</small>
                       </div>
                     ))}
                   </div>
@@ -814,17 +929,21 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                 <section className="oraculo-character-sheet__block">
                   <div className="oraculo-character-sheet__block-title">
                     <span>03</span>
-                    <h4>Recursos de juego</h4>
+                    <h4>Derivados y Karma</h4>
                   </div>
                   <p className="oraculo-character-sheet__privacy-note">Karma es progresión RPG. No modifica el Ranking HeroIndex.</p>
                   <dl className="oraculo-character-sheet__identity">
                     <div>
+                      <dt>Base Slugfest Damage</dt>
+                      <dd>{getBaseSlugfestDamage(displaySheet.attributes, displaySheet.derived?.baseSlugfestDamage)}</dd>
+                    </div>
+                    <div>
                       <dt>Health</dt>
-                      <dd>{getNumericValue(displaySheet.health)}</dd>
+                      <dd>{getNumericValue(displaySheet.derived?.health ?? displaySheet.health)}</dd>
                     </div>
                     <div>
                       <dt>Resolve</dt>
-                      <dd>{getNumericValue(displaySheet.resolve)}</dd>
+                      <dd>{getNumericValue(displaySheet.derived?.resolve ?? displaySheet.resolve)}</dd>
                     </div>
                     <div>
                       <dt>Karma</dt>
@@ -836,20 +955,24 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                 <section className="oraculo-character-sheet__block">
                   <div className="oraculo-character-sheet__block-title">
                     <span>04</span>
-                    <h4>Poderes y rasgos</h4>
+                    <h4>Powers & Boosts</h4>
                   </div>
                   <dl className="oraculo-character-sheet__details">
                     <div>
-                      <dt>Powers</dt>
-                      <dd>{renderListValue(displaySheet.powers)}</dd>
+                      <dt>Powers & Boosts</dt>
+                      <dd>{renderTextValue(displaySheet.powersAndBoosts) !== '—' ? renderTextValue(displaySheet.powersAndBoosts) : renderListValue(displaySheet.powers)}</dd>
                     </div>
                     <div>
-                      <dt>Talents</dt>
-                      <dd>{renderListValue(displaySheet.talents)}</dd>
+                      <dt>Power Source</dt>
+                      <dd>{renderTextValue(displaySheet.powerSource)}</dd>
                     </div>
                     <div>
-                      <dt>Drawbacks</dt>
-                      <dd>{renderListValue(displaySheet.drawbacks)}</dd>
+                      <dt>Critical Injuries</dt>
+                      <dd>{renderTextValue(displaySheet.criticalInjuries)}</dd>
+                    </div>
+                    <div>
+                      <dt>Talents & Drawbacks</dt>
+                      <dd>{renderTextValue(displaySheet.talentsAndDrawbacks) !== '—' ? renderTextValue(displaySheet.talentsAndDrawbacks) : renderListValue([...normalizeArray(displaySheet.talents), ...normalizeArray(displaySheet.drawbacks)])}</dd>
                     </div>
                     <div>
                       <dt>Flags</dt>
@@ -865,24 +988,40 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                   </div>
                   <dl className="oraculo-character-sheet__details">
                     <div>
-                      <dt>Resources</dt>
-                      <dd>{renderTextValue(displaySheet.resources)}</dd>
+                      <dt>Occupation</dt>
+                      <dd>{renderTextValue(displaySheet.personalStuff?.occupation ?? displaySheet.occupation)}</dd>
+                    </div>
+                    <div>
+                      <dt>Personality</dt>
+                      <dd>{renderTextValue(displaySheet.personalStuff?.personality ?? displaySheet.personality)}</dd>
+                    </div>
+                    <div>
+                      <dt>Drive</dt>
+                      <dd>{renderTextValue(displaySheet.personalStuff?.drive ?? displaySheet.drive)}</dd>
+                    </div>
+                    <div>
+                      <dt>Flaw</dt>
+                      <dd>{renderTextValue(displaySheet.personalStuff?.flaw ?? displaySheet.flaw)}</dd>
+                    </div>
+                    <div>
+                      <dt>Key Relationships</dt>
+                      <dd>{renderTextValue(displaySheet.personalStuff?.keyRelationships ?? displaySheet.relationships)}</dd>
+                    </div>
+                    <div>
+                      <dt>Team</dt>
+                      <dd>{renderTextValue(displaySheet.team)}</dd>
                     </div>
                     <div>
                       <dt>Gear</dt>
                       <dd>{renderTextValue(displaySheet.gear)}</dd>
                     </div>
                     <div>
+                      <dt>Resources</dt>
+                      <dd>{renderTextValue(displaySheet.resources)}</dd>
+                    </div>
+                    <div>
                       <dt>Reputation</dt>
                       <dd>{renderTextValue(displaySheet.reputation)}</dd>
-                    </div>
-                    <div>
-                      <dt>Personality</dt>
-                      <dd>{renderTextValue(displaySheet.personality)}</dd>
-                    </div>
-                    <div>
-                      <dt>Relationships</dt>
-                      <dd>{renderTextValue(displaySheet.relationships)}</dd>
                     </div>
                   </dl>
                 </section>
@@ -907,12 +1046,24 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                   </div>
                   <div className="oraculo-character-sheet__form-grid">
                     <label>
-                      <span>Nombre real</span>
+                      <span>Hero Name</span>
+                      <input name="heroName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.heroName} />
+                    </label>
+                    <label>
+                      <span>Civilian Name</span>
+                      <input name="civilianName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.civilianName} />
+                    </label>
+                    <label>
+                      <span>Nombre real legacy</span>
                       <input name="realName" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.realName} />
                     </label>
                     <label>
-                      <span>Rol</span>
+                      <span>Role</span>
                       <input name="role" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.role} />
+                    </label>
+                    <label>
+                      <span>Appearance</span>
+                      <input name="appearance" onChange={handleCharacterSheetFieldChange} value={characterSheetForm.appearance} />
                     </label>
                     <label>
                       <span>Owner ID</span>
@@ -940,7 +1091,7 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                       <label key={attribute}>
                         <span>{attributeLabels[attribute]}</span>
                         <input
-                          max="10"
+                          max="12"
                           min="1"
                           name={attribute}
                           onChange={handleCharacterSheetAttributeChange}
@@ -955,17 +1106,21 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                 <section className="oraculo-character-sheet__block">
                   <div className="oraculo-character-sheet__block-title">
                     <span>03</span>
-                    <h4>Recursos de juego</h4>
+                    <h4>Derivados y Karma</h4>
                   </div>
-                  <p className="oraculo-character-sheet__privacy-note">Karma es progresión RPG. No modifica el Ranking HeroIndex.</p>
+                  <p className="oraculo-character-sheet__privacy-note">Base Slugfest Damage se deriva de Strength / 2, redondeado hacia arriba, si no se define manualmente.</p>
                   <div className="oraculo-character-sheet__form-grid">
                     <label>
+                      <span>Base Slugfest Damage</span>
+                      <input name="baseSlugfestDamage" onChange={handleCharacterSheetNestedFieldChange('derived')} type="number" value={characterSheetForm.derived?.baseSlugfestDamage ?? ''} />
+                    </label>
+                    <label>
                       <span>Health</span>
-                      <input name="health" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.health} />
+                      <input name="health" onChange={handleCharacterSheetNestedFieldChange('derived')} type="number" value={characterSheetForm.derived?.health ?? characterSheetForm.health} />
                     </label>
                      <label>
                       <span>Resolve</span>
-                      <input name="resolve" onChange={handleCharacterSheetFieldChange} type="number" value={characterSheetForm.resolve} />
+                      <input name="resolve" onChange={handleCharacterSheetNestedFieldChange('derived')} type="number" value={characterSheetForm.derived?.resolve ?? characterSheetForm.resolve} />
                     </label>
  <label>
                       <span>Karma</span>
@@ -977,12 +1132,23 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                 <section className="oraculo-character-sheet__block">
                   <div className="oraculo-character-sheet__block-title">
                     <span>04</span>
-                    <h4>Poderes y rasgos</h4>
+                    <h4>Powers & Boosts</h4>
                   </div>
                   <div className="oraculo-character-sheet__form-grid">
+                    {[
+                      ['powersAndBoosts', 'Powers & Boosts'],
+                      ['powerSource', 'Power Source'],
+                      ['criticalInjuries', 'Critical Injuries'],
+                      ['talentsAndDrawbacks', 'Talents & Drawbacks'],
+                    ].map(([field, label]) => (
+                      <label key={field}>
+                        <span>{label}</span>
+                        <input name={field} onChange={handleCharacterSheetFieldChange} value={characterSheetForm[field]} />
+                      </label>
+                    ))}
                     {listFields.map((field) => (
                       <label key={field}>
-                        <span>{field === 'powers' ? 'Powers' : field === 'talents' ? 'Talents' : field === 'drawbacks' ? 'Drawbacks' : 'Flags'}</span>
+                        <span>{field === 'powers' ? 'Powers legacy' : field === 'talents' ? 'Talents legacy' : field === 'drawbacks' ? 'Drawbacks legacy' : 'Flags'}</span>
                         <input
                           name={field}
                           onChange={handleCharacterSheetFieldChange}
@@ -1001,11 +1167,22 @@ const [karmaTransactions, setKarmaTransactions] = useState([])
                   </div>
                   <div className="oraculo-character-sheet__text-grid">
                     {[
-                      ['resources', 'Resources'],
-                      ['gear', 'Gear'],
-                      ['reputation', 'Reputation'],
+                      ['occupation', 'Occupation'],
                       ['personality', 'Personality'],
-                      ['relationships', 'Relationships'],
+                      ['drive', 'Drive'],
+                      ['flaw', 'Flaw'],
+                      ['keyRelationships', 'Key Relationships'],
+                    ].map(([field, label]) => (
+                      <label key={field}>
+                        <span>{label}</span>
+                        <textarea name={field} onChange={handleCharacterSheetNestedFieldChange('personalStuff')} value={characterSheetForm.personalStuff?.[field] ?? ''} />
+                      </label>
+                    ))}
+                    {[
+                      ['team', 'Team'],
+                      ['gear', 'Gear'],
+                      ['resources', 'Resources'],
+                      ['reputation', 'Reputation'],
                     ].map(([field, label]) => (
                       <label key={field}>
                         <span>{label}</span>

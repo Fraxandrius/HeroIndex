@@ -72,6 +72,12 @@ function parseNumber(value, fallback = 0) {
   return Number.isNaN(numberValue) || value === '' ? fallback : numberValue
 }
 
+function parseAttribute(value) {
+  const numberValue = parseNumber(value, 1)
+
+  return Math.min(12, Math.max(1, Math.round(numberValue)))
+}
+
 function parseCommaList(value = '') {
   return value
     .split(',')
@@ -119,7 +125,7 @@ function normalizeNpcRow(row, corporations) {
     validationErrors,
     preview: {
       alias,
-      attributes: attributeKeys.map((key) => `${key}: ${parseNumber(getField(row, key), 1)}`).join(' / '),
+      attributes: attributeKeys.map((key) => `${key}: ${parseAttribute(getField(row, key))}`).join(' / '),
       corporation: rawCorporation,
       heroTitle,
       rankingPoints,
@@ -141,7 +147,7 @@ function normalizeNpcRow(row, corporations) {
       rankingPoints,
     },
     sheetPayload: {
-      attributes: Object.fromEntries(attributeKeys.map((key) => [key, parseNumber(getField(row, key), 1)])),
+      attributes: Object.fromEntries(attributeKeys.map((key) => [key, parseAttribute(getField(row, key))])),
       drawbacks: parseCommaList(getField(row, 'drawbacks')),
       flags: parseCommaList(getField(row, 'flags')),
       gear: getField(row, 'gear').trim(),

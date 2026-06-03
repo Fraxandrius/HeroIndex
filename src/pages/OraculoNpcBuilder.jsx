@@ -74,6 +74,12 @@ function parseNumber(value, fallback = 0) {
   return Number.isNaN(numberValue) ? fallback : numberValue
 }
 
+function parseAttribute(value) {
+  const numberValue = parseNumber(value, 1)
+
+  return Math.min(12, Math.max(1, Math.round(numberValue)))
+}
+
 function buildHeroPayload(form) {
   return {
     active: form.active,
@@ -94,12 +100,12 @@ function buildHeroPayload(form) {
 function buildCharacterSheetPayload(heroId, form) {
   return {
     attributes: {
-      agility: parseNumber(form.agility, 1),
-      fighting: parseNumber(form.fighting, 1),
-      intuition: parseNumber(form.intuition, 1),
-      presence: parseNumber(form.presence, 1),
-      reason: parseNumber(form.reason, 1),
-      strength: parseNumber(form.strength, 1),
+      agility: parseAttribute(form.agility),
+      fighting: parseAttribute(form.fighting),
+      intuition: parseAttribute(form.intuition),
+      presence: parseAttribute(form.presence),
+      reason: parseAttribute(form.reason),
+      strength: parseAttribute(form.strength),
     },
     drawbacks: parseCommaList(form.drawbacks),
     flags: parseCommaList(form.flags),
@@ -352,7 +358,7 @@ function OraculoNpcBuilder({ onNavigate }) {
                 <label key={field}>
                   <span>{label}</span>
                   <input
-                    max="10"
+                    max="12"
                     min="1"
                     name={field}
                     onChange={handlePrivateFieldChange}
