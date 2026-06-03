@@ -4,8 +4,22 @@ import { uploadImage } from './storageService.js'
 
 export const NEWS_PATH = 'news'
 
+export function normalizeNewsPlacement(value) {
+  if (value === 'hero' || value === 'hidden' || value === 'feed') {
+    return value
+  }
+
+  return 'feed'
+}
+
+export function normalizeNewsPriority(value) {
+  const priority = Number(value ?? 0)
+
+  return Number.isNaN(priority) ? 0 : priority
+}
+
 const NEWS_DEFAULTS = {
-  sourceLabel: 'HeroIndex Newsroom',
+  sourceLabel: 'Mesa Editorial HeroIndex',
   editorialTone: 'verified',
   homePlacement: 'feed',
   priority: 0,
@@ -22,7 +36,8 @@ function withNewsDefaults(newsData = {}) {
   return {
     ...NEWS_DEFAULTS,
     ...newsData,
-    priority: Number(newsData.priority ?? NEWS_DEFAULTS.priority),
+    homePlacement: normalizeNewsPlacement(newsData.homePlacement ?? NEWS_DEFAULTS.homePlacement),
+    priority: normalizeNewsPriority(newsData.priority ?? NEWS_DEFAULTS.priority),
     imagePositionX: Number(newsData.imagePositionX ?? NEWS_DEFAULTS.imagePositionX),
     imagePositionY: Number(newsData.imagePositionY ?? NEWS_DEFAULTS.imagePositionY),
     imageScale: Number(newsData.imageScale ?? NEWS_DEFAULTS.imageScale),
@@ -33,9 +48,16 @@ function withNewsDefaults(newsData = {}) {
 }
 
 function normalizeNewsItem(id, newsItem) {
+   const active = newsItem.active !== false
+  const homePlacement = normalizeNewsPlacement(newsItem.homePlacement)
+
   return {
     id,
     ...newsItem,
+    active,
+    homePlacement,
+    isPublic: active && homePlacement !== 'hidden',
+    priority: normalizeNewsPriority(newsItem.priority),
   }
 }
 

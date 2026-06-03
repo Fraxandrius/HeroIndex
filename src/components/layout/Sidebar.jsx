@@ -1,4 +1,5 @@
 import BrandLogo from '../BrandLogo.jsx'
+import SidebarVisualSlot from '../visual/SidebarVisualSlot.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { canSeeOraculoTools } from '../../utils/roles.js'
 
@@ -77,11 +78,13 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
                   </button>
                 ))}
               </div>
+              {section.id === 'access' ? <SidebarVisualSlot canSeeOraculoTools={canViewOracle} /> : null}
             </section>
           )
         })}
       </nav>
       
+      {isLoggedIn ? <SidebarVisualSlot canSeeOraculoTools={canViewOracle} /> : null}
       <section className="sidebar__user" aria-label="Cuenta de jugador">
         {loading ? (
           <span>Restaurando sesión HeroIndex...</span>

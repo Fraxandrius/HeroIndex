@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { mockNews } from '../data/mockNews.js'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
-import { subscribeToNews } from '../services/newsService.js'
+import { normalizeNewsPlacement, normalizeNewsPriority, subscribeToNews } from '../services/newsService.js'
 
 function toTimestamp(value) {
   if (!value) {
@@ -77,7 +77,7 @@ function getNewsTag(newsItem) {
 function normalizeNewsForUi(newsItem) {
   return {
     ...newsItem,
-    author: newsItem.author ?? newsItem.sourceLabel ?? newsItem.source ?? 'HeroIndex Newsroom',
+    author: newsItem.author ?? newsItem.sourceLabel ?? newsItem.source ?? 'Mesa Editorial HeroIndex',
     body: newsItem.body ?? newsItem.summary ?? newsItem.excerpt ?? '',
     handle: newsItem.handle ?? '@heroindex',
     inlinePlacementSlotId:
@@ -85,10 +85,11 @@ function normalizeNewsForUi(newsItem) {
     metric: newsItem.metric ?? newsItem.reactionCount ?? 'Actualización en vivo',
     movement: newsItem.movement ?? newsItem.move ?? '+1',
     editorialTone: newsItem.editorialTone ?? 'verified',
-    homePlacement: newsItem.homePlacement ?? 'feed',
-    priority: Number(newsItem.priority ?? 0),
-    source: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'HeroIndex Newsroom',
-    sourceLabel: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'HeroIndex Newsroom',
+    homePlacement: normalizeNewsPlacement(newsItem.homePlacement),
+    isPublic: newsItem.active !== false && normalizeNewsPlacement(newsItem.homePlacement) !== 'hidden',
+    priority: normalizeNewsPriority(newsItem.priority),
+    source: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'Mesa Editorial HeroIndex',
+    sourceLabel: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'Mesa Editorial HeroIndex',
     tag: newsItem.kicker ?? getNewsTag(newsItem),
     time: formatNewsTime(newsItem),
     title: newsItem.title ?? 'Actualización HeroIndex sin titular',

@@ -1,0 +1,421 @@
+/* HeroIndex Sidebar styles. Extracted from globals.css for modular maintenance. */
+
+.sidebar {
+  border-right: 1px solid rgba(151, 164, 205, 0.18);
+  background: rgba(7, 11, 23, 0.78);
+  padding: 1.5rem;
+}
+
+.sidebar__brand {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar__brand strong {
+  color: #ffffff;
+  display: block;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.sidebar__brand small {
+  color: #92a0c7;
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
+}
+
+.sidebar__logo {
+  align-items: center;
+  background: linear-gradient(135deg, #62d6ff, #7c5cff 58%, #f45dff);
+  border-radius: 1rem;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 800;
+  height: 3rem;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  width: 3rem;
+}
+
+.sidebar__nav {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.sidebar__section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.sidebar__section-header {
+  color: #ffffff;
+  display: grid;
+  gap: 0.12rem;
+  padding: 0 0.15rem;
+}
+
+.sidebar__section-header span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sidebar__section-header small {
+  color: #8796c3;
+  font-size: 0.72rem;
+}
+
+.sidebar__section-links {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar__section--player {
+  background: linear-gradient(135deg, rgba(98, 214, 255, 0.07), rgba(124, 92, 255, 0.08));
+  border: 1px solid rgba(98, 214, 255, 0.14);
+  border-radius: 1.15rem;
+  padding: 0.75rem;
+}
+
+.sidebar__section--oracle {
+  background: linear-gradient(135deg, rgba(245, 190, 92, 0.1), rgba(98, 214, 255, 0.06));
+  border: 1px solid rgba(245, 190, 92, 0.18);
+  border-radius: 1.15rem;
+  padding: 0.75rem;
+}
+
+.sidebar__link {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  color: #aeb8d8;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.sidebar__link:hover,
+.sidebar__link[aria-current='page'] {
+  background: rgba(124, 92, 255, 0.16);
+  border-color: rgba(124, 92, 255, 0.4);
+  color: #ffffff;
+}
+
+.sidebar__user {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  display: grid;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.sidebar__user strong,
+.sidebar__user span {
+  color: #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.sidebar__link--subtle {
+  opacity: 0.82;
+}
+
+.sidebar__link--highlight {
+  border-color: rgba(234, 191, 79, 0.58);
+  color: #fde68a;
+}
+
+.account-social-identity,
+.sidebar-user-card,
+.account-hero-card {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.account-social-avatar,
+.sidebar-user-card__avatar,
+.account-hero-card > span,
+.account-hero-option > span {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.34), rgba(234, 191, 79, 0.28));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.account-social-avatar img,
+.sidebar-user-card__avatar img,
+.account-hero-card img,
+.account-hero-option img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.account-social-badges,
+.sidebar-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.sidebar-user-card {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  padding: 0.75rem;
+}
+
+.sidebar-user-card__avatar {
+  border-radius: 14px;
+  flex: 0 0 42px;
+  height: 42px;
+  width: 42px;
+}
+
+.sidebar-user-card small {
+  color: #bae6fd;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.sidebar-user-actions {
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Home Final Usable Fix Pack-v1 + Brand Integration-v1 */
+.brand-logo {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brand-logo img {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.brand-logo--sm {
+  height: 2rem;
+  width: 2rem;
+}
+
+.brand-logo--md {
+  height: 2.75rem;
+  width: 2.75rem;
+}
+
+.brand-logo--lg {
+  height: 3.75rem;
+  width: 3.75rem;
+}
+
+.brand-logo__fallback {
+  color: #f8fafc;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+}
+
+.sidebar__logo {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(104, 216, 255, 0.26);
+  box-shadow: 0 0 24px rgba(104, 216, 255, 0.18);
+}
+
+.sidebar__logo .brand-logo {
+  filter: drop-shadow(0 0 10px rgba(104, 216, 255, 0.34));
+}
+
+.hero-feature__brand-seal .brand-logo {
+  filter: drop-shadow(0 0 12px rgba(104, 216, 255, 0.46));
+}
+
+/* Brand Sidebar Polish-v2 */
+.sidebar__brand {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: flex-start;
+  margin: 0 0 1.65rem;
+  opacity: 0.94;
+  padding: 0;
+  text-align: left;
+  transition: filter 160ms ease, opacity 160ms ease;
+  width: 100%;
+}
+
+.sidebar__brand:hover,
+.sidebar__brand:focus-visible {
+  filter: drop-shadow(0 0 14px rgba(94, 234, 212, 0.22));
+  opacity: 1;
+  outline: none;
+}
+
+.sidebar__brand-mark {
+  filter: drop-shadow(0 0 12px rgba(94, 234, 212, 0.18));
+}
+
+.sidebar__brand .brand-logo {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.brand-logo--sidebar {
+  height: auto;
+  max-height: 64px;
+  width: min(170px, 100%);
+}
+
+.brand-logo--sidebar img {
+  height: auto;
+  max-height: 64px;
+  object-fit: contain;
+  object-position: left center;
+  width: 100%;
+}
+
+.brand-logo--sidebar .brand-logo__fallback {
+  color: #f8fafc;
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
+}
+
+@media (max-width: 760px) {
+  .sidebar__brand {
+    margin-bottom: 1rem;
+  }
+
+  .brand-logo--sidebar {
+    max-height: 52px;
+    width: min(148px, 100%);
+  }
+}
+
+.visual-image-editor__empty,
+.sidebar-visual-slot__placeholder {
+  align-items: center;
+  color: #bae6fd;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+.visual-image-editor__empty span,
+.sidebar-visual-slot__placeholder span {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.sidebar-visual-slot {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  width: 100%;
+}
+
+.sidebar-visual-slot__frame {
+  aspect-ratio: 4 / 5;
+  background:
+    radial-gradient(circle at 80% 12%, rgba(124, 92, 255, 0.22), transparent 9rem),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 17, 32, 0.98));
+  border: 1px solid rgba(94, 234, 212, 0.24);
+  border-radius: 1.15rem;
+  box-shadow: 0 18px 42px rgba(8, 145, 178, 0.13), inset 0 0 0 1px rgba(168, 85, 247, 0.12);
+  color: #f8fafc;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.sidebar-visual-slot__frame img {
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  width: 100%;
+}
+
+.sidebar-visual-slot__overlay {
+  background: #020617;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.sidebar-visual-slot__copy {
+  bottom: 0.85rem;
+  display: grid;
+  gap: 0.15rem;
+  left: 0.85rem;
+  position: absolute;
+  right: 0.85rem;
+  text-align: left;
+  z-index: 1;
+}
+
+.sidebar-visual-slot__copy strong {
+  color: #f8fafc;
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.sidebar-visual-slot__copy span {
+  color: #bae6fd;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-visual-slot__control {
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(94, 234, 212, 0.38);
+  border-radius: 999px;
+  color: #bae6fd;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  justify-self: start;
+  padding: 0.45rem 0.7rem;
+}
+
+.sidebar-visual-slot__control:hover,
+.sidebar-visual-slot__control:focus-visible {
+  border-color: rgba(168, 85, 247, 0.72);
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.14);
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .visual-image-editor__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-visual-slot__frame {
+    aspect-ratio: 1 / 1;
+  }
+}

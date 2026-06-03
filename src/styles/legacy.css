@@ -1,0 +1,171 @@
+/* HeroIndex Legacy styles. Extracted from globals.css for modular maintenance. */
+
+/* LEGACY REVIEW: reglas conservadas porque su uso puede ser dinámico o compartido; confirmar antes de borrar. */
+
+.broadcast-label {
+  color: #68d8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.section-heading {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.section-heading h2 {
+  font-size: 1.35rem;
+}
+
+.broadcast-panel {
+  background: rgba(7, 11, 23, 0.92);
+  border: 1px solid rgba(104, 216, 255, 0.36);
+  border-radius: 1rem;
+  bottom: 1rem;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  color: #d7def3;
+  font-size: 0.78rem;
+  max-width: min(26rem, calc(100vw - 2rem));
+  padding: 1rem;
+  position: fixed;
+  right: 1rem;
+  z-index: 50;
+}
+
+.broadcast-panel h2 {
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.broadcast-panel dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.broadcast-panel__row {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.broadcast-panel dt {
+  color: #92a0c7;
+  font-weight: 700;
+}
+
+.broadcast-panel dd {
+  color: #ffffff;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.broadcast-panel h3 {
+  color: #68d8ff;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  margin: 1rem 0 0.6rem;
+  text-transform: uppercase;
+}
+
+.broadcast-panel__slots {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 45vh;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.broadcast-panel__slot {
+  border-top: 1px solid rgba(151, 164, 205, 0.22);
+  padding-top: 0.65rem;
+}
+
+.broadcast-panel__slot h4 {
+  color: #ffffff;
+  font-size: 0.78rem;
+  margin: 0 0 0.45rem;
+}
+
+.hero-ranking-avatar {
+  align-items: center;
+  background: linear-gradient(135deg, #68d8ff, #7c5cff);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 950;
+  height: 3.6rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-transform: uppercase;
+  width: 3.6rem;
+}
+
+.hero-ranking-avatar--large {
+  border-radius: 1.25rem;
+  height: 5.2rem;
+  width: 5.2rem;
+}
+
+.hero-ranking-list {
+  display: grid;
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hero-ranking-list li {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(151, 164, 205, 0.14);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: auto auto minmax(10rem, 1fr) minmax(8rem, 0.8fr) auto minmax(20rem, 1.25fr);
+  padding: 0.85rem;
+}
+
+.hero-ranking-list__identity {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.hero-ranking-list__identity strong {
+  color: #ffffff;
+  font-size: 1.05rem;
+}
+
+.hero-ranking-list__identity span,
+.hero-ranking-list__affiliation {
+  color: #aeb8d8;
+  font-weight: 700;
+}
+
+.hero-ranking-list em {
+  color: #8ea0ce;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.hi-metric-card {
+  background: rgba(8, 15, 31, 0.38);
+  border: 1px solid rgba(186, 230, 253, 0.14);
+  border-radius: 1rem;
+  padding: 0.85rem;
+}
+
+.is-danger {
+  color: var(--hi-danger) !important;
+}
+
+.hero-ranking-list li {
+  grid-template-columns: auto auto minmax(12rem, 1fr) minmax(10rem, 0.8fr) minmax(9rem, auto) minmax(16rem, 1fr) auto;
+}

@@ -46,6 +46,12 @@ function sortEditorialNews(firstNewsItem, secondNewsItem) {
   return getNewsTimestamp(secondNewsItem) - getNewsTimestamp(firstNewsItem)
 }
 
+function getNewsImageScale(newsItem) {
+  const scale = Number(newsItem?.imageScale ?? 1)
+
+  return Number.isNaN(scale) ? 1 : Math.max(scale, 1)
+}
+
 function getHeroDisplayName(hero) {
   return hero.alias ?? hero.publicName ?? hero.codename ?? hero.name ?? 'Figura HeroIndex'
 }
@@ -66,17 +72,24 @@ function Home({ onNavigate }) {
     loading: corporationsLoading,
   } = useCorporations()
   const { loading: heroesLoading, rankingHeroes } = useHeroes()
-  const visibleFeedNews = feedNews.filter((item) => item.active !== false && item.homePlacement !== 'hidden')
-  const heroNews = visibleFeedNews.filter((item) => item.homePlacement === 'hero').sort(sortEditorialNews)
-  const topStory = heroNews[0] ?? visibleFeedNews[0] ?? null
-  const feedPlacementNews = visibleFeedNews.filter((item) => {
-    if (item.id === topStory?.id) return false
-
-    return !item.homePlacement || item.homePlacement === 'feed' || item.homePlacement === 'featured'
-  })
-  const recentNews = feedPlacementNews.length > 3 ? feedPlacementNews.slice(0, 5) : visibleFeedNews.filter((item) => item.id !== topStory?.id).slice(0, 5)
-  const sidebarNews = visibleFeedNews.filter((item) => item.homePlacement === 'sidebar').sort(sortEditorialNews)
-  const visibleTrendingNews = sidebarNews.length > 0 ? sidebarNews.slice(0, 3) : trendingNews.filter((item) => item.active !== false)
+  const publicNews = feedNews.filter((item) => item.active !== false && item.homePlacement !== 'hidden')
+  const heroNews = publicNews.filter((item) => item.homePlacement === 'hero').sort(sortEditorialNews)
+  const topStory = heroNews[0] ?? null
+  const recentNews = publicNews
+    .filter((item) => item.homePlacement === 'feed' && item.id !== topStory?.id)
+    .sort(sortEditorialNews)
+    .slice(0, 5)
+  const visibleTrendingNews = trendingNews
+    .filter((item) => item.active !== false && item.homePlacement !== 'hidden' && item.id !== topStory?.id)
+    .sort(sortEditorialNews)
+    .slice(0, 3)
+  const topStoryVisualStyle = topStory?.imageUrl
+    ? {
+        backgroundImage: `linear-gradient(rgba(3, 7, 18, ${topStory.imageOverlayStrength ?? 0.55}), rgba(3, 7, 18, ${topStory.imageOverlayStrength ?? 0.55})), url(${topStory.imageUrl})`,
+        backgroundPosition: `${topStory.imagePositionX ?? 50}% ${topStory.imagePositionY ?? 50}%`,
+        backgroundSize: `${getNewsImageScale(topStory) * 100}%`,
+      }
+    : undefined
   const featuredHeroes = rankingHeroes.slice(0, 5)
   const citizenFeaturedHeroes = rankingHeroes
     .filter((hero) => hero.active !== false)
@@ -151,33 +164,24 @@ function Home({ onNavigate }) {
 
       <div className="home-grid">
         <div className="home-main" aria-label="Feed de noticias HeroIndex">
-          <InlineVisualSlot
-            activeVisualSlotId={activeVisualSlotId}
-            className="hero-feature"
-            isVisualEditorOpen={isVisualEditorOpen}
-            onVisualEditorClose={handleVisualEditorClose}
-            onVisualEditorOpen={handleVisualEditorOpen}
-            page="home"
-            section="Portada HeroIndex"
-            slotId="home-hero-visual"
-          >
+          <section className="hero-feature hero-feature--news" style={topStoryVisualStyle}>
             {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading && topStory ? (
               <div className="hero-feature__copy">
                 <div className="hero-feature__brand-seal">
                   <BrandLogo size="sm" variant="symbol" />
-                  <span>HeroIndex Newsroom</span>
+                  <span>Mesa Editorial HeroIndex</span>
                 </div>
                 <div className="hero-feature__badges" aria-label="Estado editorial">
-                  <span>COBERTURA PRIORITARIA</span>
-                  <span>ACTUALIZACIÓN EN VIVO</span>
+                  <span>PORTADA PRINCIPAL</span>
+                  <span>COBERTURA EDITORIAL</span>
                   <span>CANAL VERIFICADO</span>
                 </div>
                 <p className="page-card__kicker">{getNewsType(topStory)}</p>
                 <h2>{topStory.title}</h2>
                 <p>{getNewsSummary(topStory)}</p>
                 <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada">
-                  <span>{topStory.sourceLabel ?? topStory.source ?? 'HeroIndex Newsroom'}</span>
+                  <span>{topStory.sourceLabel ?? topStory.source ?? 'Mesa Editorial HeroIndex'}</span>
                   {topStory.time ? <span>{topStory.time}</span> : null}
                   {topStory.metric ? <span>{topStory.metric}</span> : null}
                 </div>
@@ -187,14 +191,14 @@ function Home({ onNavigate }) {
               <div className="hero-feature__copy">
                 <div className="hero-feature__brand-seal">
                   <BrandLogo size="sm" variant="symbol" />
-                  <span>HeroIndex Newsroom</span>
+                  <span>Mesa Editorial HeroIndex</span>
                 </div>
                 <p className="page-card__kicker">Canal verificado</p>
-                <h2>Sin actualizaciones activas por ahora</h2>
-                <p>La cobertura pública de HeroIndex aparecerá aquí cuando esté disponible.</p>
+                <h2>Sin portada principal activa</h2>
+                <p>Marca una noticia como Portada principal en Mesa Editorial para ocupar este espacio.</p>
               </div>
             ) : null}
-          </InlineVisualSlot>
+          </section>
 
           <InlineVisualSlot
             activeVisualSlotId={activeVisualSlotId}
@@ -232,7 +236,7 @@ function Home({ onNavigate }) {
                       <div className="feed-card__body">
                         <header>
                           <div>
-                            <strong>{item.sourceLabel ?? item.source ?? item.author ?? 'HeroIndex Newsroom'}</strong>
+                            <strong>{item.sourceLabel ?? item.source ?? item.author ?? 'Mesa Editorial HeroIndex'}</strong>
                             <span>{item.handle ?? 'Canal público verificado'}</span>
                           </div>
                           <time>{item.time}</time>

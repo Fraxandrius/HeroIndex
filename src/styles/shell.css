@@ -1,0 +1,298 @@
+/* HeroIndex Shell styles. Extracted from globals.css for modular maintenance. */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(55, 91, 255, 0.22), transparent 32rem),
+    linear-gradient(135deg, #0a0f1e 0%, #11182b 54%, #151127 100%);
+}
+
+.app-shell__workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  align-items: center;
+  border-bottom: 1px solid rgba(151, 164, 205, 0.18);
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+}
+
+.topbar h1 {
+  color: #ffffff;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  margin: 0.25rem 0 0;
+}
+
+.topbar__eyebrow,
+.page-card__kicker {
+  color: #68d8ff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.topbar__status {
+  border: 1px solid rgba(104, 216, 255, 0.38);
+  border-radius: 999px;
+  color: #bdefff;
+  padding: 0.45rem 0.8rem;
+}
+
+.app-shell__content {
+  padding: 2rem;
+}
+
+.page-card {
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(151, 164, 205, 0.2);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  max-width: 880px;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.page-card h2 {
+  color: #ffffff;
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  line-height: 1.1;
+  margin: 0.4rem 0 1rem;
+}
+
+.page-card p {
+  color: #aeb8d8;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.page-card--player {
+  background:
+    linear-gradient(135deg, rgba(98, 214, 255, 0.12), rgba(124, 92, 255, 0.12)),
+    rgba(15, 23, 42, 0.76);
+}
+
+.page-card--oracle {
+  background:
+    linear-gradient(135deg, rgba(245, 190, 92, 0.13), rgba(68, 84, 132, 0.2)),
+    rgba(15, 23, 42, 0.82);
+  border-color: rgba(245, 190, 92, 0.28);
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-bottom: 1px solid rgba(151, 164, 205, 0.18);
+    border-right: 0;
+  }
+
+  .sidebar__nav {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar__section-links {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .app-shell__content {
+    padding: 1.25rem;
+  }
+}
+
+.hero-feature p:not(.page-card__kicker) {
+  color: #c6d2f2;
+  font-size: 1.08rem;
+  max-width: 42rem;
+}
+
+.gm-manager-workspace__top p:not(.page-card__kicker) {
+  color: #aebce3;
+  margin: 0;
+}
+
+.my-profile-page .page-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 28, 49, 0.92));
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 1.5rem 4rem rgba(8, 15, 31, 0.22);
+}
+
+.app-shell__content {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1520px;
+  width: 100%;
+}
+
+.page-card,
+.hi-page,
+.hi-page-wide,
+.home-main,
+.home-page,
+.ranking-page,
+.profiles-page,
+.hero-profile-page,
+.oraculo-hub,
+.oraculo-dossier-page,
+.gm-manager-page,
+.mission-calculator-page,
+.oraculo-npc-builder-page,
+.oraculo-npc-import-page,
+.news-page,
+.corporations-page {
+  box-sizing: border-box;
+  max-width: min(1520px, 100%);
+  width: 100%;
+}
+
+.hi-page,
+.hi-page-wide {
+  margin: 0 auto;
+}
+
+.hi-page-header,
+.hi-section,
+.hi-card,
+.hi-actions-card,
+.hi-state-card {
+  border-radius: 1.4rem;
+  box-sizing: border-box;
+}
+
+.hi-dashboard-grid {
+  align-items: start;
+  display: grid;
+  gap: 1.35rem;
+  grid-template-columns: minmax(0, 8fr) minmax(19rem, 4fr);
+  width: 100%;
+}
+
+.hi-main-column,
+.hi-side-column {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.hi-card-grid,
+.hi-section-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.hi-card-public {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(232, 240, 255, 0.92));
+  border: 1px solid rgba(17, 91, 173, 0.12);
+}
+
+.hi-card-oraculo {
+  background: linear-gradient(145deg, rgba(9, 16, 32, 0.96), rgba(15, 23, 42, 0.96));
+  border: 1px solid rgba(94, 234, 212, 0.18);
+}
+
+.hi-card-player,
+.hi-actions-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 28, 49, 0.92));
+  border: 1px solid var(--hi-border);
+}
+
+.hi-action-panel,
+.hi-actions-card,
+.hi-quick-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.hi-form-error,
+.hi-state-card--error {
+  background: rgba(251, 113, 133, 0.12);
+  border: 1px solid rgba(251, 113, 133, 0.24);
+  color: var(--hi-danger);
+}
+
+.hi-state-card--success {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.24);
+  color: var(--hi-success);
+}
+
+@media (max-width: 980px) {
+  .hi-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-profile-dashboard__side {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell__content {
+    padding: 1rem;
+  }
+
+  .hi-card-grid,
+  .hi-section-grid,
+  .my-profile-side-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Website / App Polish v2 */
+.hi-page,
+.home-page,
+.ranking-page,
+.profiles-page,
+.hero-profile-page,
+.news-page,
+.corporations-page,
+.my-profile-page {
+  margin-inline: auto;
+  max-width: 1520px;
+  width: 100%;
+}
+
+.page-card.home-page,
+.home-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.home-visual-signal p:not(.page-card__kicker),
+.ranking-visual-signal p:not(.page-card__kicker),
+.hero-profile-visual-signal p:not(.page-card__kicker) {
+  color: var(--hi-text-soft, #cbd5e1);
+  margin: 0;
+}
+
+.news-hero.inline-visual-slot p:not(.page-card__kicker),
+.corporations-hero.inline-visual-slot p:not(.page-card__kicker),
+.profiles-feature-visual.inline-visual-slot p:not(.page-card__kicker) {
+  color: #cbd5e1;
+}
+
+.hero-feature p:not(.page-card__kicker) {
+  color: #dbe7ff;
+  font-size: clamp(1rem, 1.7vw, 1.18rem);
+}
+
+.newsroom-form-block > p:not(.page-card__kicker) {
+  color: #cbd5e1;
+  margin: 0;
+}
