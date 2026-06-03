@@ -34,8 +34,12 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
   return (
     <aside className="sidebar" aria-label="Navegación HeroIndex">
       <button className="sidebar__brand" aria-label="Ir al inicio de HeroIndex" onClick={() => onNavigate('home')} type="button">
-        <BrandLogo className="sidebar__brand-mark" size="sidebar" variant="full" />
-      </button>
+  <BrandLogo className="sidebar__brand-mark" size="sidebarSymbol" variant="symbol" />
+  <div className="sidebar__brand-copy">
+    <strong>HeroIndex</strong>
+    <small>Red de reputación heroica</small>
+  </div>
+</button>
 
       <nav className="sidebar__nav">
         {navSections.map((section) => {

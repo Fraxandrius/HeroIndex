@@ -528,3 +528,66 @@
   gap: 0.5rem;
   margin-top: 0.25rem;
 }
+/* Sidebar Brand Symbol Lockup-v1 */
+.sidebar__brand {
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(94, 234, 212, 0.16), transparent 7rem),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(8, 15, 31, 0.72));
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 1.4rem;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  margin: 0 0 1.5rem;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  width: 100%;
+}
+
+.sidebar__brand:hover,
+.sidebar__brand:focus-visible {
+  border-color: rgba(94, 234, 212, 0.34);
+  box-shadow: 0 0 28px rgba(94, 234, 212, 0.12);
+  filter: none;
+  opacity: 1;
+  outline: none;
+}
+
+.brand-logo--sidebar-symbol {
+  height: 96px;
+  max-height: none;
+  width: 96px;
+}
+
+.brand-logo--sidebar-symbol img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.sidebar__brand-copy {
+  display: grid;
+  gap: 0.1rem;
+  text-align: center;
+}
+
+.sidebar__brand-copy strong {
+  color: #f8fafc;
+  display: block;
+  font-size: 1.18rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.sidebar__brand-copy small {
+  color: #93c5fd;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
