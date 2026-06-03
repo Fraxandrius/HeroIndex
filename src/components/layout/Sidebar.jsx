@@ -3,9 +3,10 @@ import SidebarVisualSlot from '../visual/SidebarVisualSlot.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { canSeeOraculoTools } from '../../utils/roles.js'
 
+const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
+
 const navSections = [
   { id: 'public', label: 'Público', description: 'Noticias · Perfiles · Ranking' },
-   { id: 'player', label: 'Jugador', description: 'Mi Perfil · Karma', requiresLogin: true },
   { id: 'access', label: 'Acceso', description: 'Iniciar sesión · Crear cuenta', requiresGuest: true },
   { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas internas', requiresOracle: true },
 ]
@@ -21,9 +22,9 @@ function getInitials(value = 'HI') {
 
 function Sidebar({ activeRouteId, onNavigate, routes }) {
   const { isLoggedIn, loading, logout, userProfile } = useAuth()
-  const canViewOracle = canSeeOraculoTools(userProfile)
+  const canViewOracle = isOraculoMode && canSeeOraculoTools(userProfile)
   const visibleRoutes = routes.filter((route) => route.hiddenFromNav !== true)
- const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
+  const userName = userProfile?.displayName || userProfile?.username || 'Jugador HeroIndex'
 
   const handleLogout = async () => {
     await logout()
@@ -42,7 +43,7 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
             return null
           }
 
-                    if (section.requiresGuest && isLoggedIn) {
+          if (section.requiresGuest && (isLoggedIn || loading)) {
             return null
           }
 
@@ -59,7 +60,7 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
           }
 
           return (
-             <section className={`sidebar__section sidebar__section--${section.id}`} key={section.id}>
+            <section className={`sidebar__section sidebar__section--${section.id}`} key={section.id}>
               <div className="sidebar__section-header">
                 <span>{section.label}</span>
                 <small>{section.description}</small>
@@ -83,44 +84,51 @@ function Sidebar({ activeRouteId, onNavigate, routes }) {
           )
         })}
       </nav>
-      
+
       {isLoggedIn ? <SidebarVisualSlot canSeeOraculoTools={canViewOracle} /> : null}
-      <section className="sidebar__user" aria-label="Cuenta de jugador">
-        {loading ? (
-          <span>Restaurando sesión HeroIndex...</span>
-        ) : isLoggedIn ? (
-          <>
-            <div className="sidebar-user-card">
-              <div className="sidebar-user-card__avatar">
-                {userProfile?.avatarUrl ? <img alt="Avatar de cuenta" src={userProfile.avatarUrl} /> : <span>{getInitials(userName)}</span>}
+
+      {loading || isLoggedIn ? (
+        <section className="sidebar__user sidebar__section sidebar__section--player" aria-label="Cuenta de jugador">
+          <div className="sidebar__section-header">
+            <span>Jugador</span>
+            <small>Mi Perfil · Karma · Cuenta</small>
+          </div>
+          {loading ? (
+            <span>Restaurando sesión HeroIndex...</span>
+          ) : isLoggedIn ? (
+            <>
+              <div className="sidebar-user-card">
+                <div className="sidebar-user-card__avatar">
+                  {userProfile?.avatarUrl ? <img alt="Avatar de cuenta" src={userProfile.avatarUrl} /> : <span>{getInitials(userName)}</span>}
+                </div>
+                <div>
+                  <strong>{userName}</strong>
+                  <small>Cuenta HeroIndex activa</small>
+                </div>
               </div>
-              <div>
-                <strong>{userName}</strong>
-                <small>Cuenta HeroIndex activa</small>
+              {!userProfile?.heroId ? (
+                <button className="sidebar__link sidebar__link--highlight" onClick={() => onNavigate('my-profile')} type="button">
+                  Completar Mi Perfil
+                </button>
+              ) : null}
+              <div className="sidebar-user-actions">
+                <button className="sidebar__link" onClick={() => onNavigate('my-profile')} type="button">
+                  Mi Perfil
+                </button>
+                <button className="sidebar__link" onClick={() => onNavigate('karma')} type="button">
+                  Karma
+                </button>
+                <button className="sidebar__link" onClick={() => onNavigate('account')} type="button">
+                  Mi Cuenta
+                </button>
+                <button className="sidebar__link sidebar__link--subtle" onClick={handleLogout} type="button">
+                  Cerrar sesión
+                </button>
               </div>
-            </div>
-             {!userProfile?.heroId ? (
-              <button className="sidebar__link sidebar__link--highlight" onClick={() => onNavigate('my-profile')} type="button">
-                Completar Mi Perfil
-              </button>
-            ) : null}
-            <div className="sidebar-user-actions">
-              <button className="sidebar__link" onClick={() => onNavigate('my-profile')} type="button">
-                Mi Perfil
-              </button>
-              <button className="sidebar__link" onClick={() => onNavigate('account')} type="button">
-                Mi Cuenta
-              </button>
-              <button className="sidebar__link" onClick={() => onNavigate('karma')} type="button">
-                Karma
-              </button>
-              <button className="sidebar__link sidebar__link--subtle" onClick={handleLogout} type="button">
-                Cerrar sesión
-              </button>
-            </div>
-          </>
+            </>
           ) : null}
-      </section>
+        </section>
+      ) : null}
     </aside>
   )
 }
