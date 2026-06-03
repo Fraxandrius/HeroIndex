@@ -14,7 +14,7 @@ const defaultFormState = {
   editorialTone: 'verified',
   homePlacement: 'feed',
   priority: 0,
-  sourceLabel: 'HeroIndex Newsroom',
+  sourceLabel: 'Mesa Editorial HeroIndex',
   imageUrl: '',
   imageFit: 'cover',
   imagePositionX: 50,
@@ -37,11 +37,9 @@ const toneOptions = [
 ]
 
 const placementOptions = [
-  { value: 'hero', label: 'Hero principal' },
-  { value: 'featured', label: 'Destacado' },
+  { value: 'hero', label: 'Portada principal' },
   { value: 'feed', label: 'Feed' },
-  { value: 'sidebar', label: 'Sidebar' },
-  { value: 'hidden', label: 'Oculto' },
+  { value: 'hidden', label: 'Oculta / borrador' },
 ]
 
 const titlePositionOptions = [
@@ -59,13 +57,28 @@ function getDateLabel(value) {
   }).format(new Date(value))
 }
 
+function normalizePlacement(value) {
+  if (value === 'hero' || value === 'feed' || value === 'hidden') return value
+
+  return 'feed'
+}
+
+function normalizePriority(value) {
+  const priority = Number(value ?? 0)
+
+  return Number.isNaN(priority) ? 0 : priority
+}
+
 function getPreviewStyle(formState) {
   if (!formState.imageUrl) return undefined
 
+  const imageScale = Number(formState.imageScale ?? 1)
+  const overlayStrength = Number(formState.imageOverlayStrength ?? 0.55)
+
   return {
-    backgroundImage: `linear-gradient(rgba(3, 7, 18, ${formState.imageOverlayStrength}), rgba(3, 7, 18, ${formState.imageOverlayStrength})), url(${formState.imageUrl})`,
+    backgroundImage: `linear-gradient(rgba(3, 7, 18, ${Number.isNaN(overlayStrength) ? 0.55 : overlayStrength}), rgba(3, 7, 18, ${Number.isNaN(overlayStrength) ? 0.55 : overlayStrength})), url(${formState.imageUrl})`,
     backgroundPosition: `${formState.imagePositionX}% ${formState.imagePositionY}%`,
-    backgroundSize: formState.imageFit === 'contain' ? 'contain' : `${Math.round(formState.imageScale * 100)}%`,
+    backgroundSize: `${Math.round((Number.isNaN(imageScale) ? 1 : imageScale) * 100)}%`
   }
 }
 
@@ -73,7 +86,8 @@ function normalizeFormValue(newsItem) {
   return {
     ...defaultFormState,
     ...newsItem,
-    priority: Number(newsItem.priority ?? 0),
+    homePlacement: normalizePlacement(newsItem.homePlacement),
+    priority: normalizePriority(newsItem.priority),
     imagePositionX: Number(newsItem.imagePositionX ?? 50),
     imagePositionY: Number(newsItem.imagePositionY ?? 50),
     imageScale: Number(newsItem.imageScale ?? 1),
@@ -182,7 +196,8 @@ function OraculoNewsroom() {
         ...formState,
         ...overrides,
         imageUrl: nextImageUrl,
-        priority: Number(formState.priority ?? 0),
+        homePlacement: normalizePlacement(overrides.homePlacement ?? formState.homePlacement),
+        priority: normalizePriority(overrides.priority ?? formState.priority),
         imagePositionX: Number(formState.imagePositionX ?? 50),
         imagePositionY: Number(formState.imagePositionY ?? 50),
         imageScale: Number(formState.imageScale ?? 1),
@@ -227,6 +242,8 @@ function OraculoNewsroom() {
 
   const previewState = { ...formState, imageUrl: selectedPreviewUrl || formState.imageUrl }
   const previewStyle = getPreviewStyle(previewState)
+  const hasPreviewImage = Boolean(previewState.imageUrl)
+  const isHiddenDraft = formState.active === false || formState.homePlacement === 'hidden'
 
   return (
     <section className="newsroom-page">
@@ -267,18 +284,20 @@ function OraculoNewsroom() {
               </select>
             </label>
             <label className="hi-field">
-              <span className="hi-label">Ubicación en Home</span>
+              <span className="hi-label">Destino editorial</span>
               <select className="hi-select" onChange={(event) => updateField('homePlacement', event.target.value)} value={formState.homePlacement}>
                 {placementOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
+              <small>Define dónde aparecerá esta noticia. La portada principal muestra solo una noticia activa: la de mayor prioridad.</small>
             </label>
             <label className="hi-field">
-              <span className="hi-label">Prioridad</span>
+              <span className="hi-label">Prioridad editorial</span>
               <input className="hi-input" min="0" onChange={(event) => updateField('priority', event.target.value)} type="number" value={formState.priority} />
+            <small>La prioridad ordena noticias dentro del mismo destino. Un número mayor aparece antes.</small>
             </label>
             <label className="newsroom-check">
               <input checked={formState.active} onChange={(event) => updateField('active', event.target.checked)} type="checkbox" />
-              <span>Activa</span>
+              <span>Activa públicamente</span>
             </label>
           </section>
 
@@ -292,6 +311,7 @@ function OraculoNewsroom() {
               <span className="hi-label">URL manual opcional</span>
               <input className="hi-input" onChange={(event) => updateField('imageUrl', event.target.value)} value={formState.imageUrl} />
             </label>
+            {hasPreviewImage ? (
             <div className="newsroom-form-grid">
               <label className="hi-field">
                 <span className="hi-label">Posición X</span>
@@ -310,54 +330,57 @@ function OraculoNewsroom() {
                 <input max="0.85" min="0.25" onChange={(event) => updateField('imageOverlayStrength', event.target.value)} step="0.05" type="range" value={formState.imageOverlayStrength} />
               </label>
               <label className="hi-field">
-                <span className="hi-label">Ajuste visual</span>
-                <select className="hi-select" onChange={(event) => updateField('imageFit', event.target.value)} value={formState.imageFit}>
-                  <option value="cover">Cubrir</option>
-                  <option value="contain">Contener</option>
-                </select>
-              </label>
-              <label className="hi-field">
                 <span className="hi-label">Posición del titular</span>
                 <select className="hi-select" onChange={(event) => updateField('headlinePlacement', event.target.value)} value={formState.headlinePlacement}>
                   {titlePositionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
             </div>
-            <div className="newsroom-actions">
-              <button className="hi-button hi-button-secondary" onClick={centerVisual} type="button">Centrar</button>
-              <button className="hi-button hi-button-secondary" onClick={resetVisual} type="button">Restablecer</button>
-            </div>
+            ) : <p>Agrega una imagen para activar los controles de encuadre.</p>}
+            {hasPreviewImage ? (
+              <div className="newsroom-actions">
+                <button className="hi-button hi-button-secondary" onClick={centerVisual} type="button">Centrar</button>
+                <button className="hi-button hi-button-secondary" onClick={resetVisual} type="button">Restablecer</button>
+              </div>
+            ) : null}
           </section>
 
           {statusMessage ? <p className="newsroom-status">{statusMessage}</p> : null}
           {errorMessage ? <p className="newsroom-error">{errorMessage}</p> : null}
 
           <footer className="newsroom-actions newsroom-actions--main">
-            <button className="hi-button hi-button-primary" disabled={isSaving} onClick={() => saveNews()} type="button">Guardar noticia</button>
-            <button className="hi-button hi-button-primary" disabled={isSaving} onClick={() => saveNews({ active: true })} type="button">Publicar</button>
-            <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={() => saveNews({ active: false })} type="button">Guardar como borrador</button>
+            <button className="hi-button hi-button-primary" disabled={isSaving} onClick={() => saveNews()} type="button">{isHiddenDraft ? 'Guardar borrador' : 'Guardar noticia'}</button>
+            <button className="hi-button hi-button-primary" disabled={isSaving} onClick={() => saveNews({ active: true })} type="button">Publicar noticia</button>
+            <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={() => saveNews({ active: false })} type="button">Guardar borrador</button>
             <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={resetForm} type="button">Limpiar formulario</button>
           </footer>
         </form>
 
         <aside className="newsroom-preview" aria-label="Vista previa editorial">
-          <div className={`newsroom-preview-card newsroom-preview-card--hero newsroom-tone-${formState.editorialTone} newsroom-copy-${formState.headlinePlacement}`} style={previewStyle}>
-            <span>{formState.kicker || 'Canal verificado'}</span>
-            <h3>{formState.title || 'Titular HeroIndex listo para publicar'}</h3>
-            <p>{formState.summary || 'La bajada aparecerá aquí para revisar contraste, ritmo y lectura editorial.'}</p>
-            <small>{formState.sourceLabel}</small>
-          </div>
-          <div className={`newsroom-preview-card newsroom-preview-card--feed newsroom-tone-${formState.editorialTone}`} style={previewStyle}>
-            <span>{formState.kicker || 'Feed HeroIndex'}</span>
-            <h3>{formState.title || 'Vista Feed'}</h3>
-            <p>{formState.summary || 'Resumen compacto para cobertura reciente.'}</p>
-            <small>{formState.sourceLabel} · {toneOptions.find((option) => option.value === formState.editorialTone)?.label}</small>
-          </div>
-          <div className={`newsroom-preview-card newsroom-preview-card--rail newsroom-tone-${formState.editorialTone}`} style={previewStyle}>
-            <span>Vista Sidebar</span>
-            <strong>{formState.title || 'Actividad destacada'}</strong>
-            <small>{formState.homePlacement} · Prioridad {formState.priority}</small>
-          </div>
+        {formState.homePlacement === 'hero' ? (
+            <div className={`newsroom-preview-card newsroom-preview-card--hero newsroom-tone-${formState.editorialTone} newsroom-copy-${formState.headlinePlacement}`} style={previewStyle}>
+              <span>Vista portada principal</span>
+              <h3>{formState.title || 'Titular HeroIndex listo para publicar'}</h3>
+              <p>{formState.summary || 'La bajada aparecerá aquí para revisar contraste, ritmo y lectura editorial.'}</p>
+              <small>{formState.sourceLabel}</small>
+            </div>
+          ) : null}
+          {formState.homePlacement === 'feed' ? (
+            <div className={`newsroom-preview-card newsroom-preview-card--feed newsroom-tone-${formState.editorialTone}`} style={previewStyle}>
+              <span>Vista feed</span>
+              <h3>{formState.title || 'Vista Feed'}</h3>
+              <p>{formState.summary || 'Resumen compacto para cobertura reciente.'}</p>
+              <small>{formState.sourceLabel} · {toneOptions.find((option) => option.value === formState.editorialTone)?.label}</small>
+            </div>
+          ) : null}
+          {formState.homePlacement === 'hidden' ? (
+            <div className="newsroom-preview-card newsroom-preview-card--feed newsroom-tone-verified">
+              <span>Oculta / borrador</span>
+              <h3>{formState.title || 'Noticia sin publicar'}</h3>
+              <p>No aparecerá públicamente mientras esté oculta.</p>
+            </div>
+          ) : null}
+          <p className="newsroom-preview-note">Los espacios visuales laterales se gestionan fuera de Mesa Editorial.</p>
         </aside>
       </div>
 

@@ -1,5 +1,6 @@
 import { onValue, push, ref, remove, set, update } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
+import { uploadImageWithPath } from './storageService.js'
 
 export const HEROES_PATH = 'heroes'
 const CHARACTER_SHEETS_PATH = 'characterSheets'
@@ -120,4 +121,16 @@ export async function deleteHero(heroId, options = {}) {
 
 export async function deleteMultipleHeroes(heroIds = [], options = {}) {
   await Promise.all(heroIds.filter(Boolean).map((heroId) => deleteHero(heroId, options)))
+}
+
+export function uploadHeroMediaImage(heroId, channel, file) {
+  if (!heroId) {
+    throw new Error('Hero id is required')
+  }
+
+  if (!channel) {
+    throw new Error('Media channel is required')
+  }
+
+  return uploadImageWithPath(file, `hero-media/${heroId}/${channel}`)
 }

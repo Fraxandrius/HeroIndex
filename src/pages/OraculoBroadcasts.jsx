@@ -24,7 +24,7 @@ const placementOptions = [
 ]
 
 const toneOptions = [
-  { value: 'institutional', label: 'Institucional' },
+  { value: 'institutional', label: 'Canal público' },
   { value: 'civic', label: 'Cívico' },
   { value: 'corporate', label: 'Corporativo' },
   { value: 'recruitment', label: 'Comunidad' },
@@ -163,7 +163,7 @@ function OraculoBroadcasts() {
       <header className="oraculo-broadcasts-hero hi-card hi-card-oraculo">
         <p className="page-card__kicker">ORÁCULO · Canales públicos</p>
         <h2>Señales públicas</h2>
-        <p>Gestiona mensajes visuales institucionales para poblar HeroIndex con cobertura, confianza y presencia heroica certificada.</p>
+        <p>Gestiona Señales Públicas para poblar HeroIndex con avisos, comunicados y llamados corporativos.</p>
       </header>
 
       <section className="oraculo-broadcasts-summary" aria-label="Resumen de señales públicas">

@@ -20,7 +20,7 @@ function sanitizeFolder(folder = 'uploads') {
   return sanitizedFolder || 'uploads'
 }
 
-export async function uploadImage(file, folder = 'uploads') {
+export async function uploadImageWithPath(file, folder = 'uploads') {
   if (!file) {
     throw new Error('Image file is required')
   }
@@ -43,5 +43,14 @@ export async function uploadImage(file, folder = 'uploads') {
 
   await uploadBytes(imageRef, file, { contentType: file.type })
 
-  return getDownloadURL(imageRef)
+  const imageUrl = await getDownloadURL(imageRef)
+  const storagePath = `${safeFolder}/${timestamp}-${safeFileName}`
+
+  return { imageUrl, storagePath }
+}
+
+export async function uploadImage(file, folder = 'uploads') {
+  const uploadedImage = await uploadImageWithPath(file, folder)
+
+  return uploadedImage.imageUrl
 }

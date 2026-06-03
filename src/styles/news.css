@@ -1,0 +1,101 @@
+/* HeroIndex News styles. Extracted from globals.css for modular maintenance. */
+
+.news-page {
+  max-width: 960px;
+}
+
+.news-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.news-list__item {
+  border-top: 1px solid rgba(151, 164, 205, 0.16);
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 1rem;
+}
+
+.news-list__item h3 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.news-list__item footer {
+  color: #c6d2f2;
+  font-weight: 700;
+}
+
+.news-list__image {
+  aspect-ratio: 21 / 9;
+}
+
+.ranking-page,
+.profiles-page,
+.news-page,
+.corporations-page {
+  max-width: 1520px;
+}
+
+.ranking-hero,
+.profiles-hero,
+.news-hero,
+.corporations-hero {
+  max-width: none;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.ranking-top-card h4,
+.ranking-top-card p,
+.ranking-top-card small,
+.hero-ranking-list__identity strong,
+.hero-ranking-list__identity span,
+.hero-ranking-list__affiliation,
+.profile-public-card__heading h3,
+.profile-public-card__heading p,
+.profile-public-card__bio,
+.news-list__item h3,
+.news-list__item p,
+.corporation-card h3,
+.corporation-card p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-public-card__bio,
+.news-list__item p,
+.corporation-card p {
+  -webkit-line-clamp: 3;
+}
+
+.news-list {
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+}
+
+.news-list__item {
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.25rem;
+  padding: 1rem;
+}
+
+.news-list__image {
+  aspect-ratio: 16 / 9;
+  max-height: 16rem;
+}
+
+@media (max-width: 760px) {
+  .profiles-catalog-grid,
+  .news-list,
+  .corporations-list {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-top-card {
+    min-height: auto;
+  }
+}

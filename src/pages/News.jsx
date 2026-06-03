@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
-import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
 import { useNews } from '../hooks/useNews.js'
 import { deleteNews } from '../services/newsService.js'
 
@@ -10,7 +9,7 @@ function News() {
   const { feedNews, loading, source } = useNews()
   const [deletingNewsId, setDeletingNewsId] = useState(null)
   const [deleteMessage, setDeleteMessage] = useState('')
-  const visibleNews = feedNews.filter((item) => item.active !== false)
+  const visibleNews = feedNews.filter((item) => item.active !== false && item.homePlacement !== 'hidden')
 
   const handleDeleteNews = async (newsItem) => {
     if (!window.confirm('Eliminar noticia. Esta acción no se puede deshacer.')) return
@@ -30,11 +29,11 @@ function News() {
 
   return (
     <section className="page-card news-page">
-        <InlineVisualSlot className="news-hero hi-card hi-card-public" page="news" section="Cabecera de noticias" slotId="news-feature-visual">
+        <header className="news-hero hi-card hi-card-public">
         <p className="page-card__kicker">Cobertura verificada · {source}</p>
         <h2>Noticias HeroIndex</h2>
         <p>Cobertura verificada de intervenciones, alertas y eventos heroicos relevantes para una ciudadanía protegida.</p>
-      </InlineVisualSlot>
+      </header>
       <BroadcastSlot className="news-broadcast-channel" placement="news-feature" variant="feature" />
       {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
       <div className="news-list">
@@ -48,7 +47,7 @@ function News() {
                 <p>{newsItem.summary ?? newsItem.body}</p>
                 {newsItem.imageUrl ? (
                   <img
-                    alt={newsItem.title ?? 'HeroIndex news'}
+                    alt={newsItem.title ?? 'Noticia HeroIndex'}
                     className="news-list__image"
                     loading="lazy"
                     onError={(event) => {

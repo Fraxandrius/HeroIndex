@@ -1,28 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useMemo, useState } from 'react'
+import VisualImageEditor from './VisualImageEditor.jsx'
 import {
-  saveVisualSlot,
   subscribeToVisualSlot,
+  updateVisualSlot,
   uploadVisualSlotImage,
 } from '../../services/visualSlotsService.js'
+import { getVisualImageStyle, getVisualOverlayStyle, normalizeVisualData } from '../../utils/visualModel.js'
+import { getPublicContentDefinition, hasPublicContentDefinition } from '../../utils/publicContentRegistry.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
-const fitOptions = [
-  { value: 'cover', label: 'Cubrir' },
-  { value: 'contain', label: 'Contener' },
-]
+function VisualOverlayCopy({ visual }) {
+  const hasCopy = Boolean(visual.eyebrow || visual.title || visual.subtitle || visual.body || visual.ctaLabel)
 
-const positionOptions = [
-  { value: 'center', label: 'Centro', cssValue: 'center center' },
-  { value: 'top', label: 'Arriba', cssValue: 'center top' },
-  { value: 'bottom', label: 'Abajo', cssValue: 'center bottom' },
-  { value: 'left', label: 'Izquierda', cssValue: 'left center' },
-  { value: 'right', label: 'Derecha', cssValue: 'right center' },
-]
+  if (!hasCopy) return null
 
-function getPositionCss(position) {
-  return positionOptions.find((option) => option.value === position)?.cssValue ?? 'center center'
+  return (
+    <div className="visual-slot__copy">
+      {visual.eyebrow ? <p className="page-card__kicker">{visual.eyebrow}</p> : null}
+      {visual.title ? <h3>{visual.title}</h3> : null}
+      {visual.subtitle ? <strong>{visual.subtitle}</strong> : null}
+      {visual.body ? <p>{visual.body}</p> : null}
+      {visual.ctaLabel ? (
+        <a className="visual-slot__link" href={visual.ctaRoute || '#'}>
+          {visual.ctaLabel}
+        </a>
+      ) : null}
+    </div>
+  )
 }
 
 function InlineVisualSlot({
@@ -32,227 +37,88 @@ function InlineVisualSlot({
   isVisualEditorOpen = false,
   onVisualEditorClose,
   onVisualEditorOpen,
-  page,
   section,
+  slotDefinition: providedSlotDefinition,
   slotId,
 }) {
   const [slotConfig, setSlotConfig] = useState(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [fitMode, setFitMode] = useState('cover')
-  const [position, setPosition] = useState('center')
-  const [altText, setAltText] = useState('')
-  const [statusMessage, setStatusMessage] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
+  const slotDefinition = useMemo(
+    () => providedSlotDefinition ?? getPublicContentDefinition(slotId),
+    [providedSlotDefinition, slotId],
+  )
 
   useEffect(() => subscribeToVisualSlot(slotId, setSlotConfig), [slotId])
 
-  const closeEditor = useCallback(() => {
-    setIsEditorOpen(false)
-    onVisualEditorClose?.(slotId)
-  }, [onVisualEditorClose, slotId])
-
-  useEffect(() => {
-    if (!isEditorOpen) return undefined
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-         closeEditor()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [closeEditor, isEditorOpen])
-
-   useEffect(() => {
-    if (!isEditorOpen) return undefined
-
-    document.body.classList.add('visual-editor-open')
-
-    return () => {
-      document.body.classList.remove('visual-editor-open')
-    }
-  }, [isEditorOpen])
-
-  const previewUrl = useMemo(() => {
-    if (!selectedFile) return ''
-
-    return URL.createObjectURL(selectedFile)
-  }, [selectedFile])
-
-  useEffect(
-    () => () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-    },
-    [previewUrl],
-  )
-
   const openEditor = () => {
-    setFitMode(slotConfig?.fitMode ?? 'cover')
-    setPosition(slotConfig?.position ?? 'center')
-    setAltText(slotConfig?.altText ?? '')
-    setSelectedFile(null)
-    setStatusMessage('')
-    setErrorMessage('')
     setIsEditorOpen(true)
     onVisualEditorOpen?.(slotId)
   }
 
-  const handleSave = async () => {
-    setIsSaving(true)
-    setErrorMessage('')
-
-    try {
-      let nextImageUrl = slotConfig?.imageUrl ?? ''
-      let nextStoragePath = slotConfig?.storagePath ?? ''
-
-      if (selectedFile) {
-        setStatusMessage('Subiendo imagen...')
-        const uploadedImage = await uploadVisualSlotImage(slotId, selectedFile)
-        nextImageUrl = uploadedImage.imageUrl
-        nextStoragePath = uploadedImage.storagePath
-      }
-
-      setStatusMessage('Guardando configuración...')
-      const savedSlot = await saveVisualSlot(slotId, {
-        page,
-        section,
-        imageUrl: nextImageUrl,
-        storagePath: nextStoragePath,
-        fitMode,
-        position,
-        altText,
-      })
-
-      setSlotConfig(savedSlot)
-      setStatusMessage('Imagen actualizada correctamente.')
-      setSelectedFile(null)
-      setTimeout(closeEditor, 650)
-    } catch {
-      setErrorMessage('No fue posible actualizar la imagen.')
-      setStatusMessage('')
-    } finally {
-      setIsSaving(false)
-    }
+  const closeEditor = () => {
+    setIsEditorOpen(false)
+    onVisualEditorClose?.(slotId)
   }
 
-  const imageUrl = slotConfig?.imageUrl
-  const resolvedFitMode = slotConfig?.fitMode ?? 'cover'
-  const resolvedPosition = slotConfig?.position ?? 'center'
-  const slotStyle = imageUrl
-    ? {
-        backgroundImage: `url(${imageUrl})`,
-        backgroundPosition: getPositionCss(resolvedPosition),
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: resolvedFitMode,
+  const saveVisual = async ({ file, visual }) => {
+    let nextVisual = normalizeVisualData({ ...slotConfig, ...visual })
+
+    if (file) {
+      const uploadedImage = await uploadVisualSlotImage(slotId, file)
+      nextVisual = {
+        ...nextVisual,
+        imageUrl: uploadedImage.imageUrl,
+        storagePath: uploadedImage.storagePath,
       }
-    : undefined
+    }
 
-  const modalPreviewUrl = previewUrl || slotConfig?.imageUrl || ''
+    const savedSlot = await updateVisualSlot(slotId, nextVisual)
+    setSlotConfig(savedSlot)
+  }
+
+  const visual = normalizeVisualData(slotConfig)
+  const imageUrl = visual.active !== false ? visual.imageUrl : ''
   const shouldShowControl = isOraculoMode && !isEditorOpen && !isVisualEditorOpen
-  const editorPortalTarget = typeof document === 'undefined' ? null : document.body
-  const editorMarkup = isEditorOpen ? (
-    <div className="visual-editor-root visual-slot-modal" role="dialog" aria-modal="true" aria-labelledby={`visual-slot-title-${slotId}`}>
-      <button
-        aria-label="Cerrar editor visual"
-        className="visual-editor-backdrop visual-slot-modal__scrim"
-        onClick={closeEditor}
-        type="button"
-      />
-      <div className="visual-editor-panel visual-slot-modal__panel">
-        <header>
-          <p className="page-card__kicker">ORÁCULO visual</p>
-          <h2 id={`visual-slot-title-${slotId}`}>Editar imagen</h2>
-          <p>Actualiza el espacio visual sin salir de la página pública.</p>
-        </header>
+  const hasEditableOverlay = slotDefinition.allowText === true || slotDefinition.allowTextContent === true || slotDefinition.type === 'signal'
+  const shouldUseRegisteredAspectRatio = hasPublicContentDefinition(slotId) || !children
+  const hasChildren = Boolean(children)
+  const shouldRender = Boolean(imageUrl || hasChildren || shouldShowControl || isEditorOpen)
 
-        <div className="visual-slot-modal__preview">
-          {modalPreviewUrl ? (
-            <img alt={altText || section || 'Vista previa visual'} src={modalPreviewUrl} />
-          ) : (
-            <span>Vista previa pendiente</span>
-          )}
-        </div>
-
-        <div className="visual-slot-modal__form">
-          <label className="hi-field">
-            <span className="hi-label">Imagen</span>
-            <input
-              accept="image/*"
-              className="hi-input"
-              disabled={isSaving}
-              onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-              type="file"
-            />
-          </label>
-
-          <label className="hi-field">
-            <span className="hi-label">Modo de imagen</span>
-            <select className="hi-select" disabled={isSaving} onChange={(event) => setFitMode(event.target.value)} value={fitMode}>
-              {fitOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="hi-field">
-            <span className="hi-label">Posición</span>
-            <select className="hi-select" disabled={isSaving} onChange={(event) => setPosition(event.target.value)} value={position}>
-              {positionOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="hi-field">
-            <span className="hi-label">Texto alternativo / etiqueta interna</span>
-            <input
-              className="hi-input"
-              disabled={isSaving}
-              onChange={(event) => setAltText(event.target.value)}
-              placeholder="Describe el visual para ORÁCULO"
-              type="text"
-              value={altText}
-            />
-          </label>
-        </div>
-
-        {statusMessage ? <p className="visual-slot-modal__status">{statusMessage}</p> : null}
-        {errorMessage ? <p className="visual-slot-modal__error">{errorMessage}</p> : null}
-
-        <footer className="visual-editor-footer visual-slot-modal__actions">
-          <button className="hi-button hi-button-secondary" disabled={isSaving} onClick={closeEditor} type="button">
-            Cerrar
-          </button>
-          <button className="hi-button hi-button-primary" disabled={isSaving} onClick={handleSave} type="button">
-            Guardar visual
-          </button>
-        </footer>
-      </div>
-    </div>
-  ) : null
+  if (!shouldRender) return null
 
   return (
     <section
-      aria-label={slotConfig?.altText || section}
-      className={`inline-visual-slot ${imageUrl ? 'inline-visual-slot--with-image' : ''} ${className}`.trim()}
-      style={slotStyle}
+      aria-label={visual.altText || section || slotDefinition.label}
+      className={`visual-slot inline-visual-slot ${imageUrl ? 'inline-visual-slot--with-image' : ''} ${className}`.trim()}
+      style={shouldUseRegisteredAspectRatio ? { aspectRatio: slotDefinition.aspectRatio } : undefined}
     >
-      <div className="inline-visual-slot__veil" aria-hidden="true" />
-      <div className="inline-visual-slot__content">{children}</div>
-       {shouldShowControl ? (
-        <button className="inline-visual-slot__control" disabled={isVisualEditorOpen && activeVisualSlotId !== slotId} onClick={openEditor} type="button">
-          {imageUrl ? 'Cambiar visual' : 'Editar imagen'}
+      {imageUrl ? <img alt={visual.altText} className="visual-slot__image" src={imageUrl} style={getVisualImageStyle(visual)} /> : null}
+      <span aria-hidden="true" className="visual-slot__overlay inline-visual-slot__veil" style={getVisualOverlayStyle(visual)} />
+      <div className="inline-visual-slot__content">
+        {hasEditableOverlay ? <VisualOverlayCopy visual={visual} /> : null}
+        {!imageUrl ? children : null}
+        {!imageUrl && shouldShowControl && !hasChildren ? (
+          <div className="visual-slot__placeholder">
+            <strong>Agregar visual publicitario</strong>
+            <span>Piezas gráficas del ecosistema HeroIndex: afiches, visuales corporativos y llamados visuales.</span>
+          </div>
+        ) : null}
+      </div>
+      {shouldShowControl ? (
+        <button className="visual-slot__controls inline-visual-slot__control" disabled={isVisualEditorOpen && activeVisualSlotId !== slotId} onClick={openEditor} type="button">
+          {hasEditableOverlay ? 'Gestionar señal pública' : 'Gestionar visual publicitario'}
         </button>
       ) : null}
-      {editorPortalTarget && editorMarkup ? createPortal(editorMarkup, editorPortalTarget) : null}
+      {isEditorOpen ? (
+        <VisualImageEditor
+          onClose={closeEditor}
+          onSave={saveVisual}
+          slotDefinition={slotDefinition}
+          slotId={slotId}
+          title={hasEditableOverlay ? 'Gestionar señal pública' : 'Gestionar visual publicitario'}
+          visual={visual}
+        />
+      ) : null}
     </section>
   )
 }

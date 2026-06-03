@@ -1,8 +1,10 @@
-import { onValue, ref, set } from 'firebase/database'
+import { get, onValue, ref, set } from 'firebase/database'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
-import { uploadImage } from './storageService.js'
+import { uploadImageWithPath } from './storageService.js'
+import { normalizeVisualData } from '../utils/visualModel.js'
 
 export const VISUAL_SLOTS_PATH = 'visualSlots'
+export const VISUAL_SLOTS_STORAGE_PATH = 'visual-slots'
 
 export function subscribeToVisualSlot(slotId, callback) {
   if (!slotId) {
@@ -20,11 +22,11 @@ export function subscribeToVisualSlot(slotId, callback) {
   const slotReference = ref(database, `${VISUAL_SLOTS_PATH}/${slotId}`)
 
   return onValue(slotReference, (snapshot) => {
-    callback?.(snapshot.exists() ? { id: slotId, ...snapshot.val() } : null)
+    callback?.(snapshot.exists() ? { id: slotId, ...normalizeVisualData(snapshot.val()) } : null)
   })
 }
 
-export async function saveVisualSlot(slotId, slotData = {}) {
+export async function updateVisualSlot(slotId, data = {}) {
   if (!slotId) {
     throw new Error('Visual slot id is required')
   }
@@ -35,22 +37,28 @@ export async function saveVisualSlot(slotId, slotData = {}) {
     throw new Error('Firebase is not configured')
   }
 
+  const slotReference = ref(database, `${VISUAL_SLOTS_PATH}/${slotId}`)
+  const snapshot = await get(slotReference)
+  const currentData = snapshot.exists() ? snapshot.val() : {}
+  const timestamp = Date.now()
   const payload = {
+    ...normalizeVisualData({ ...currentData, ...data }),
     id: slotId,
-    page: slotData.page ?? '',
-    section: slotData.section ?? '',
-    imageUrl: slotData.imageUrl ?? '',
-    storagePath: slotData.storagePath ?? '',
-    fitMode: slotData.fitMode ?? 'cover',
-    position: slotData.position ?? 'center',
-    altText: slotData.altText ?? '',
-    updatedAt: Date.now(),
-    updatedByMode: 'oraculo',
+    createdAt: currentData.createdAt ?? data.createdAt ?? timestamp,
+    updatedAt: timestamp,
   }
 
-  await set(ref(database, `${VISUAL_SLOTS_PATH}/${slotId}`), payload)
+  if (data.storagePath ?? currentData.storagePath) {
+    payload.storagePath = data.storagePath ?? currentData.storagePath
+  }
+
+  await set(slotReference, payload)
 
   return payload
+}
+
+export function saveVisualSlot(slotId, data = {}) {
+  return updateVisualSlot(slotId, data)
 }
 
 export async function uploadVisualSlotImage(slotId, file) {
@@ -58,8 +66,5 @@ export async function uploadVisualSlotImage(slotId, file) {
     throw new Error('Visual slot id is required')
   }
 
-  const storagePath = `${VISUAL_SLOTS_PATH}/${slotId}`
-  const imageUrl = await uploadImage(file, storagePath)
-
-  return { imageUrl, storagePath }
+  return uploadImageWithPath(file, `${VISUAL_SLOTS_STORAGE_PATH}/${slotId}`)
 }
