@@ -6,12 +6,14 @@ import {
   uploadVisualSlotImage,
 } from '../../services/visualSlotsService.js'
 import { getVisualImageStyle, getVisualOverlayStyle, normalizeVisualData } from '../../utils/visualModel.js'
+import { getVisualSlotDefinition } from '../../utils/visualSlotsRegistry.js'
 
 export const SIDEBAR_ACCOUNT_VISUAL_SLOT = 'sidebarAccountVisual'
 
 function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUNT_VISUAL_SLOT }) {
   const [visualSlot, setVisualSlot] = useState(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const slotDefinition = getVisualSlotDefinition(slotId)
 
   useEffect(() => subscribeToVisualSlot(slotId, setVisualSlot), [slotId])
 
@@ -40,15 +42,11 @@ function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUN
 
   return (
     <section className={`sidebar-visual-slot ${hasActiveImage ? 'sidebar-visual-slot--ready' : 'sidebar-visual-slot--empty'}`} aria-label={visual.altText}>
-      <div className="sidebar-visual-slot__frame">
+      <div className="sidebar-visual-slot__frame" style={{ aspectRatio: slotDefinition.aspectRatio }}>
         {hasActiveImage ? (
           <>
             <img alt={visual.altText} src={visual.imageUrl} style={getVisualImageStyle(visual)} />
             <span aria-hidden="true" className="sidebar-visual-slot__overlay" style={getVisualOverlayStyle(visual)} />
-            <div className="sidebar-visual-slot__copy">
-              <strong>Red HeroIndex</strong>
-              <span>Identidad verificada</span>
-            </div>
           </>
         ) : (
           <div className="sidebar-visual-slot__placeholder">
@@ -68,7 +66,9 @@ function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUN
         <VisualImageEditor
           onClose={() => setIsEditorOpen(false)}
           onSave={saveVisual}
-          title="Editar visual del sidebar"
+          slotDefinition={slotDefinition}
+          slotId={slotId}
+          title="Editar visual lateral de acceso"
           visual={visual}
         />
       ) : null}

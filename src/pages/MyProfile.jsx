@@ -552,6 +552,7 @@ function MyProfile({ onNavigate }) {
           onClose={() => setEditorTarget(null)}
           onSave={handleSaveMedia}
           showOverlayControl={editorTarget === 'cover'}
+          slotId={editorTarget === 'cover' ? 'profileCover' : 'profileAvatar'}
           title={editorTarget === 'cover' ? 'Editar portada' : 'Editar foto de perfil'}
           visual={editorTarget === 'cover' ? coverVisual : avatarVisual}
         />

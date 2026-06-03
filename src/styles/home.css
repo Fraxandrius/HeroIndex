@@ -752,3 +752,27 @@
 .hero-feature--news::after {
   display: none;
 }
+
+/* Home visual signals managed through VisualSlots. */
+.home-signal {
+  border: 1px solid rgba(186, 230, 253, 0.24);
+  border-radius: 1.35rem;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.22);
+  min-height: 12rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.home-signal .inline-visual-slot__content {
+  align-items: end;
+  display: flex;
+  min-height: inherit;
+  width: min(100%, 54rem);
+}
+
+.home-signal--primary {
+  min-height: 13rem;
+}
+
+.home-signal--institutional {
+  min-height: 12rem;
+}

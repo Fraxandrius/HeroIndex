@@ -6,6 +6,12 @@ export const VISUAL_DEFAULTS = {
   imageOverlayStrength: 0.35,
   altText: 'Visual institucional HeroIndex',
   active: true,
+  eyebrow: '',
+  title: '',
+  subtitle: '',
+  body: '',
+  ctaLabel: '',
+  ctaRoute: '',
 }
 
 function toFiniteNumber(value, fallback) {
@@ -29,6 +35,12 @@ export function normalizeVisualData(visualData) {
     ),
     altText: source.altText || VISUAL_DEFAULTS.altText,
     active: source.active !== false,
+    eyebrow: source.eyebrow ?? VISUAL_DEFAULTS.eyebrow,
+    title: source.title ?? VISUAL_DEFAULTS.title,
+    subtitle: source.subtitle ?? VISUAL_DEFAULTS.subtitle,
+    body: source.body ?? VISUAL_DEFAULTS.body,
+    ctaLabel: source.ctaLabel ?? VISUAL_DEFAULTS.ctaLabel,
+    ctaRoute: source.ctaRoute ?? VISUAL_DEFAULTS.ctaRoute,
   }
 }
 

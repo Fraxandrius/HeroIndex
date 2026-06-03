@@ -694,3 +694,124 @@
   gap: 0.75rem;
   justify-content: flex-end;
 }
+
+/* Visual Slots Registry + Institutional Message Cleanup-v1 */
+.visual-slot {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(94, 234, 212, 0.18), transparent 18rem),
+    linear-gradient(135deg, rgba(8, 15, 31, 0.98), rgba(17, 28, 49, 0.92));
+  overflow: hidden;
+  position: relative;
+}
+
+.visual-slot__image {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  transform-origin: center;
+  width: 100%;
+  z-index: 0;
+}
+
+.visual-slot__overlay {
+  background: #020617;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.visual-slot__copy,
+.visual-slot__placeholder {
+  display: grid;
+  gap: 0.45rem;
+  max-width: min(42rem, 100%);
+  position: relative;
+  z-index: 2;
+}
+
+.visual-slot__copy h3,
+.visual-slot__copy p,
+.visual-slot__copy strong {
+  margin: 0;
+}
+
+.visual-slot__copy h3 {
+  color: #f8fafc;
+  font-size: clamp(1.4rem, 3vw, 2.5rem);
+  line-height: 1;
+}
+
+.visual-slot__copy strong {
+  color: #bae6fd;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+}
+
+.visual-slot__copy p:not(.page-card__kicker),
+.visual-slot__placeholder span {
+  color: #cbd5e1;
+}
+
+.visual-slot__link {
+  background: rgba(94, 234, 212, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.38);
+  border-radius: 999px;
+  color: #f8fafc;
+  font-weight: 900;
+  justify-self: start;
+  padding: 0.58rem 0.9rem;
+  text-decoration: none;
+}
+
+.visual-slot__controls {
+  z-index: 4;
+}
+
+.visual-image-editor__meta {
+  background: rgba(8, 15, 31, 0.72);
+  border: 1px solid rgba(186, 230, 253, 0.2);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0.9rem;
+}
+
+.visual-image-editor__meta div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.visual-image-editor__meta span {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.visual-image-editor__meta strong {
+  color: #e5e7eb;
+}
+
+.visual-image-editor__meta p {
+  color: #cbd5e1;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.visual-image-editor__warning {
+  background: rgba(234, 191, 79, 0.12);
+  border: 1px solid rgba(234, 191, 79, 0.32);
+  border-radius: 0.85rem;
+  color: #fef3c7 !important;
+  font-weight: 850;
+  padding: 0.65rem;
+}
+
+@media (max-width: 760px) {
+  .visual-image-editor__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

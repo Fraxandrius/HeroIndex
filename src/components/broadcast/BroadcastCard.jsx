@@ -3,7 +3,7 @@ const toneLabels = {
   civic: 'Canal cívico',
   corporate: 'Afiliación certificada',
   heroic: 'Estándar heroico',
-  institutional: 'Mensaje institucional',
+  institutional: 'Señal institucional',
   recruitment: 'Comunidad HeroIndex',
   safety: 'Red de protección',
 }

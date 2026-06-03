@@ -1,15 +1,38 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { normalizeVisualData } from '../../utils/visualModel.js'
+import { getVisualSlotDefinition } from '../../utils/visualSlotsRegistry.js'
 
-function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title = 'Editar visual', visual }) {
+const ASPECT_RATIO_WARNING_THRESHOLD = 0.14
+
+function getDefinitionRatio(slotDefinition) {
+  const width = Number(slotDefinition.recommendedWidth ?? 0)
+  const height = Number(slotDefinition.recommendedHeight ?? 0)
+
+  return width > 0 && height > 0 ? width / height : 2
+}
+
+function VisualImageEditor({
+  onClose,
+  onSave,
+  showOverlayControl = true,
+  slotDefinition: providedSlotDefinition,
+  slotId,
+  title = 'Editar visual',
+  visual,
+}) {
+  const slotDefinition = useMemo(
+    () => providedSlotDefinition ?? getVisualSlotDefinition(slotId),
+    [providedSlotDefinition, slotId],
+  )
+  const allowOverlayText = slotDefinition.allowOverlayText === true
   const initialVisual = useMemo(() => normalizeVisualData(visual), [visual])
   const [draftVisual, setDraftVisual] = useState(initialVisual)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [selectedImageSize, setSelectedImageSize] = useState(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-
 
   useEffect(() => {
     document.body.classList.add('visual-editor-open')
@@ -45,6 +68,28 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
     },
     [previewUrl],
   )
+
+  useEffect(() => {
+    if (!previewUrl) return undefined
+
+    const previewImage = new Image()
+    previewImage.onload = () => {
+      setSelectedImageSize({
+        height: previewImage.naturalHeight,
+        width: previewImage.naturalWidth,
+      })
+    }
+    previewImage.src = previewUrl
+
+    return () => {
+      previewImage.onload = null
+    }
+  }, [previewUrl])
+
+  const handleFileChange = (event) => {
+    setSelectedImageSize(null)
+    setSelectedFile(event.target.files?.[0] ?? null)
+  }
 
   const updateDraft = (field, value) => {
     setDraftVisual((currentVisual) => ({
@@ -88,6 +133,11 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
   }
 
   const visiblePreviewUrl = previewUrl || draftVisual.imageUrl
+  const slotRatio = getDefinitionRatio(slotDefinition)
+  const selectedRatio = selectedImageSize ? selectedImageSize.width / selectedImageSize.height : null
+  const hasRatioWarning = selectedRatio
+    ? Math.abs(selectedRatio - slotRatio) / slotRatio > ASPECT_RATIO_WARNING_THRESHOLD
+    : false
   const portalTarget = typeof document === 'undefined' ? null : document.body
   const editorMarkup = (
     <div className="visual-editor-root visual-image-editor" role="dialog" aria-modal="true" aria-labelledby="visual-image-editor-title">
@@ -105,8 +155,35 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
           <p>Sube una imagen, ajusta su encuadre y guarda este espacio visual independiente.</p>
         </header>
 
+        <section className="visual-editor__meta visual-image-editor__meta" aria-label="Guía del slot visual">
+          <div>
+            <span>Slot</span>
+            <strong>{slotDefinition.label}</strong>
+          </div>
+          <div>
+            <span>Ubicación</span>
+            <strong>{slotDefinition.placementLabel}</strong>
+          </div>
+          <div>
+            <span>Resolución recomendada</span>
+            <strong>{slotDefinition.recommendedWidth} × {slotDefinition.recommendedHeight} px</strong>
+          </div>
+          <div>
+            <span>Proporción</span>
+            <strong>{slotDefinition.aspectRatioLabel}</strong>
+          </div>
+          <p>{slotDefinition.helperText}</p>
+          <p>Las imágenes usan encuadre de cobertura para llenar el espacio. Si se recortan, usa posición y zoom para ajustar el encuadre.</p>
+          {selectedImageSize ? (
+            <p>Imagen seleccionada: {selectedImageSize.width} × {selectedImageSize.height} px.</p>
+          ) : null}
+          {hasRatioWarning ? (
+            <p className="visual-editor__warning visual-image-editor__warning">Esta imagen puede recortarse en este espacio.</p>
+          ) : null}
+        </section>
+
         <div className="visual-image-editor__layout">
-          <div className="visual-image-editor__preview" aria-label="Vista previa del visual">
+          <div className="visual-image-editor__preview" aria-label="Vista previa del visual" style={{ aspectRatio: slotDefinition.aspectRatio }}>
             {visiblePreviewUrl ? (
               <>
                 <img
@@ -140,7 +217,7 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
                 accept="image/*"
                 className="hi-input"
                 disabled={isSaving}
-                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                onChange={handleFileChange}
                 type="file"
               />
             </label>
@@ -197,6 +274,35 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
               </label>
             ) : null}
 
+{allowOverlayText ? (
+              <>
+                <label className="hi-field">
+                  <span className="hi-label">Etiqueta superior</span>
+                  <input className="hi-input" disabled={isSaving} onChange={(event) => updateDraft('eyebrow', event.target.value)} type="text" value={draftVisual.eyebrow} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Título visible</span>
+                  <input className="hi-input" disabled={isSaving} onChange={(event) => updateDraft('title', event.target.value)} type="text" value={draftVisual.title} />
+                </label>
+                <label className="hi-field visual-image-editor__wide-field">
+                  <span className="hi-label">Subtítulo visible</span>
+                  <input className="hi-input" disabled={isSaving} onChange={(event) => updateDraft('subtitle', event.target.value)} type="text" value={draftVisual.subtitle} />
+                </label>
+                <label className="hi-field visual-image-editor__wide-field">
+                  <span className="hi-label">Cuerpo visible</span>
+                  <textarea className="hi-textarea" disabled={isSaving} onChange={(event) => updateDraft('body', event.target.value)} rows="3" value={draftVisual.body} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Texto del botón</span>
+                  <input className="hi-input" disabled={isSaving} onChange={(event) => updateDraft('ctaLabel', event.target.value)} type="text" value={draftVisual.ctaLabel} />
+                </label>
+                <label className="hi-field">
+                  <span className="hi-label">Ruta del botón</span>
+                  <input className="hi-input" disabled={isSaving} onChange={(event) => updateDraft('ctaRoute', event.target.value)} placeholder="/registro" type="text" value={draftVisual.ctaRoute} />
+                </label>
+              </>
+            ) : null}
+
             <label className="hi-field visual-image-editor__wide-field">
               <span className="hi-label">Texto alternativo interno</span>
               <input
@@ -221,7 +327,7 @@ function VisualImageEditor({ onClose, onSave, showOverlayControl = true, title =
           </div>
         </div>
 
-        <p className="visual-image-editor__note">v1 usa sliders; arrastre y rueda pueden agregarse después sin cambiar el modelo.</p>
+         <p className="visual-image-editor__note">v1 usa sliders; arrastre, rueda y modo de imagen completa pueden agregarse después sin cambiar el modelo.</p>
         {statusMessage ? <p className="visual-image-editor__status">{statusMessage}</p> : null}
         {errorMessage ? <p className="visual-image-editor__error">{errorMessage}</p> : null}
 

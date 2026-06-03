@@ -202,21 +202,23 @@ function Home({ onNavigate }) {
 
           <InlineVisualSlot
             activeVisualSlotId={activeVisualSlotId}
-            className="home-visual-signal hi-card hi-card-public"
+            className="home-signal home-signal--primary hi-card hi-card-public"
             isVisualEditorOpen={isVisualEditorOpen}
             onVisualEditorClose={handleVisualEditorClose}
             onVisualEditorOpen={handleVisualEditorOpen}
-            page="home"
-            section="Mensaje institucional"
-            slotId="home-signal-visual"
-          >
-            <p className="page-card__kicker">Mensaje institucional</p>
-            <h3>Héroes registrados. Protección visible. Confianza certificada.</h3>
-            <p>Cobertura verificada para una ciudadanía más segura y conectada con la red oficial de protección HeroIndex.</p>
-          </InlineVisualSlot>
+            section="Señal principal horizontal"
+            slotId="homePrimarySignal"
+          />
 
-          <BroadcastSlot className="home-broadcast-channel" isVisualEditorOpen={isVisualEditorOpen} placement="home-feature" variant="feature" />
-
+          <InlineVisualSlot
+            activeVisualSlotId={activeVisualSlotId}
+            className="home-signal home-signal--institutional hi-card hi-card-public"
+            isVisualEditorOpen={isVisualEditorOpen}
+            onVisualEditorClose={handleVisualEditorClose}
+            onVisualEditorOpen={handleVisualEditorOpen}
+            section="Señal institucional"
+            slotId="homeInstitutionalSignal"
+          />
           <section className="feed-panel">
             <div className="section-heading">
               <p className="page-card__kicker">Feed HeroIndex</p>
