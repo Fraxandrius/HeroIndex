@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { normalizeVisualData } from '../../utils/visualModel.js'
-import { getVisualSlotDefinition } from '../../utils/visualSlotsRegistry.js'
+import { getPublicContentDefinition } from '../../utils/publicContentRegistry.js'
 
 const ASPECT_RATIO_WARNING_THRESHOLD = 0.14
 
@@ -22,10 +22,16 @@ function VisualImageEditor({
   visual,
 }) {
   const slotDefinition = useMemo(
-    () => providedSlotDefinition ?? getVisualSlotDefinition(slotId),
+    () => providedSlotDefinition ?? getPublicContentDefinition(slotId),
     [providedSlotDefinition, slotId],
   )
-  const allowOverlayText = slotDefinition.allowOverlayText === true
+  const allowsTextContent = slotDefinition.allowText === true || slotDefinition.allowTextContent === true || slotDefinition.type === 'signal'
+  const canUseOverlay = showOverlayControl && slotDefinition.allowOverlay !== false
+  const editorIntro = slotDefinition.type === 'signal'
+    ? 'Gestiona texto público, imagen opcional y encuadre para este espacio.'
+    : slotDefinition.type === 'profileVisual'
+      ? 'Edita este visual de perfil y ajusta el encuadre según su proporción real.'
+      : 'Sube una imagen, ajusta su encuadre y guarda este visual publicitario independiente.'
   const initialVisual = useMemo(() => normalizeVisualData(visual), [visual])
   const [draftVisual, setDraftVisual] = useState(initialVisual)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -150,14 +156,18 @@ function VisualImageEditor({
       />
       <section className="visual-editor-panel visual-image-editor__panel">
         <header className="visual-image-editor__header">
-          <p className="page-card__kicker">ORÁCULO visual</p>
+          <p className="page-card__kicker">{slotDefinition.typeLabel ?? 'Contenido público'}</p>
           <h2 id="visual-image-editor-title">{title}</h2>
-          <p>Sube una imagen, ajusta su encuadre y guarda este espacio visual independiente.</p>
+          <p>{editorIntro}</p>
         </header>
 
         <section className="visual-editor__meta visual-image-editor__meta" aria-label="Guía del slot visual">
           <div>
-            <span>Slot</span>
+            <span>Tipo</span>
+            <strong>{slotDefinition.typeLabel ?? 'Contenido público'}</strong>
+          </div>
+          <div>
+            <span>Espacio</span>
             <strong>{slotDefinition.label}</strong>
           </div>
           <div>
@@ -183,7 +193,7 @@ function VisualImageEditor({
         </section>
 
         <div className="visual-image-editor__layout">
-          <div className="visual-image-editor__preview" aria-label="Vista previa del visual" style={{ aspectRatio: slotDefinition.aspectRatio }}>
+          <div className="visual-editor__preview-frame visual-image-editor__preview" aria-label="Vista previa del visual" style={{ aspectRatio: slotDefinition.aspectRatio }}>
             {visiblePreviewUrl ? (
               <>
                 <img
@@ -194,7 +204,7 @@ function VisualImageEditor({
                     transform: `scale(${draftVisual.imageScale})`,
                   }}
                 />
-                {showOverlayControl ? (
+                {canUseOverlay ? (
                   <span
                     aria-hidden="true"
                     className="visual-image-editor__overlay"
@@ -259,7 +269,7 @@ function VisualImageEditor({
               />
             </label>
 
-{showOverlayControl ? (
+            {canUseOverlay ? (
               <label className="hi-field">
                 <span className="hi-label">Overlay oscuro</span>
                 <input
@@ -274,7 +284,7 @@ function VisualImageEditor({
               </label>
             ) : null}
 
-{allowOverlayText ? (
+{allowsTextContent ? (
               <>
                 <label className="hi-field">
                   <span className="hi-label">Etiqueta superior</span>
@@ -309,7 +319,7 @@ function VisualImageEditor({
                 className="hi-input"
                 disabled={isSaving}
                 onChange={(event) => updateDraft('altText', event.target.value)}
-                placeholder="Visual institucional HeroIndex"
+                placeholder="Visual HeroIndex"
                 type="text"
                 value={draftVisual.altText}
               />
@@ -322,7 +332,7 @@ function VisualImageEditor({
                 onChange={(event) => updateDraft('active', event.target.checked)}
                 type="checkbox"
               />
-              <span>Visual activo</span>
+              <span>{allowsTextContent ? 'Señal pública activa' : 'Visual activo'}</span>
             </label>
           </div>
         </div>
@@ -342,7 +352,7 @@ function VisualImageEditor({
             Cerrar
           </button>
           <button className="hi-button hi-button-primary" disabled={isSaving} onClick={handleSave} type="button">
-            Guardar visual
+            {allowsTextContent ? 'Guardar señal pública' : 'Guardar visual'}
           </button>
         </footer>
       </section>

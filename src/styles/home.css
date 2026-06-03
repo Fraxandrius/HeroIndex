@@ -773,6 +773,24 @@
   min-height: 13rem;
 }
 
-.home-signal--institutional {
+.home-signal--secondary {
   min-height: 12rem;
+}
+
+.home-visual-placement {
+  border: 1px solid rgba(186, 230, 253, 0.24);
+  border-radius: 1.35rem;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.22);
+  min-height: 11rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.home-visual-placement .inline-visual-slot__content,
+.home-signal .public-signal__copy,
+.home-signal .public-signal__placeholder {
+  align-self: end;
+}
+
+.home-signal--secondary {
+  min-height: 11rem;
 }

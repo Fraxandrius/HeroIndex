@@ -37,7 +37,7 @@ function BroadcastSlot({ className = '', corporationId, heroId, isVisualEditorOp
           id: `${placement}-placeholder`,
           title: 'Señal HeroIndex pendiente',
           subtitle: 'Canal verificado en preparación.',
-          body: 'HeroIndex prepara nuevas señales institucionales para una ciudadanía más segura.',
+          body: 'HeroIndex prepara nuevas señales públicas para una ciudadanía más segura.',
           placement,
           tone: 'institutional',
           category: 'Canal verificado',
@@ -48,7 +48,7 @@ function BroadcastSlot({ className = '', corporationId, heroId, isVisualEditorOp
     <section className={`broadcast-slot broadcast-slot--${variant} ${className}`.trim()} aria-label="Señal pública HeroIndex">
       {isOraculoMode && !isVisualEditorOpen ? (
         <a className="broadcast-slot__manage" href="/oraculo/broadcasts">
-          Gestionar señales
+          Abrir señales públicas
         </a>
       ) : null}
       <div className="broadcast-slot__items">

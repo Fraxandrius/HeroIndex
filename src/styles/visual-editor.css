@@ -815,3 +815,132 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Public Content Taxonomy Fix-v1 */
+.public-signal {
+  background:
+    radial-gradient(circle at 86% 18%, rgba(94, 234, 212, 0.18), transparent 16rem),
+    linear-gradient(135deg, rgba(8, 15, 31, 0.98), rgba(17, 28, 49, 0.92));
+  border: 1px solid rgba(186, 230, 253, 0.24);
+  overflow: hidden;
+  position: relative;
+}
+
+.public-signal__image {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  transform-origin: center;
+  width: 100%;
+  z-index: 0;
+}
+
+.public-signal__overlay {
+  background: #020617;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.public-signal__copy,
+.public-signal__placeholder {
+  display: grid;
+  gap: 0.45rem;
+  max-width: min(42rem, 100%);
+  position: relative;
+  z-index: 2;
+}
+
+.public-signal__copy h3,
+.public-signal__copy p,
+.public-signal__copy strong {
+  margin: 0;
+}
+
+.public-signal__copy h3 {
+  color: #f8fafc;
+  font-size: clamp(1.35rem, 3vw, 2.45rem);
+  line-height: 1;
+}
+
+.public-signal__copy strong {
+  color: #bae6fd;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+}
+
+.public-signal__copy p:not(.page-card__kicker),
+.public-signal__placeholder span {
+  color: #cbd5e1;
+}
+
+.public-signal__link {
+  background: rgba(94, 234, 212, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.38);
+  border-radius: 999px;
+  color: #f8fafc;
+  font-weight: 900;
+  justify-self: start;
+  padding: 0.58rem 0.9rem;
+  text-decoration: none;
+}
+
+.public-signal__control {
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(94, 234, 212, 0.38);
+  border-radius: 999px;
+  color: #bae6fd;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.55rem 0.85rem;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 4;
+}
+
+.public-signal__control:hover,
+.public-signal__control:focus-visible {
+  border-color: rgba(234, 191, 79, 0.7);
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.16);
+  outline: none;
+}
+
+/* Shared Visual Editor Slot Contract Fix-v1 */
+.visual-image-editor__panel {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.visual-image-editor__layout {
+  align-items: start;
+  gap: 24px;
+  grid-template-columns: minmax(320px, 1.15fr) minmax(300px, 0.85fr);
+}
+
+.visual-editor__preview-frame {
+  max-width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.visual-image-editor__fields input[type='range'] {
+  width: 100%;
+}
+
+.visual-image-editor__actions {
+  align-items: center;
+  position: sticky;
+}
+
+@media (max-width: 860px) {
+  .visual-image-editor__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .visual-image-editor__preview {
+    min-height: 12rem;
+  }
+}

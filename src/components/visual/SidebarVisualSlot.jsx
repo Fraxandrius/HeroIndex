@@ -6,26 +6,40 @@ import {
   uploadVisualSlotImage,
 } from '../../services/visualSlotsService.js'
 import { getVisualImageStyle, getVisualOverlayStyle, normalizeVisualData } from '../../utils/visualModel.js'
-import { getVisualSlotDefinition } from '../../utils/visualSlotsRegistry.js'
+import { getPublicContentDefinition } from '../../utils/publicContentRegistry.js'
 
-export const SIDEBAR_ACCOUNT_VISUAL_SLOT = 'sidebarAccountVisual'
+export const SIDEBAR_ACCESS_VISUAL_SLOT = 'sidebarAccessVisual'
+export const SIDEBAR_ACCOUNT_VISUAL_SLOT = SIDEBAR_ACCESS_VISUAL_SLOT
+const LEGACY_SIDEBAR_VISUAL_SLOT = 'sidebarAccountVisual'
 
-function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUNT_VISUAL_SLOT }) {
+function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCESS_VISUAL_SLOT }) {
   const [visualSlot, setVisualSlot] = useState(null)
+  const [legacyVisualSlot, setLegacyVisualSlot] = useState(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const slotDefinition = getVisualSlotDefinition(slotId)
+  const slotDefinition = getPublicContentDefinition(slotId)
 
-  useEffect(() => subscribeToVisualSlot(slotId, setVisualSlot), [slotId])
+  useEffect(() => {
+    const unsubscribePrimary = subscribeToVisualSlot(slotId, setVisualSlot)
+    const unsubscribeLegacy = slotId === SIDEBAR_ACCESS_VISUAL_SLOT
+      ? subscribeToVisualSlot(LEGACY_SIDEBAR_VISUAL_SLOT, setLegacyVisualSlot)
+      : () => {}
 
-  const visual = normalizeVisualData(visualSlot)
+    return () => {
+      unsubscribePrimary()
+      unsubscribeLegacy()
+    }
+  }, [slotId])
+
+  const effectiveVisualSlot = visualSlot ?? legacyVisualSlot
+  const visual = normalizeVisualData(effectiveVisualSlot)
   const hasActiveImage = visual.active !== false && Boolean(visual.imageUrl)
 
-  if (!hasActiveImage && canSeeOraculoTools !== true) {
+  if (!hasActiveImage && canSeeOraculoTools !== true && !isEditorOpen) {
     return null
   }
 
   const saveVisual = async ({ file, visual: draftVisual }) => {
-    let nextVisual = normalizeVisualData({ ...visualSlot, ...draftVisual })
+    let nextVisual = normalizeVisualData({ ...effectiveVisualSlot, ...draftVisual })
 
     if (file) {
       const uploadedImage = await uploadVisualSlotImage(slotId, file)
@@ -41,7 +55,7 @@ function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUN
   }
 
   return (
-    <section className={`sidebar-visual-slot ${hasActiveImage ? 'sidebar-visual-slot--ready' : 'sidebar-visual-slot--empty'}`} aria-label={visual.altText}>
+    <section className={`sidebar-visual-slot ${hasActiveImage ? 'sidebar-visual-slot--ready' : 'sidebar-visual-slot--empty'}`} aria-label={visual.altText || slotDefinition.label}>
       <div className="sidebar-visual-slot__frame" style={{ aspectRatio: slotDefinition.aspectRatio }}>
         {hasActiveImage ? (
           <>
@@ -50,15 +64,15 @@ function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUN
           </>
         ) : (
           <div className="sidebar-visual-slot__placeholder">
-            <strong>Agregar visual</strong>
-            <span>Sube una imagen para este espacio.</span>
+            <strong>Agregar visual publicitario</strong>
+            <span>Piezas gráficas del ecosistema HeroIndex: afiches, visuales corporativos y llamados visuales.</span>
           </div>
         )}
       </div>
 
       {canSeeOraculoTools === true ? (
         <button className="sidebar-visual-slot__control" onClick={() => setIsEditorOpen(true)} type="button">
-          Cambiar visual
+          Gestionar visual publicitario
         </button>
       ) : null}
 
@@ -68,7 +82,7 @@ function SidebarVisualSlot({ canSeeOraculoTools = false, slotId = SIDEBAR_ACCOUN
           onSave={saveVisual}
           slotDefinition={slotDefinition}
           slotId={slotId}
-          title="Editar visual lateral de acceso"
+          title="Gestionar visual publicitario"
           visual={visual}
         />
       ) : null}

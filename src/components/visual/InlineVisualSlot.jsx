@@ -6,7 +6,7 @@ import {
   uploadVisualSlotImage,
 } from '../../services/visualSlotsService.js'
 import { getVisualImageStyle, getVisualOverlayStyle, normalizeVisualData } from '../../utils/visualModel.js'
-import { getVisualSlotDefinition, hasVisualSlotDefinition } from '../../utils/visualSlotsRegistry.js'
+import { getPublicContentDefinition, hasPublicContentDefinition } from '../../utils/publicContentRegistry.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
@@ -44,7 +44,7 @@ function InlineVisualSlot({
   const [slotConfig, setSlotConfig] = useState(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const slotDefinition = useMemo(
-    () => providedSlotDefinition ?? getVisualSlotDefinition(slotId),
+    () => providedSlotDefinition ?? getPublicContentDefinition(slotId),
     [providedSlotDefinition, slotId],
   )
 
@@ -79,10 +79,10 @@ function InlineVisualSlot({
   const visual = normalizeVisualData(slotConfig)
   const imageUrl = visual.active !== false ? visual.imageUrl : ''
   const shouldShowControl = isOraculoMode && !isEditorOpen && !isVisualEditorOpen
-  const hasEditableOverlay = slotDefinition.allowOverlayText === true
-  const shouldUseRegisteredAspectRatio = hasVisualSlotDefinition(slotId) || !children
+  const hasEditableOverlay = slotDefinition.allowText === true || slotDefinition.allowTextContent === true || slotDefinition.type === 'signal'
+  const shouldUseRegisteredAspectRatio = hasPublicContentDefinition(slotId) || !children
   const hasChildren = Boolean(children)
-  const shouldRender = Boolean(imageUrl || hasChildren || shouldShowControl)
+  const shouldRender = Boolean(imageUrl || hasChildren || shouldShowControl || isEditorOpen)
 
   if (!shouldRender) return null
 
@@ -99,14 +99,14 @@ function InlineVisualSlot({
         {!imageUrl ? children : null}
         {!imageUrl && shouldShowControl && !hasChildren ? (
           <div className="visual-slot__placeholder">
-            <strong>Agregar señal</strong>
-            <span>Sube una imagen y texto para este espacio.</span>
+            <strong>Agregar visual publicitario</strong>
+            <span>Piezas gráficas del ecosistema HeroIndex: afiches, visuales corporativos y llamados visuales.</span>
           </div>
         ) : null}
       </div>
       {shouldShowControl ? (
         <button className="visual-slot__controls inline-visual-slot__control" disabled={isVisualEditorOpen && activeVisualSlotId !== slotId} onClick={openEditor} type="button">
-          {hasEditableOverlay ? 'Gestionar señal' : imageUrl ? 'Cambiar visual' : 'Editar visual'}
+          {hasEditableOverlay ? 'Gestionar señal pública' : 'Gestionar visual publicitario'}
         </button>
       ) : null}
       {isEditorOpen ? (
@@ -115,7 +115,7 @@ function InlineVisualSlot({
           onSave={saveVisual}
           slotDefinition={slotDefinition}
           slotId={slotId}
-          title={`Editar ${section ?? slotDefinition.label}`}
+          title={hasEditableOverlay ? 'Gestionar señal pública' : 'Gestionar visual publicitario'}
           visual={visual}
         />
       ) : null}

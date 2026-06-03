@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import BrandLogo from '../components/BrandLogo.jsx'
-import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
 import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
+import PublicSignalSlot from '../components/visual/PublicSignalSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -201,24 +201,33 @@ function Home({ onNavigate }) {
           </section>
 
           <InlineVisualSlot
+          activeVisualSlotId={activeVisualSlotId}
+            className="home-visual-placement home-visual-placement--wide hi-card hi-card-public"
+            isVisualEditorOpen={isVisualEditorOpen}
+            onVisualEditorClose={handleVisualEditorClose}
+            onVisualEditorOpen={handleVisualEditorOpen}
+            section="Visual horizontal principal"
+            slotId="homeWideVisual"
+          />
+
+          <PublicSignalSlot
             activeVisualSlotId={activeVisualSlotId}
             className="home-signal home-signal--primary hi-card hi-card-public"
             isVisualEditorOpen={isVisualEditorOpen}
             onVisualEditorClose={handleVisualEditorClose}
             onVisualEditorOpen={handleVisualEditorOpen}
-            section="Señal principal horizontal"
-            slotId="homePrimarySignal"
+            signalId="homePrimarySignal"
           />
 
-          <InlineVisualSlot
+          <PublicSignalSlot
             activeVisualSlotId={activeVisualSlotId}
-            className="home-signal home-signal--institutional hi-card hi-card-public"
+            className="home-signal home-signal--secondary hi-card hi-card-public"
             isVisualEditorOpen={isVisualEditorOpen}
             onVisualEditorClose={handleVisualEditorClose}
             onVisualEditorOpen={handleVisualEditorOpen}
-            section="Señal institucional"
-            slotId="homeInstitutionalSignal"
+            signalId="homeSecondarySignal"
           />
+
           <section className="feed-panel">
             <div className="section-heading">
               <p className="page-card__kicker">Feed HeroIndex</p>
@@ -227,7 +236,7 @@ function Home({ onNavigate }) {
 
             {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading
-              ? recentNews.map((item, index) => {
+              ? recentNews.map((item) => {
                   const hasImage = Boolean(item.imageUrl)
 
                   return (
@@ -258,9 +267,6 @@ function Home({ onNavigate }) {
                         <h3>{item.title}</h3>
                         <p>{hasImage ? getNewsSummary(item) : getShortNewsSummary(item)}</p>
                         {item.metric ? <footer>{item.metric}</footer> : null}
-                        {index === 1 ? (
-                          <BroadcastSlot className="home-feed-signal" isVisualEditorOpen={isVisualEditorOpen} placement="home-feed" variant="inline" />
-                        ) : null}
                       </div>
                     </article>
                   )
@@ -271,8 +277,6 @@ function Home({ onNavigate }) {
         </div>
 
         <aside className="home-sidebar" aria-label="Panel editorial HeroIndex">
-          <BroadcastSlot className="home-rail-signal" isVisualEditorOpen={isVisualEditorOpen} placement="home-rail" variant="rail" />
-
           <section className="side-panel side-panel--activity">
             <div className="section-heading">
               <p className="page-card__kicker">Actividad destacada</p>

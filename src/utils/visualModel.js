@@ -4,7 +4,7 @@ export const VISUAL_DEFAULTS = {
   imagePositionY: 50,
   imageScale: 1,
   imageOverlayStrength: 0.35,
-  altText: 'Visual institucional HeroIndex',
+  altText: 'Visual HeroIndex',
   active: true,
   eyebrow: '',
   title: '',

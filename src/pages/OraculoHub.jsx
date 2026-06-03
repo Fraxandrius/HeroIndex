@@ -254,7 +254,7 @@ function OraculoHub({ onNavigate }) {
       routeId: 'oraculo-player-requests',
     },
         {
-      description: 'Crear y revisar señales públicas institucionales.',
+      description: 'Crear y revisar Señales Públicas del ecosistema HeroIndex.',
       label: 'Señales públicas',
       routeId: 'oraculo-broadcasts',
     },
