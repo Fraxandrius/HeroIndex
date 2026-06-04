@@ -7,6 +7,7 @@ import {
 } from '../services/newsService.js'
 
 const defaultFormState = {
+  storyMode: 'standard',
   kicker: 'Canal verificado',
   title: '',
   summary: '',
@@ -104,6 +105,7 @@ function OraculoNewsroom() {
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+const [isImageDropActive, setIsImageDropActive] = useState(false)
 
   useEffect(
     () => subscribeToNews({
@@ -136,6 +138,14 @@ function OraculoNewsroom() {
       ...currentState,
       [field]: value,
     }))
+  }
+
+  const selectEditorialFile = (file) => {
+    setErrorMessage('')
+    if (!file) { setSelectedFile(null); return }
+    if (!file.type?.startsWith('image/')) { setSelectedFile(null); setErrorMessage('El archivo debe ser una imagen válida.'); return }
+    if (file.size > 5 * 1024 * 1024) { setSelectedFile(null); setErrorMessage('La imagen supera el tamaño permitido de 5 MB.'); return }
+    setSelectedFile(file)
   }
 
   const resetVisual = () => {
@@ -175,8 +185,16 @@ function OraculoNewsroom() {
   }
 
   const saveNews = async (overrides = {}) => {
-    if (!formState.title.trim() || !formState.summary.trim()) {
-      setErrorMessage('Titular y bajada son obligatorios.')
+    const nextImageUrl = selectedPreviewUrl || formState.imageUrl
+    const hasText = Boolean(formState.title.trim() || formState.summary.trim() || formState.body.trim())
+
+    if (formState.storyMode === 'visual' && !nextImageUrl) {
+      setErrorMessage('La pieza visual necesita una imagen.')
+      return
+    }
+
+    if (formState.storyMode !== 'visual' && !hasText) {
+      setErrorMessage('Agrega texto editorial o cambia el tipo de cobertura a Pieza visual.')
       return
     }
 
@@ -185,17 +203,17 @@ function OraculoNewsroom() {
     setStatusMessage('Guardando cobertura editorial...')
 
     try {
-      let nextImageUrl = formState.imageUrl
+      let nextSavedImageUrl = formState.imageUrl
 
       if (selectedFile) {
         setStatusMessage('Subiendo imagen editorial...')
-        nextImageUrl = await uploadNewsImage(selectedFile)
+        nextSavedImageUrl = await uploadNewsImage(selectedFile)
       }
 
       const payload = {
         ...formState,
         ...overrides,
-        imageUrl: nextImageUrl,
+        imageUrl: nextSavedImageUrl,
         homePlacement: normalizePlacement(overrides.homePlacement ?? formState.homePlacement),
         priority: normalizePriority(overrides.priority ?? formState.priority),
         imagePositionX: Number(formState.imagePositionX ?? 50),
@@ -216,7 +234,7 @@ function OraculoNewsroom() {
       }
 
       setSelectedFile(null)
-      setFormState((currentState) => ({ ...currentState, ...overrides, imageUrl: nextImageUrl }))
+      setFormState((currentState) => ({ ...currentState, ...overrides, imageUrl: nextSavedImageUrl }))
     } catch {
       setErrorMessage('No fue posible guardar la noticia.')
       setStatusMessage('')
@@ -257,7 +275,15 @@ function OraculoNewsroom() {
         <form className="newsroom-form hi-card" onSubmit={(event) => event.preventDefault()}>
           <section className="newsroom-form-block">
             <p className="page-card__kicker">Identidad editorial</p>
-            <p>El titular vende el momento. La bajada convierte el espectáculo en confianza pública.</p>
+            <p>Publica una noticia tradicional o una pieza visual donde la imagen sea suficiente.</p>
+            <label className="hi-field">
+              <span className="hi-label">Tipo de cobertura</span>
+              <select className="hi-select" onChange={(event) => updateField('storyMode', event.target.value)} value={formState.storyMode}>
+                <option value="standard">Noticia</option>
+                <option value="visual">Pieza visual</option>
+              </select>
+              <small>{formState.storyMode === 'visual' ? 'La imagen es obligatoria; titular, bajada y cuerpo son opcionales.' : 'El texto editorial puede combinarse con una imagen.'}</small>
+            </label>
             <label className="hi-field">
               <span className="hi-label">Kicker / etiqueta superior</span>
               <input className="hi-input" onChange={(event) => updateField('kicker', event.target.value)} value={formState.kicker} />
@@ -303,10 +329,12 @@ function OraculoNewsroom() {
 
           <section className="newsroom-form-block">
             <p className="page-card__kicker">Imagen</p>
-            <label className="hi-field">
-              <span className="hi-label">Subir imagen</span>
-              <input accept="image/*" className="hi-input" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} type="file" />
+            <label className={`newsroom-image-dropzone${isImageDropActive ? ' newsroom-image-dropzone--active' : ''}`} onDragEnter={(event) => { event.preventDefault(); setIsImageDropActive(true) }} onDragLeave={() => setIsImageDropActive(false)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); setIsImageDropActive(false); selectEditorialFile(event.dataTransfer.files?.[0]) }}>
+              <span>Arrastra una imagen o haz click para subir</span>
+              <small>JPG, PNG o WEBP. La imagen puede funcionar como pieza editorial completa.</small>
+              <input accept="image/*" onChange={(event) => selectEditorialFile(event.target.files?.[0])} type="file" />
             </label>
+            {selectedFile ? <button className="hi-button hi-button-secondary" onClick={() => setSelectedFile(null)} type="button">Quitar imagen seleccionada</button> : null}
             <label className="hi-field">
               <span className="hi-label">URL manual opcional</span>
               <input className="hi-input" onChange={(event) => updateField('imageUrl', event.target.value)} value={formState.imageUrl} />
@@ -360,16 +388,18 @@ function OraculoNewsroom() {
         {formState.homePlacement === 'hero' ? (
             <div className={`newsroom-preview-card newsroom-preview-card--hero newsroom-tone-${formState.editorialTone} newsroom-copy-${formState.headlinePlacement}`} style={previewStyle}>
               <span>Vista portada principal</span>
-              <h3>{formState.title || 'Titular HeroIndex listo para publicar'}</h3>
-              <p>{formState.summary || 'La bajada aparecerá aquí para revisar contraste, ritmo y lectura editorial.'}</p>
+              {formState.title ? <h3>{formState.title}</h3> : null}
+              {formState.summary ? <p>{formState.summary}</p> : null}
+              {!formState.title && !formState.summary ? <strong>Cobertura visual HeroIndex</strong> : null}
               <small>{formState.sourceLabel}</small>
             </div>
           ) : null}
           {formState.homePlacement === 'feed' ? (
             <div className={`newsroom-preview-card newsroom-preview-card--feed newsroom-tone-${formState.editorialTone}`} style={previewStyle}>
               <span>Vista feed</span>
-              <h3>{formState.title || 'Vista Feed'}</h3>
-              <p>{formState.summary || 'Resumen compacto para cobertura reciente.'}</p>
+              {formState.title ? <h3>{formState.title}</h3> : null}
+              {formState.summary ? <p>{formState.summary}</p> : null}
+              {!formState.title && !formState.summary ? <strong>Pieza visual HeroIndex</strong> : null}
               <small>{formState.sourceLabel} · {toneOptions.find((option) => option.value === formState.editorialTone)?.label}</small>
             </div>
           ) : null}
@@ -393,7 +423,7 @@ function OraculoNewsroom() {
           {sortedNewsItems.map((newsItem) => (
             <article className="newsroom-list-item" key={newsItem.id}>
               <div>
-                <strong>{newsItem.title ?? 'Noticia sin titular'}</strong>
+                <strong>{newsItem.title || (newsItem.storyMode === 'visual' ? 'Pieza visual HeroIndex' : 'Noticia sin titular')}</strong>
                 <small>{newsItem.homePlacement ?? 'feed'} · {newsItem.editorialTone ?? 'verified'} · {newsItem.active === false ? 'Borrador' : 'Activa'} · {getDateLabel(newsItem.updatedAt ?? newsItem.createdAt)}</small>
               </div>
               <div className="newsroom-actions">

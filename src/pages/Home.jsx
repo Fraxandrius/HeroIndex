@@ -15,7 +15,11 @@ function getInitials(name = '') {
 }
 
 function getNewsSummary(newsItem) {
-  return newsItem.summary ?? newsItem.body ?? 'Actualización editorial de HeroIndex.'
+  return newsItem.summary ?? newsItem.body ?? ''
+}
+
+function getNewsTitle(newsItem) {
+  return newsItem.title ?? ''
 }
 
 function getShortNewsSummary(newsItem) {
@@ -115,89 +119,43 @@ function Home({ onNavigate }) {
   return (
 <div className={`home-page ${isVisualEditorOpen ? 'home-page--visual-editor-open' : ''}`.trim()}>
       <section className="story-rail" aria-label="Figuras en tendencia">
-        <article className="story-card story-card--statement">
-          <strong>Figuras en tendencia</strong>
-          <small>Presencia pública verificada dentro del ecosistema HeroIndex.</small>
-        </article>
+        <InlineVisualSlot
+          activeVisualSlotId={activeVisualSlotId}
+          className="story-card story-card--visual-signal"
+          isVisualEditorOpen={isVisualEditorOpen}
+          onVisualEditorClose={handleVisualEditorClose}
+          onVisualEditorOpen={handleVisualEditorOpen}
+          section="Señal destacada del strip"
+          slotId="homeTrendSignal"
+        >
+          <span className="story-card__visual-copy"><strong>HeroIndex Live</strong><small>Cobertura activa de figuras verificadas.</small></span>
+        </InlineVisualSlot>
         {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
         {!heroesLoading && !corporationsLoading
           ? featuredHeroes.map((hero, index) => {
-              const corporationName =
-                getCorporationById(hero.corporationId)?.name ??
-                hero.corporationId ??
-                'Independiente'
+              const corporationName = getCorporationById(hero.corporationId)?.name ?? hero.corporationId ?? 'Independiente'
               const badge = index === 0 ? 'TOP GLOBAL' : index === 1 ? 'EN TENDENCIA' : 'VERIFICADO'
-
-              return (
-                <button
-                  className="story-card story-card--compact"
-                  key={hero.id}
-                  onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
-                  type="button"
-                >
-                  <span className="story-card__avatar">
-                    <span>{getInitials(getHeroDisplayName(hero))}</span>
-                    {hero.avatarUrl ? (
-                      <img
-                        alt={getHeroDisplayName(hero)}
-                        loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.hidden = true
-                        }}
-                        src={hero.avatarUrl}
-                      />
-                    ) : null}
-                  </span>
-                  <span className="story-card__copy">
-                    <strong>{getHeroDisplayName(hero)}</strong>
-                    <small>{hero.heroTitle ?? `Aprobación ciudadana ${getScore(hero.approval)}`}</small>
-                    <em>{corporationName}</em>
-                  </span>
-                  <span className={`story-card__badge story-card__badge--${index === 0 ? 'gold' : index === 1 ? 'live' : 'cyan'}`}>
-                    {badge}
-                  </span>
-                </button>
-              )
+return <button className="story-card story-card--compact" key={hero.id} onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })} type="button"><span className="story-card__avatar"><span>{getInitials(getHeroDisplayName(hero))}</span>{hero.avatarUrl ? <img alt={getHeroDisplayName(hero)} loading="lazy" onError={(event) => { event.currentTarget.hidden = true }} src={hero.avatarUrl} /> : null}</span><span className="story-card__copy"><strong>{getHeroDisplayName(hero)}</strong><small>{hero.heroTitle ?? `Aprobación ciudadana ${getScore(hero.approval)}`}</small><em>{corporationName}</em></span><span className={`story-card__badge story-card__badge--${index === 0 ? 'gold' : index === 1 ? 'live' : 'cyan'}`}>{badge}</span></button>        
             })
           : null}
       </section>
 
       <div className="home-grid">
         <div className="home-main" aria-label="Feed de noticias HeroIndex">
-          <section className="hero-feature hero-feature--news" style={topStoryVisualStyle}>
+          <section className={`hero-feature hero-feature--news${topStory?.storyMode === 'visual' ? ' hero-feature--visual-story' : ''}`} style={topStoryVisualStyle}>
             {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading && topStory ? (
-              <div className="hero-feature__copy">
-                <div className="hero-feature__brand-seal">
-                  <BrandLogo size="sm" variant="symbol" />
-                  <span>Mesa Editorial HeroIndex</span>
-                </div>
-                <div className="hero-feature__badges" aria-label="Estado editorial">
-                  <span>PORTADA PRINCIPAL</span>
-                  <span>COBERTURA EDITORIAL</span>
-                  <span>CANAL VERIFICADO</span>
-                </div>
+              <div className="hero-feature__editorial-panel">
+                <div className="hero-feature__brand-seal"><BrandLogo size="sm" variant="symbol" /><span>Mesa Editorial HeroIndex</span></div>
+                <div className="hero-feature__badges" aria-label="Estado editorial"><span>PORTADA PRINCIPAL</span><span>CANAL VERIFICADO</span></div>
                 <p className="page-card__kicker">{getNewsType(topStory)}</p>
-                <h2>{topStory.title}</h2>
-                <p>{getNewsSummary(topStory)}</p>
-                <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada">
-                  <span>{topStory.sourceLabel ?? topStory.source ?? 'Mesa Editorial HeroIndex'}</span>
-                  {topStory.time ? <span>{topStory.time}</span> : null}
-                  {topStory.metric ? <span>{topStory.metric}</span> : null}
-                </div>
+                 {getNewsTitle(topStory) ? <h2>{getNewsTitle(topStory)}</h2> : null}
+                {getNewsSummary(topStory) ? <p>{getNewsSummary(topStory)}</p> : null}
+                {!getNewsTitle(topStory) && !getNewsSummary(topStory) ? <strong className="hero-feature__visual-label">Cobertura visual prioritaria</strong> : null}
+                <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada"><span>{topStory.sourceLabel ?? topStory.source ?? 'Mesa Editorial HeroIndex'}</span>{topStory.time ? <span>{topStory.time}</span> : null}</div>
               </div>
             ) : null}
-            {!newsLoading && !topStory ? (
-              <div className="hero-feature__copy">
-                <div className="hero-feature__brand-seal">
-                  <BrandLogo size="sm" variant="symbol" />
-                  <span>Mesa Editorial HeroIndex</span>
-                </div>
-                <p className="page-card__kicker">Canal verificado</p>
-                <h2>Sin portada principal activa</h2>
-                <p>Marca una noticia como Portada principal en Mesa Editorial para ocupar este espacio.</p>
-              </div>
-            ) : null}
+            {!newsLoading && !topStory ? <div className="hero-feature__editorial-panel"><div className="hero-feature__brand-seal"><BrandLogo size="sm" variant="symbol" /><span>Mesa Editorial HeroIndex</span></div><p className="page-card__kicker">Canal verificado</p><h2>Sin portada principal activa</h2><p>Marca una cobertura como Portada principal en Mesa Editorial para ocupar este espacio.</p></div> : null}
           </section>
 
           <InlineVisualSlot
@@ -264,8 +222,8 @@ function Home({ onNavigate }) {
                             src={item.imageUrl}
                           />
                         ) : null}
-                        <h3>{item.title}</h3>
-                        <p>{hasImage ? getNewsSummary(item) : getShortNewsSummary(item)}</p>
+                        {getNewsTitle(item) ? <h3>{getNewsTitle(item)}</h3> : null}
+                        {getNewsSummary(item) ? <p>{hasImage ? getNewsSummary(item) : getShortNewsSummary(item)}</p> : <p className="feed-card__visual-fallback">Cobertura visual HeroIndex</p>}
                         {item.metric ? <footer>{item.metric}</footer> : null}
                       </div>
                     </article>
@@ -287,7 +245,7 @@ function Home({ onNavigate }) {
               {!newsLoading
                 ? visibleTrendingNews.map((newsItem) => (
                     <li key={newsItem.id}>
-                      <span>{newsItem.title}</span>
+                      <span>{newsItem.title || 'Pieza visual HeroIndex'}</span>
                       <strong>{newsItem.metric}</strong>
                       <small>{newsItem.movement}</small>
                     </li>

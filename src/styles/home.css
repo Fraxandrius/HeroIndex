@@ -794,3 +794,51 @@
 .home-signal--secondary {
   min-height: 11rem;
 }
+
+/* Home Editorial Visual Refactor-v1 */
+.story-card--visual-signal {
+  align-content: end;
+  background: radial-gradient(circle at 78% 10%, rgba(94, 234, 212, 0.24), transparent 10rem), linear-gradient(145deg, rgba(9, 22, 42, 0.98), rgba(29, 24, 68, 0.88));
+  justify-items: start;
+  min-height: 8.25rem;
+  overflow: hidden;
+  padding: 0.8rem;
+  text-align: left;
+}
+.story-card--visual-signal .inline-visual-slot__content { align-items: end; display: flex; min-height: 100%; }
+.story-card__visual-copy { display: grid; gap: 0.22rem; position: relative; z-index: 2; }
+.story-card__visual-copy strong { color: #fff; }
+.story-card__visual-copy small { color: #bdefff; }
+
+.hero-feature--news {
+  align-content: end;
+  background-color: #081225;
+  isolation: isolate;
+  min-height: clamp(28rem, 50vw, 44rem);
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+.hero-feature--news::before {
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.12) 0%, rgba(3, 7, 18, 0.34) 48%, rgba(3, 7, 18, 0.88) 100%), linear-gradient(90deg, rgba(3, 7, 18, 0.54), transparent 72%);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+.hero-feature__editorial-panel {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, rgba(4, 12, 27, 0.9), rgba(8, 20, 39, 0.76));
+  border: 1px solid rgba(186, 230, 253, 0.18);
+  border-radius: 1.15rem;
+  box-shadow: 0 1.2rem 3rem rgba(2, 6, 23, 0.32);
+  display: grid;
+  gap: 0.65rem;
+  max-width: min(46rem, 100%);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  position: relative;
+  z-index: 1;
+}
+.hero-feature__editorial-panel h2 { font-size: clamp(2rem, 5vw, 4rem); max-width: 16ch; }
+.hero-feature__editorial-panel > p:not(.page-card__kicker) { color: #d7e2f6; line-height: 1.55; margin: 0; max-width: 42rem; }
+.hero-feature__visual-label { color: #fff; font-size: clamp(1.05rem, 2vw, 1.35rem); letter-spacing: 0.04em; }
+.hero-feature--visual-story .hero-feature__editorial-panel { max-width: fit-content; }
