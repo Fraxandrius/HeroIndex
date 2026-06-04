@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react'
 import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
 import InlineVisualSlot from '../components/visual/InlineVisualSlot.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { useProfileGallery } from '../hooks/useProfileGallery.js'
+import { useProfilePosts } from '../hooks/useProfilePosts.js'
 import { deleteHero } from '../services/heroesService.js'
+import { canSeeOraculoTools } from '../utils/roles.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
@@ -81,6 +85,33 @@ function getPublicPowers(hero = {}) {
   return []
 }
 
+function normalizePublicCollection(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : []
+}
+
+function getPublicPosts(hero = {}) {
+  return normalizePublicCollection(hero.publicPosts ?? hero.publications ?? hero.posts ?? hero.activity ?? hero.publicUpdates ?? hero.updates)
+    .filter((post) => post?.visibility !== 'private' && post?.public !== false)
+    .sort((firstPost, secondPost) => toTimestamp(secondPost.createdAt ?? secondPost.date) - toTimestamp(firstPost.createdAt ?? firstPost.date))
+}
+
+function getPublicGallery(hero = {}) {
+  const gallery = normalizePublicCollection(hero.publicGallery ?? hero.gallery ?? hero.publicImages ?? hero.images)
+  const imageUrls = gallery.map((item) => (typeof item === 'string' ? item : item?.imageUrl ?? item?.url)).filter(Boolean)
+
+  return [...new Set([hero.featuredImageUrl, ...imageUrls].filter(Boolean))]
+}
+
+function getPublicTrust(hero = {}) {
+  const value = hero.publicTrust ?? hero.trust ?? hero.trustScore
+
+  return value === undefined || value === null || value === '' ? 'Datos en consolidación' : String(value)
+}
+
+function getPublicMetric(value, fallback = 'Sin medición') {
+  return value === undefined || value === null || value === '' ? fallback : String(value)
+}
+
 function getNewsSummary(newsItem) {
   const summary = newsItem.summary ?? newsItem.body ?? ''
 
@@ -116,6 +147,7 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
   const [deleteMessage, setDeleteMessage] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [isDeletingHero, setIsDeletingHero] = useState(false)
+  const { userProfile } = useAuth()
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
   const {
     getCorporationById,
@@ -123,6 +155,9 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
     error: corporationsError,
   } = useCorporations()
   const { feedNews, loading: newsLoading, error: newsError } = useNews()
+  const { error: postsError, loading: postsLoading, posts: profilePosts } = useProfilePosts(heroId, { publicOnly: true })
+  const { error: galleryError, loading: galleryLoading, images: profileGallery } = useProfileGallery(heroId, { publicOnly: true })
+  const canViewOraculoTools = isOraculoMode && canSeeOraculoTools(userProfile)
 
   const hero = heroes.find((heroItem) => String(heroItem.id) === String(heroId))
   const activeHeroes = useMemo(
@@ -145,8 +180,8 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
         .slice(0, 5)
     : []
 
-  const loading = heroesLoading || corporationsLoading || newsLoading
-  const error = heroesError || corporationsError || newsError
+   const loading = heroesLoading || corporationsLoading || newsLoading || postsLoading || galleryLoading
+  const error = heroesError || corporationsError || newsError || postsError || galleryError
 
   if (loading) {
     return (
@@ -176,21 +211,23 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
   const publicPowers = getPublicPowers(hero)
   const publicBio = hero.publicBio || 'Biografía pública pendiente de actualización.'
   const heroTier = getHeroTier(hero.rankingPoints)
+  const legacyPublicPosts = getPublicPosts(hero)
+  const publicPosts = profilePosts.length > 0 ? profilePosts : legacyPublicPosts
+  const legacyPublicGallery = getPublicGallery(hero)
+  const publicGallery = profileGallery.length > 0 ? profileGallery : legacyPublicGallery.map((imageUrl) => ({ id: imageUrl, imageUrl, caption: '' }))
+  const coverUrl = hero.coverUrl || hero.bannerUrl || hero.imageUrl || ''
+  const publicQuote = hero.profileStatus || hero.publicQuote || hero.tagline || 'Presencia pública activa dentro de la red HeroIndex.'
 
-   const handleDeleteHero = async (deleteCharacterSheet = false) => {
-    const confirmationMessage = deleteCharacterSheet
-      ? 'Eliminar héroe y hoja privada RPG. Esta acción no se puede deshacer.'
-      : 'Eliminar héroe público. Noticias y evaluaciones asociadas no se eliminarán automáticamente. Esta acción no se puede deshacer.'
-
-    if (!window.confirm(confirmationMessage)) return
+   const handleDeleteHero = async () => {
+    if (!window.confirm('Eliminar héroe público. Noticias y evaluaciones asociadas no se eliminarán automáticamente. Esta acción no se puede deshacer.')) return
 
     setIsDeletingHero(true)
     setDeleteMessage('Eliminando...')
     setDeleteError('')
 
     try {
-      await deleteHero(hero.id, { deleteCharacterSheet })
-      setDeleteMessage('Registro eliminado correctamente.')
+      await deleteHero(hero.id)
+     setDeleteMessage('Registro eliminado correctamente.')
       onNavigate?.('oraculo-hub')
     } catch {
       setDeleteError('No fue posible eliminar el registro.')
@@ -201,188 +238,81 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
   }
 
   return (
-    <section className="page-card hero-profile-page">
-       <nav className="hero-profile-actions" aria-label="Navegación de perfil">
-        <button onClick={() => onNavigate?.('ranking')} type="button">
-          Volver al ranking
-        </button>
-        <button onClick={() => onNavigate?.('profiles')} type="button">
-          Ver catálogo de héroes
-        </button>
+    <section className="page-card hero-profile-page public-hero-profile">
+      <nav className="hero-profile-actions public-hero-profile__actions" aria-label="Navegación de perfil">
+        <button onClick={() => onNavigate?.('profiles')} type="button">Volver a perfiles</button>
+        <button onClick={() => onNavigate?.('ranking')} type="button">Volver al ranking</button>
       </nav>
 
-      <header className="hero-profile-cover">
-        {hero.bannerUrl ? (
-          <img
-            alt={`Portada pública de ${displayName}`}
-            loading="lazy"
-            onError={(event) => {
-              event.currentTarget.hidden = true
-            }}
-            src={hero.bannerUrl}
-          />
-        ) : null}
-        <div className="hero-profile-cover__overlay">
+      <header className="hero-profile-cover public-hero-profile__cover">
+        {coverUrl ? <img alt={`Portada pública de ${displayName}`} loading="lazy" onError={(event) => { event.currentTarget.hidden = true }} src={coverUrl} /> : null}
+        <div className="public-hero-profile__cover-placeholder" hidden={Boolean(coverUrl)}><span>RED HEROINDEX</span><strong>IDENTIDAD HEROICA REGISTRADA</strong></div>
+        <div className="hero-profile-cover__overlay public-hero-profile__identity">
           <span className="hero-profile-avatar">
             <span>{getInitials(displayName)}</span>
-            {hero.avatarUrl ? (
-              <img
-                alt={`Avatar público de ${displayName}`}
-                loading="lazy"
-                onError={(event) => {
-                  event.currentTarget.hidden = true
-                }}
-                src={hero.avatarUrl}
-              />
-            ) : null}
+            {hero.avatarUrl ? <img alt={`Avatar público de ${displayName}`} loading="lazy" onError={(event) => { event.currentTarget.hidden = true }} src={hero.avatarUrl} /> : null}
           </span>
           <div className="hero-profile-heading">
-            <p className="page-card__kicker">Perfil verificado por HeroIndex</p>
+            <p className="page-card__kicker">PERFIL PÚBLICO HEROINDEX</p>
             <h2>{displayName}</h2>
             <p>{getHeroTitle(hero)}</p>
             <div className="hero-profile-tags">
-               <span>{heroTier}</span>
-              <span>{corporationName}</span>
-              <span>Trayectoria registrada</span>
+              <span>Canal verificado</span><span>{corporationName}</span><span>{publicPosition > 0 ? `Ranking #${publicPosition}` : heroTier}</span><span>Aprobación {getPublicMetric(hero.approval)}</span>
             </div>
           </div>
         </div>
       </header>
 
-<div className="hero-profile-layout">
-        <main className="hero-profile-main">
-          <section className="hero-profile-section hero-profile-section--lead">
-             <p className="page-card__kicker">Presencia heroica confiable</p>
+      <div className="public-hero-profile__layout">
+        <main className="public-hero-profile__main">
+          <section className="public-hero-profile__section public-hero-profile__presentation">
+            <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">PRESENTACIÓN</p><h3>Presencia pública</h3></div><span>Identidad heroica registrada</span></div>
+            <blockquote>{publicQuote}</blockquote>
             <p>{publicBio}</p>
           </section>
 
-<InlineVisualSlot className="hero-profile-section hero-profile-visual-signal" page="hero-profile" section="Canal verificado de perfil" slotId="hero-profile-feature-visual">
-            <p className="page-card__kicker">Canal verificado</p>
-            <h3>Perfil verificado por HeroIndex</h3>
-            <p>Actividad destacada dentro del ecosistema HeroIndex y cobertura pública asociada para una ciudadanía más segura.</p>
-          </InlineVisualSlot>
-
-          <section className="hero-profile-section">
-            <p className="page-card__kicker">Poderes visibles</p>
-            {publicPowers.length > 0 ? (
-              <div className="hero-profile-powers">
-                {publicPowers.map((power) => (
-                  <span key={power}>{power}</span>
-                ))}
-              </div>
-            ) : (
-              <p>Sin poderes públicos registrados.</p>
-            )}
+          <section className="public-hero-profile__section">
+            <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">ACTIVIDAD</p><h3>Canal público del héroe</h3></div><span>{publicPosts.length} actualizaciones</span></div>
+            <div className="public-hero-feed">
+              {publicPosts.length > 0 ? publicPosts.map((post, index) => (
+                <article className="public-hero-post" key={post.id || `${hero.id}-post-${index}`}>
+                  <header><span className="public-hero-post__avatar">{hero.avatarUrl ? <img alt="" src={hero.avatarUrl} /> : getInitials(displayName)}</span><div><strong>{displayName}</strong><small>{formatDate(post.createdAt ?? post.date)}</small></div><em>Señal del héroe</em></header>
+                  <p>{post.content ?? post.text ?? post.body}</p>
+                  {post.imageUrl ? <img alt={`Actualización pública de ${displayName}`} loading="lazy" src={post.imageUrl} /> : null}
+                </article>
+              )) : <div className="public-hero-profile__empty"><strong>Este perfil aún no registra actualizaciones públicas.</strong><span>La actividad visible aparecerá aquí cuando el héroe emita una señal pública.</span></div>}
+            </div>
           </section>
 
-          <section className="hero-profile-section">
-            <div className="hero-profile-section__heading">
-              <p className="page-card__kicker">Noticias relacionadas</p>
-              <span>Actividad pública destacada</span>
-            </div>
-            {relatedNews.length > 0 ? (
-              <div className="hero-profile-news">
-                {relatedNews.map((newsItem) => (
-                  <article className="hero-profile-news__item" key={newsItem.id}>
-                    {newsItem.imageUrl ? (
-                      <img
-                        alt={newsItem.title}
-                        loading="lazy"
-                        onError={(event) => {
-                          event.currentTarget.hidden = true
-                        }}
-                        src={newsItem.imageUrl}
-                      />
-                    ) : null}
-                    <div>
-                      <span>{newsItem.category || newsItem.layer || 'HeroIndex News'}</span>
-                      <h3>{newsItem.title}</h3>
-                      <p>{getNewsSummary(newsItem)}</p>
-                      <time dateTime={newsItem.createdAt ? new Date(toTimestamp(newsItem.createdAt)).toISOString() : undefined}>
-                        {formatDate(newsItem.createdAt)}
-                      </time>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p>Sin noticias relacionadas.</p>
-            )}
+          <InlineVisualSlot className="public-hero-profile__section hero-profile-visual-signal" page="hero-profile" section="Canal verificado de perfil" slotId="hero-profile-feature-visual">
+            <p className="page-card__kicker">CANAL VERIFICADO</p><h3>Presencia heroica activa</h3><p>Actividad destacada y cobertura pública asociada dentro del ecosistema HeroIndex.</p>
+          </InlineVisualSlot>
+
+          <section className="public-hero-profile__section">
+            <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">GALERÍA</p><h3>Galería pública</h3></div><span>Presencia visual</span></div>
+          {publicGallery.length > 0 ? <div className="public-hero-gallery">{publicGallery.map((image) => <figure key={image.id || image.imageUrl}><img alt={image.caption || `Galería pública de ${displayName}`} loading="lazy" src={image.imageUrl} />{image.caption ? <figcaption>{image.caption}</figcaption> : null}</figure>)}</div> : <div className="public-hero-profile__empty"><strong>Galería pública en consolidación.</strong><span>Las futuras imágenes verificadas aparecerán en este espacio.</span></div>}
+          </section>
+
+          <section className="public-hero-profile__section">
+            <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">CAPACIDADES DECLARADAS</p><h3>Poderes visibles</h3></div><span>Información pública declarada o verificada por HeroIndex</span></div>
+            {publicPowers.length > 0 ? <div className="public-hero-powers">{publicPowers.map((power) => <span key={power}>{power}</span>)}</div> : <div className="public-hero-profile__empty"><strong>Sin poderes públicos declarados.</strong></div>}
+          </section>
+
+          <section className="public-hero-profile__section">
+            <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">SEÑALES RELACIONADAS</p><h3>Cobertura vinculada</h3></div><span>{relatedNews.length} señales</span></div>
+            {relatedNews.length > 0 ? <div className="public-hero-signals">{relatedNews.map((newsItem) => <article key={newsItem.id}><span>{newsItem.category || newsItem.layer || 'Canal HeroIndex'}</span><h4>{newsItem.title}</h4><p>{getNewsSummary(newsItem)}</p><small>{formatDate(newsItem.createdAt)} · Leer cobertura</small></article>)}</div> : <div className="public-hero-profile__empty"><strong>Sin señales asociadas.</strong></div>}
           </section>
         </main>
 
-        <aside className="hero-profile-sidebar" aria-label="Resumen público del héroe">
-          <section className="hero-profile-panel">
-            <p className="page-card__kicker">Reconocimiento ciudadano</p>
-            <dl className="hero-profile-metrics">
-              <div>
-                <dt>Puntos HeroIndex</dt>
-                <dd>{getNumericValue(hero.rankingPoints)}</dd>
-              </div>
-              <div>
-                <dt>Aprobación ciudadana</dt>
-                <dd>{getNumericValue(hero.approval)}</dd>
-              </div>
-              <div>
-                <dt>Posición pública</dt>
-                <dd>{publicPosition > 0 ? `#${publicPosition}` : '—'}</dd>
-              </div>
-              <div>
-                <dt>Afiliación</dt>
-                <dd>{corporationName}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="hero-profile-panel hero-profile-panel--spotlight">
-            <p className="page-card__kicker">Resumen HeroIndex</p>
-            <h3>{heroTier}</h3>
-            <p>
-              Perfil público con señales de reconocimiento, actividad destacada y presencia registrada
-              en el ecosistema heroico.
-            </p>
-          </section>
-          
-          <BroadcastSlot
-            className="hero-profile-rail-signal"
-            heroId={hero.id}
-            placement="hero-profile-rail"
-            variant="rail"
-          />
-
-          {isOraculoMode ? (
-            <section className="hero-profile-panel hero-profile-oraculo-overlay">
-              <p className="page-card__kicker">Modo ORÁCULO activo</p>
-              <h3>Acceso ORÁCULO</h3>
-              <p>Controles internos visibles solo para la capa ORÁCULO/GM.</p>
-              <div className="hero-profile-oraculo-overlay__actions">
-                <button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">
-                  Abrir dossier ORÁCULO
-                </button>
-                <button onClick={() => onNavigate?.('oraculo-hub')} type="button">
-                  Ir a ORÁCULO Hub
-                </button>
-                <button onClick={() => onNavigate?.('mission-calculator')} type="button">
-                  Abrir Mission Calculator
-                </button>
-                <button onClick={() => onNavigate?.('gm-manager')} type="button">
-                  Volver a GM Manager
-                </button>
-                  <button disabled={isDeletingHero} onClick={() => handleDeleteHero(false)} type="button">
-                  {isDeletingHero ? 'Eliminando...' : 'Eliminar héroe'}
-                </button>
-                <button disabled={isDeletingHero} onClick={() => handleDeleteHero(true)} type="button">
-                  Eliminar héroe y hoja privada RPG
-                </button>
-              </div>
-               {deleteError ? <p className="hero-profile-state hero-profile-state--error">{deleteError}</p> : null}
-              {deleteMessage ? <p className="hero-profile-state">{deleteMessage}</p> : null}
-            </section>
-          ) : null}
+        <aside className="public-hero-profile__sidebar" aria-label="Resumen público del héroe">
+          <section className="public-hero-profile__panel"><p className="page-card__kicker">REPUTACIÓN PÚBLICA</p><dl className="public-hero-profile__metrics"><div><dt>Puntos HeroIndex</dt><dd>{getPublicMetric(hero.rankingPoints)}</dd></div><div><dt>Aprobación ciudadana</dt><dd>{getPublicMetric(hero.approval)}</dd></div><div><dt>Confianza pública</dt><dd>{getPublicTrust(hero)}</dd></div><div><dt>Posición ranking</dt><dd>{publicPosition > 0 ? `#${publicPosition}` : 'Sin medición'}</dd></div><div><dt>Afiliación</dt><dd>{corporationName}</dd></div></dl></section>
+          <section className="public-hero-profile__panel public-hero-profile__panel--status"><p className="page-card__kicker">PRESENCIA PÚBLICA ACTIVA</p><h3>{heroTier}</h3><p>Perfil público con identidad, actividad y reconocimiento consolidados por Red HeroIndex.</p></section>
+          <BroadcastSlot className="hero-profile-rail-signal" heroId={hero.id} placement="hero-profile-rail" variant="rail" />
         </aside>
       </div>
+
+      {canViewOraculoTools ? <section className="public-hero-oraculo-tools"><div><p className="page-card__kicker">HERRAMIENTAS ORÁCULO</p><h3>Controles internos separados de la vista pública</h3></div><div className="public-hero-oraculo-tools__actions"><button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">Abrir dossier</button><button onClick={() => onNavigate?.('gm-manager')} type="button">Volver a GM Manager</button><button disabled={isDeletingHero} onClick={handleDeleteHero} type="button">{isDeletingHero ? 'Eliminando...' : 'Eliminar héroe'}</button></div>{deleteError ? <p className="hero-profile-state hero-profile-state--error">{deleteError}</p> : null}{deleteMessage ? <p className="hero-profile-state">{deleteMessage}</p> : null}</section> : null}
     </section>
-  )
-}
+  )}
 
 export default HeroProfile
