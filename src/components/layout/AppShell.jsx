@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
+import DesktopTopNav from './DesktopTopNav.jsx'
+import HeroIndexRail from './HeroIndexRail.jsx'
 import MobileAppShell from './MobileAppShell.jsx'
-import Sidebar from './Sidebar.jsx'
-import TopBar from './TopBar.jsx'
 
 const MOBILE_QUERY = '(max-width: 768px)'
 
@@ -29,25 +29,28 @@ function AppShell({ activeRouteId, children, onNavigate, routes }) {
   const isMobile = useIsMobileShell()
   const currentSection = activeRoute?.label ?? 'HeroIndex'
 
-  return (
-    <div className={`app-shell ${isMobile ? 'app-shell--mobile' : 'app-shell--desktop'}`}>
-      {isMobile ? (
+  if (isMobile) {
+    return (
+      <div className="app-shell app-shell--mobile">
         <MobileAppShell
           activeRouteId={activeRouteId}
           currentSection={currentSection}
           onNavigate={onNavigate}
           routes={routes}
         />
-      ) : (
-        <Sidebar
-          activeRouteId={activeRouteId}
-          onNavigate={onNavigate}
-          routes={routes}
-        />
-      )}
-      <div className="app-shell__workspace">
-        {!isMobile ? <TopBar currentSection={currentSection} /> : null}
+        <div className="app-shell__workspace">
+          <main className="app-shell__content">{children}</main>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="app-shell app-shell--desktop">
+      <DesktopTopNav activeRouteId={activeRouteId} onNavigate={onNavigate} routes={routes} />
+      <div className="app-shell__desktop-layout">
         <main className="app-shell__content">{children}</main>
+        <HeroIndexRail />
       </div>
     </div>
   )
