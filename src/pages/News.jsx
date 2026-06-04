@@ -5,8 +5,12 @@ import { deleteNews } from '../services/newsService.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
+function getNewsCategory(newsItem = {}, index = 0) {
+  return newsItem.category || newsItem.layer || newsItem.tag || (index === 0 ? 'Cobertura verificada' : 'Canal verificado')
+}
+
 function News() {
-  const { feedNews, loading, source } = useNews()
+  const { feedNews, loading } = useNews()
   const [deletingNewsId, setDeletingNewsId] = useState(null)
   const [deleteMessage, setDeleteMessage] = useState('')
   const visibleNews = feedNews.filter((item) => item.active !== false && item.homePlacement !== 'hidden')
@@ -28,49 +32,95 @@ function News() {
   }
 
   return (
-    <section className="page-card news-page">
-        <header className="news-hero hi-card hi-card-public">
-        <p className="page-card__kicker">Cobertura verificada · {source}</p>
-        <h2>Noticias HeroIndex</h2>
-        <p>Cobertura verificada de intervenciones, alertas y eventos heroicos relevantes para una ciudadanía protegida.</p>
+    <section className="page-card news-page news-page--editorial">
+      <header className="news-hero news-hero--editorial">
+        <div className="news-hero__copy">
+          <p className="page-card__kicker">COBERTURA VERIFICADA · HEROINDEX</p>
+          <h2>Noticias HeroIndex</h2>
+          <p>Cobertura verificada de intervenciones, alertas y eventos heroicos relevantes para una ciudadanía protegida.</p>
+        </div>
+        <div className="news-hero__status" aria-label="Estado del canal editorial">
+          <span>Canal verificado</span>
+          <strong>Ciclo informativo activo</strong>
+          <small>Señales públicas consolidadas por Red HeroIndex.</small>
+        </div>
       </header>
-      <BroadcastSlot className="news-broadcast-channel" placement="news-feature" variant="feature" />
-      {deleteMessage && isOraculoMode ? <p>{deleteMessage}</p> : null}
-      <div className="news-list">
-        {loading ? <p>Cargando noticias HeroIndex...</p> : null}
-        {!loading && visibleNews.length === 0 ? <p>No hay noticias activas por el momento.</p> : null}
-        {!loading
-          ? visibleNews.map((newsItem) => (
-              <article className="news-list__item" key={newsItem.id}>
-                 <p className="feed-card__tag">{newsItem.category ?? newsItem.layer ?? newsItem.tag}</p>
-                <h3>{newsItem.title}</h3>
-                <p>{newsItem.summary ?? newsItem.body}</p>
-                {newsItem.imageUrl ? (
-                  <img
-                    alt={newsItem.title ?? 'Noticia HeroIndex'}
-                    className="news-list__image"
-                    loading="lazy"
-                    onError={(event) => {
-                      event.currentTarget.hidden = true
-                    }}
-                    src={newsItem.imageUrl}
-                  />
-                ) : null}
-                <footer>
-                  {newsItem.source} · {newsItem.time}
-                </footer>
-                {isOraculoMode ? (
-                  <button disabled={deletingNewsId === newsItem.id} onClick={() => handleDeleteNews(newsItem)} type="button">
-                    {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar noticia'}
-                  </button>
-                ) : null}
-                {visibleNews.indexOf(newsItem) === 1 ? (
-                  <BroadcastSlot className="news-feed-signal" placement="news-feed" variant="inline" />
-                ) : null}
-              </article>
-            ))
-          : null}
-      </div>
+
+      <section className="news-signal-block" aria-label="Cobertura destacada HeroIndex">
+        <div className="news-section-heading">
+          <div>
+            <p className="page-card__kicker">SEÑAL DESTACADA</p>
+            <h3>Cobertura en curso</h3>
+          </div>
+          <span>Red editorial activa</span>
+        </div>
+        <BroadcastSlot className="news-broadcast-channel" placement="news-feature" variant="feature" />
+      </section>
+
+      {deleteMessage && isOraculoMode ? <p className="news-state news-state--oraculo">{deleteMessage}</p> : null}
+
+      <section className="news-directory" aria-label="Coberturas públicas HeroIndex">
+        <div className="news-section-heading">
+          <div>
+            <p className="page-card__kicker">MESA EDITORIAL</p>
+            <h3>Últimas coberturas</h3>
+          </div>
+          <span>{visibleNews.length} señales verificadas</span>
+        </div>
+
+        <div className="news-list">
+          {loading ? <p className="news-state">Cargando noticias HeroIndex...</p> : null}
+          {!loading && visibleNews.length === 0 ? <p className="news-state">No hay noticias activas por el momento.</p> : null}
+          {!loading
+            ? visibleNews.map((newsItem, index) => (
+                <article className={`news-list__item${index === 0 ? ' news-list__item--featured' : ''}`} key={newsItem.id}>
+                  <div className="news-list__media">
+                    {newsItem.imageUrl ? (
+                      <img
+                        alt={newsItem.title ?? 'Noticia HeroIndex'}
+                        className="news-list__image"
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true
+                          event.currentTarget.nextElementSibling?.removeAttribute('hidden')
+                        }}
+                        src={newsItem.imageUrl}
+                      />
+                    ) : null}
+                    <div className="news-list__placeholder" hidden={Boolean(newsItem.imageUrl)}>
+                      <span>RED HEROINDEX</span>
+                      <strong>COBERTURA VERIFICADA</strong>
+                    </div>
+                    <span className="news-list__category">{getNewsCategory(newsItem, index)}</span>
+                  </div>
+                  <div className="news-list__body">
+                    <p className="feed-card__tag">{index === 0 ? 'ÚLTIMO MINUTO' : 'CANAL VERIFICADO'}</p>
+                    <h3>{newsItem.title}</h3>
+                    <p>{newsItem.summary ?? newsItem.body}</p>
+                    <footer>
+                      <span>Red HeroIndex</span>
+                      <span>{newsItem.time || 'Cobertura activa'}</span>
+                    </footer>
+                    <div className="news-list__actions">
+                      <span className="news-list__open">Leer cobertura →</span>
+                      {isOraculoMode ? (
+                        <button
+                          className="news-list__delete"
+                          disabled={deletingNewsId === newsItem.id}
+                          onClick={() => handleDeleteNews(newsItem)}
+                          type="button"
+                        >
+                          {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar noticia'}
+                        </button>
+                      ) : null}
+                    </div>
+                    {index === 1 ? <BroadcastSlot className="news-feed-signal" placement="news-feed" variant="inline" /> : null}
+                  </div>
+                </article>
+              ))
+            : null}
+        </div>
+      </section>
     </section>
   )
 }
