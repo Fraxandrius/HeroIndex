@@ -2436,3 +2436,153 @@
     right: auto;
   }
 }
+
+
+/* Wide public directories polish. */
+.profiles-page--catalog,
+.corporations-page--premium {
+  margin: 0;
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+}
+
+.profiles-page--catalog {
+  background:
+    radial-gradient(circle at 6% 2%, rgba(56, 189, 248, 0.1), transparent 24rem),
+    radial-gradient(circle at 96% 8%, rgba(139, 92, 246, 0.08), transparent 22rem),
+    linear-gradient(145deg, rgba(8, 15, 31, 0.98), rgba(11, 18, 36, 0.94));
+  display: grid;
+  gap: 1.35rem;
+}
+
+.profiles-page--catalog .profiles-hero {
+  background:
+    linear-gradient(100deg, rgba(5, 12, 27, 0.95), rgba(12, 34, 58, 0.78)),
+    radial-gradient(circle at 85% 8%, rgba(56, 189, 248, 0.2), transparent 20rem);
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 1.35rem;
+  box-shadow: 0 1.2rem 3.5rem rgba(2, 6, 23, 0.2);
+  min-height: 13rem;
+  padding: clamp(1.3rem, 3vw, 2.2rem);
+}
+
+.profiles-page--catalog .profiles-hero h2 {
+  color: #fff;
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.profiles-page--catalog .profiles-hero__subtitle {
+  color: #c9d9f4;
+  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.profiles-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.profiles-hero__chips span {
+  background: rgba(94, 234, 212, 0.08);
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  border-radius: 999px;
+  color: #b7fff4;
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  padding: 0.34rem 0.58rem;
+  text-transform: uppercase;
+}
+
+.profiles-directory {
+  background: rgba(8, 15, 31, 0.56);
+  border: 1px solid rgba(186, 230, 253, 0.14);
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.profiles-section-heading {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.profiles-section-heading h3 {
+  color: #fff;
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  margin: 0.12rem 0 0;
+}
+
+.profiles-section-heading > span {
+  color: #8edfff;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.profiles-page--catalog .profiles-catalog-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.profile-public-card--featured {
+  border-color: rgba(125, 211, 252, 0.25);
+  box-shadow: 0 1.25rem 3.5rem rgba(2, 6, 23, 0.2), 0 0 1.5rem rgba(56, 189, 248, 0.05);
+}
+
+.profile-public-card__open-indicator {
+  color: #9be9ff;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profiles-page--catalog .hero-profile-link--internal {
+  background: rgba(251, 113, 133, 0.06);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  border-radius: 999px;
+  color: #fecdd3;
+  font-size: 0.64rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  padding: 0.42rem 0.66rem;
+  text-transform: uppercase;
+}
+
+.corporations-page--premium .corporations-hero,
+.corporations-page--premium .corporations-signal-block,
+.corporations-page--premium .corporations-directory {
+  width: 100%;
+}
+
+.corporations-page--premium .corporations-grid,
+.corporations-page--premium .corporations-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+
+@media (min-width: 1480px) {
+  .corporations-page--premium .corporations-grid,
+  .corporations-page--premium .corporations-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .profiles-page--catalog,
+  .corporations-page--premium { overflow-x: hidden; }
+
+  .profiles-directory { padding: 0.75rem; }
+}

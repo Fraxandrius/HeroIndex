@@ -133,7 +133,7 @@ function Profiles({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [profileFilter, setProfileFilter] = useState('all')
   const [selectedCorporationId, setSelectedCorporationId] = useState('all')
-const [deletingHeroId, setDeletingHeroId] = useState(null)
+  const [deletingHeroId, setDeletingHeroId] = useState(null)
   const [deleteMessage, setDeleteMessage] = useState('')
 
   const { error: heroesError, heroes, loading: heroesLoading } = useHeroes()
@@ -210,15 +210,14 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
   return (
     <section className="page-card profiles-page profiles-page--catalog">
       <header className="profiles-hero">
-        <p className="page-card__kicker">Catálogo público HeroIndex</p>
+        <p className="page-card__kicker">CATÁLOGO PÚBLICO HEROINDEX</p>
         <h2>Perfiles HeroIndex</h2>
-        <p className="profiles-hero__subtitle">
-          Explora héroes verificados dentro del ecosistema HeroIndex.
-        </p>
-        <p>
-           Perfiles activos de protección, respuesta y presencia pública para una ciudadanía que confía
-          en figuras registradas, visibles y certificadas
-        </p>
+         <p className="profiles-hero__subtitle">Explora héroes verificados dentro del ecosistema HeroIndex.</p>
+        <div className="profiles-hero__chips" aria-label="Atributos del catálogo público">
+          <span>Presencia verificada</span>
+          <span>Respuesta pública</span>
+          <span>Red activa</span>
+        </div>
       </header>
 
 <InlineVisualSlot
@@ -295,8 +294,16 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
       ) : null}
 
       {!loading && filteredHeroes.length > 0 ? (
-        <div className="profiles-catalog-grid">
-          {filteredHeroes.map((hero) => {
+        <section className="profiles-directory" aria-label="Directorio público de héroes">
+          <div className="profiles-section-heading">
+            <div>
+              <p className="page-card__kicker">FIGURAS VERIFICADAS</p>
+              <h3>Directorio público</h3>
+            </div>
+            <span>{filteredHeroes.length} perfiles activos</span>
+          </div>
+          <div className="profiles-catalog-grid">
+            {filteredHeroes.map((hero, index) => {
             const displayName = getHeroDisplayName(hero)
             const corporationName = getCorporationName(hero, getCorporationById)
             const publicPowers = getPublicPowers(hero)
@@ -307,7 +314,7 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
             return (
                <article
                 aria-label={`Abrir perfil público de ${displayName}`}
-                className="profile-public-card profile-public-card--interactive"
+                className={`profile-public-card profile-public-card--interactive${index < 3 ? ' profile-public-card--featured' : ''}`}
                 key={hero.id}
                 onClick={() => openHeroProfile(hero.id)}
                 onKeyDown={(event) => handleProfileCardKeyDown(event, hero.id)}
@@ -375,8 +382,8 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
                       : `${relatedNewsCount} noticias relacionadas`}
                   </p>
 
-                  <span className="profile-public-card__open-indicator">Abrir perfil →</span>
-                   {isOraculoMode ? (
+                  <span className="profile-public-card__open-indicator">Abrir perfil público →</span>
+                  {isOraculoMode ? (
                     <button
                       className="hero-profile-link hero-profile-link--internal"
                       disabled={deletingHeroId === hero.id}
@@ -390,7 +397,8 @@ const [deletingHeroId, setDeletingHeroId] = useState(null)
               </article>
             )
           })}
-        </div>
+          </div>
+        </section>
       ) : null}
     </section>
   )
