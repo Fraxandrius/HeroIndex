@@ -298,3 +298,26 @@
   font-size: 0.86rem;
   font-weight: 700;
 }
+
+/* Image-first editorial stories. */
+.newsroom-image-dropzone {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px dashed rgba(125, 211, 252, 0.34);
+  border-radius: 1rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem;
+  min-height: 8rem;
+  place-content: center;
+  padding: 1rem;
+  text-align: center;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.newsroom-image-dropzone span { color: #fff; font-weight: 900; }
+.newsroom-image-dropzone small { color: #9fb0d8; }
+.newsroom-image-dropzone input { cursor: pointer; margin: 0.5rem auto 0; max-width: 100%; }
+.newsroom-image-dropzone--active { background: rgba(56, 189, 248, 0.14); border-color: #67e8f9; }
+.newsroom-preview-card--hero { position: relative; }
+.newsroom-preview-card--hero::before { background: linear-gradient(180deg, rgba(3,7,18,0.1), rgba(3,7,18,0.84)); content: ''; inset: 0; pointer-events: none; position: absolute; }
+.newsroom-preview-card--hero > * { position: relative; }

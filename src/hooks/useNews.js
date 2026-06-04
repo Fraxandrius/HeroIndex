@@ -92,7 +92,7 @@ function normalizeNewsForUi(newsItem) {
     sourceLabel: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'Mesa Editorial HeroIndex',
     tag: newsItem.kicker ?? getNewsTag(newsItem),
     time: formatNewsTime(newsItem),
-    title: newsItem.title ?? 'Actualización HeroIndex sin titular',
+    title: newsItem.title || (newsItem.storyMode === 'visual' ? '' : 'Actualización HeroIndex sin titular'),
   }
 }
 

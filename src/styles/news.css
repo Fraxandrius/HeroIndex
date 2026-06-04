@@ -247,3 +247,7 @@
 
   .news-list__item--featured { grid-column: auto; }
 }
+
+.news-list__item--visual-story .news-list__media { min-height: 18rem; }
+.news-list__item--visual-story .news-list__body { background: linear-gradient(180deg, rgba(9,16,32,0.92), rgba(4,12,27,0.98)); }
+.news-list__visual-copy { color: #9fb0d8 !important; font-size: 0.82rem; font-style: italic; }

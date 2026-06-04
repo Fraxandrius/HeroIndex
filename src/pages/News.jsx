@@ -6,8 +6,11 @@ import { deleteNews } from '../services/newsService.js'
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
 function getNewsCategory(newsItem = {}, index = 0) {
-  return newsItem.category || newsItem.layer || newsItem.tag || (index === 0 ? 'Cobertura verificada' : 'Canal verificado')
+  return newsItem.category || newsItem.layer || newsItem.tag || newsItem.kicker || (index === 0 ? 'Cobertura verificada' : 'Canal verificado')
 }
+
+function getNewsTitle(newsItem = {}) { return newsItem.title || (newsItem.storyMode === 'visual' ? 'Cobertura visual' : '') }
+function getNewsCopy(newsItem = {}) { return newsItem.summary || newsItem.body || '' }
 
 function News() {
   const { feedNews, loading } = useNews()
@@ -73,11 +76,11 @@ function News() {
           {!loading && visibleNews.length === 0 ? <p className="news-state">No hay noticias activas por el momento.</p> : null}
           {!loading
             ? visibleNews.map((newsItem, index) => (
-                <article className={`news-list__item${index === 0 ? ' news-list__item--featured' : ''}`} key={newsItem.id}>
+                <article className={`news-list__item${index === 0 ? ' news-list__item--featured' : ''}${newsItem.storyMode === 'visual' ? ' news-list__item--visual-story' : ''}`} key={newsItem.id}>
                   <div className="news-list__media">
                     {newsItem.imageUrl ? (
                       <img
-                        alt={newsItem.title ?? 'Noticia HeroIndex'}
+                        alt={getNewsTitle(newsItem) || 'Pieza visual HeroIndex'}
                         className="news-list__image"
                         loading="lazy"
                         onError={(event) => {
@@ -95,8 +98,8 @@ function News() {
                   </div>
                   <div className="news-list__body">
                     <p className="feed-card__tag">{index === 0 ? 'ÚLTIMO MINUTO' : 'CANAL VERIFICADO'}</p>
-                    <h3>{newsItem.title}</h3>
-                    <p>{newsItem.summary ?? newsItem.body}</p>
+                    {getNewsTitle(newsItem) ? <h3>{getNewsTitle(newsItem)}</h3> : null}
+                    {getNewsCopy(newsItem) ? <p>{getNewsCopy(newsItem)}</p> : <p className="news-list__visual-copy">Pieza visual HeroIndex · Señal editorial verificada.</p>}
                     <footer>
                       <span>Red HeroIndex</span>
                       <span>{newsItem.time || 'Cobertura activa'}</span>
