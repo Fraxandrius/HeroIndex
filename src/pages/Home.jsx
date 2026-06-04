@@ -56,6 +56,14 @@ function getNewsImageScale(newsItem) {
   return Number.isNaN(scale) ? 1 : Math.max(scale, 1)
 }
 
+function getHeroOverlayStrength(newsItem) {
+  const strength = Number(newsItem?.imageOverlayStrength ?? 0.55)
+
+  if (Number.isNaN(strength)) return 0.14
+
+  return Math.min(Math.max(strength * 0.28, 0.06), 0.2)
+}
+
 function getHeroDisplayName(hero) {
   return hero.alias ?? hero.publicName ?? hero.codename ?? hero.name ?? 'Figura HeroIndex'
 }
@@ -89,7 +97,8 @@ function Home({ onNavigate }) {
     .slice(0, 3)
   const topStoryVisualStyle = topStory?.imageUrl
     ? {
-        backgroundImage: `linear-gradient(rgba(3, 7, 18, ${topStory.imageOverlayStrength ?? 0.55}), rgba(3, 7, 18, ${topStory.imageOverlayStrength ?? 0.55})), url(${topStory.imageUrl})`,
+        '--home-hero-overlay-strength': getHeroOverlayStrength(topStory),
+        backgroundImage: `url(${topStory.imageUrl})`,
         backgroundPosition: `${topStory.imagePositionX ?? 50}% ${topStory.imagePositionY ?? 50}%`,
         backgroundSize: `${getNewsImageScale(topStory) * 100}%`,
       }
@@ -254,17 +263,17 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
             </ol>
           </section>
 
-          <section className="side-panel">
-            <div className="section-heading">
+          <section className="side-panel home-trending-module">
+            <div className="home-trending-module__heading">
               <p className="page-card__kicker">Figuras en tendencia</p>
-              <h2>Reconocimiento ciudadano</h2>
-              <p>Figuras con alto reconocimiento público dentro de HeroIndex.</p>
+              <p>Top reconocimiento público del ciclo</p>
             </div>
-            <div className="home-hero-list">
-              {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
-              {!heroesLoading && !corporationsLoading
-                ? citizenFeaturedHeroes.map((hero) => (
-                    <article className="home-hero-card" key={hero.id}>
+            <ol className="home-trending-module__list">
+              {heroesLoading ? <li className="home-trending-module__state">Cargando figuras HeroIndex...</li> : null}
+              {!heroesLoading
+                ? citizenFeaturedHeroes.map((hero, index) => (
+                    <li className="home-trending-item" key={hero.id}>
+                      <span className="home-trending-item__rank" aria-label={`Posición ${index + 1}`}>#{index + 1}</span>
                       <span className="home-hero-card__avatar">
                         <span>{getInitials(getHeroDisplayName(hero))}</span>
                         {hero.avatarUrl ? (
@@ -278,26 +287,25 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
                           />
                         ) : null}
                       </span>
-                      <div>
+                      <span className="home-trending-item__meta">
                         <strong>{getHeroDisplayName(hero)}</strong>
-                        <span>{hero.heroTitle ?? 'Figura HeroIndex'}</span>
-                        <small>
-                          {getCorporationById(hero.corporationId)?.name ??
-                            hero.corporationId ??
-                            'Independiente'}{' '}
-                          · Aprobación ciudadana {getScore(hero.approval)}
-                        </small>
-                        <button
-                          onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
-                          type="button"
-                        >
-                          Ver perfil
-                        </button>
-                      </div>
-                    </article>
+                        <small>{hero.heroTitle ?? 'Figura HeroIndex'}</small>
+                      </span>
+                      <span className="home-trending-item__approval">
+                        <small>Aprobación</small>
+                        <strong>{getScore(hero.approval)}</strong>
+                      </span>
+                      <button
+                        className="home-trending-item__action"
+                        onClick={() => onNavigate?.('hero-profile', { heroId: hero.id })}
+                        type="button"
+                      >
+                        Ver perfil
+                      </button>
+                    </li>
                   ))
                 : null}
-            </div>
+             </ol>
           </section>
 
           <section className="side-panel">
