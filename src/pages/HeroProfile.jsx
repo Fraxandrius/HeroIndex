@@ -186,7 +186,7 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
   if (loading) {
     return (
       <section className="page-card hero-profile-page">
-        <p className="hero-profile-state">Cargando perfil HeroIndex...</p>
+         <p className="hero-profile-state">Sincronizando perfil público HeroIndex…</p>
       </section>
     )
   }
@@ -300,7 +300,7 @@ function HeroProfile({ onNavigate, routeParams = {} }) {
 
           <section className="public-hero-profile__section">
             <div className="public-hero-profile__section-heading"><div><p className="page-card__kicker">SEÑALES RELACIONADAS</p><h3>Cobertura vinculada</h3></div><span>{relatedNews.length} señales</span></div>
-            {relatedNews.length > 0 ? <div className="public-hero-signals">{relatedNews.map((newsItem) => <article key={newsItem.id}><span>{newsItem.category || newsItem.layer || 'Canal HeroIndex'}</span><h4>{newsItem.title}</h4><p>{getNewsSummary(newsItem)}</p><small>{formatDate(newsItem.createdAt)} · Leer cobertura</small></article>)}</div> : <div className="public-hero-profile__empty"><strong>Sin señales asociadas.</strong></div>}
+            {relatedNews.length > 0 ? <div className="public-hero-signals">{relatedNews.map((newsItem) => <article key={newsItem.id}><span>{newsItem.category || newsItem.layer || 'Canal HeroIndex'}</span><h4>{newsItem.title}</h4><p>{getNewsSummary(newsItem)}</p><small>{formatDate(newsItem.createdAt)} · Leer cobertura</small></article>)}</div> : <div className="public-hero-profile__empty"><strong>No hay señales públicas asociadas durante el ciclo actual.</strong></div>}
           </section>
         </main>
 

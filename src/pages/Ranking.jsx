@@ -684,12 +684,12 @@ function Ranking({ onNavigate }) {
         </section>
       </header>
 
-      {loading ? <p className="ranking-state">Cargando Ranking HeroIndex...</p> : null}
+      {loading ? <p className="ranking-state">Actualizando índice oficial HeroIndex…</p> : null}
       {!loading && error && !hasActiveHeroes ? (
         <p className="ranking-state ranking-state--error">No fue posible cargar el ranking.</p>
       ) : null}
       {!loading && !error && !hasActiveHeroes ? (
-        <p className="ranking-state">No hay héroes activos en el índice.</p>
+        <p className="ranking-state">No hay identidades heroicas verificadas para este ciclo.</p>
       ) : null}
 
       {!loading && hasActiveHeroes ? (

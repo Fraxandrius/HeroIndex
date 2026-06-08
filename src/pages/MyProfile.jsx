@@ -460,7 +460,7 @@ function MyProfile({ onNavigate }) {
       <section className="page-card my-profile-page my-profile-state">
         <p className="section-kicker">Módulo de jugador</p>
         <h2>Mi Perfil</h2>
-        <p>Cargando Mi Perfil...</p>
+        <p>Sincronizando tu identidad heroica…</p>
       </section>
     )
   }
@@ -627,10 +627,10 @@ function MyProfile({ onNavigate }) {
                     {post.userId === currentUser?.uid ? <div className="profile-post__actions"><button disabled={deletingPostId === post.id} onClick={() => handleDeletePost(post.id)} type="button">{deletingPostId === post.id ? 'Eliminando…' : 'Eliminar'}</button></div> : null}
                   </article>
                 ))}
-                {postsLoading ? <div className="profile-feed__empty"><strong>Cargando actualizaciones públicas…</strong></div> : null}
+                {postsLoading ? <div className="profile-feed__empty"><strong>Sincronizando actualizaciones públicas…</strong></div> : null}
                 {!postsLoading && profilePosts.length === 0 ? (
                   <div className="profile-feed__empty">
-                    <strong>Tu muro HeroIndex aún no tiene actualizaciones públicas.</strong>
+                    <strong>Este héroe aún no ha emitido actualizaciones públicas.</strong>
                     <span>Publica una señal para empezar a construir tu presencia heroica.</span>
                   </div>
                 ) : null}
@@ -674,7 +674,7 @@ function MyProfile({ onNavigate }) {
               </div>
               <div className="profile-gallery__grid profile-gallery__grid--persistent">
                 {galleryImages.map((image) => <article className="profile-gallery__card" key={image.id}><div className="profile-gallery__image-wrap"><img alt={image.caption || `Galería pública de ${displayName}`} className="profile-gallery__image" loading="lazy" src={image.imageUrl} /><div className="profile-gallery__current-chips">{image.imageUrl === coverVisual.imageUrl ? <span>Portada actual</span> : null}{image.imageUrl === avatarVisual.imageUrl ? <span>Avatar actual</span> : null}</div></div><div className="profile-gallery__card-body"><p>{image.caption || 'Imagen pública sin descripción.'}</p><small>{formatPostDate(image.createdAt)}</small><div className="profile-gallery__actions"><button disabled={Boolean(galleryBusyId)} onClick={() => handleUseGalleryImage(image, 'cover')} type="button">Usar como portada</button><button disabled={Boolean(galleryBusyId)} onClick={() => handleUseGalleryImage(image, 'avatar')} type="button">Usar como avatar</button><button className="profile-gallery__delete" disabled={Boolean(galleryBusyId)} onClick={() => handleDeleteGalleryImage(image.id)} type="button">Eliminar</button></div></div></article>)}
-                {galleryLoading ? <div className="profile-gallery__empty"><strong>Cargando galería pública…</strong></div> : null}
+                {galleryLoading ? <div className="profile-gallery__empty"><strong>Sincronizando galería pública…</strong></div> : null}
                 {!galleryLoading && galleryImages.length === 0 ? <div className="profile-gallery__empty"><strong>Tu galería pública aún no tiene imágenes.</strong><span>Añade una imagen para comenzar a construir tu presencia visual.</span></div> : null}
               </div>
             </section>

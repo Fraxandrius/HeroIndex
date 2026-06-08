@@ -432,7 +432,7 @@ const [isImageDropActive, setIsImageDropActive] = useState(false)
               </div>
             </article>
           ))}
-          {sortedNewsItems.length === 0 ? <p>No hay noticias editoriales cargadas todavía.</p> : null}
+          {sortedNewsItems.length === 0 ? <p>No hay coberturas editoriales registradas todavía.</p> : null}
         </div>
       </section>
     </section>

@@ -1,0 +1,275 @@
+/* HeroIndex Experience System Polish-v1: capa transversal no destructiva. */
+:root {
+  --hi-radius-sm: 0.75rem;
+  --hi-radius-md: 1rem;
+  --hi-radius-lg: 1.35rem;
+  --hi-ease: 180ms ease;
+  --hi-surface-glass: linear-gradient(145deg, rgba(9, 16, 32, 0.88), rgba(13, 21, 39, 0.78));
+  --hi-focus-ring: 0 0 0 3px rgba(94, 234, 212, 0.22);
+  --hi-shadow-soft: 0 1rem 3rem rgba(2, 6, 23, 0.26);
+  --hi-shadow-lift: 0 1.25rem 3.5rem rgba(2, 6, 23, 0.34);
+}
+
+button,
+[role='button'],
+a,
+.hi-button,
+.desktop-topnav__link,
+.ranking-row,
+.ranking-top-card,
+.news-list__item,
+.corporation-card,
+.profile-post,
+.profile-gallery__card,
+.public-hero-gallery figure {
+  transition:
+    background-color var(--hi-ease),
+    border-color var(--hi-ease),
+    box-shadow var(--hi-ease),
+    color var(--hi-ease),
+    opacity var(--hi-ease),
+    transform var(--hi-ease);
+}
+
+button:focus-visible,
+[role='button']:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.hi-button:focus-visible,
+.desktop-topnav__link:focus-visible,
+.ranking-row:focus-visible,
+.ranking-top-card:focus-visible,
+.corporation-card:focus-visible,
+.profile-post:focus-within,
+.profile-gallery__card:focus-within {
+  outline: 0;
+  box-shadow: var(--hi-focus-ring);
+}
+
+.hi-button,
+.hi-button-primary,
+.hi-button--primary,
+.hi-button-secondary,
+.hi-button--secondary,
+.hi-button-ghost,
+.hi-button-subtle,
+.hi-button-danger,
+.news-list__delete,
+.corporation-card__oraculo-actions button,
+.public-hero-oraculo-tools button,
+.profile-post__actions button,
+.profile-gallery__actions button,
+.profile-gallery__preview button {
+  align-items: center;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 950;
+  justify-content: center;
+  letter-spacing: 0.055em;
+  min-height: 2.25rem;
+  text-transform: uppercase;
+}
+
+.hi-button:hover:not(:disabled),
+.hi-button-primary:hover:not(:disabled),
+.hi-button--primary:hover:not(:disabled),
+.hi-button-secondary:hover:not(:disabled),
+.hi-button--secondary:hover:not(:disabled),
+.hi-button-ghost:hover:not(:disabled),
+.hi-button-subtle:hover:not(:disabled),
+.profile-post__actions button:hover:not(:disabled),
+.profile-gallery__actions button:hover:not(:disabled),
+.profile-gallery__preview button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.hi-button-primary,
+.hi-button--primary {
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.95), rgba(96, 165, 250, 0.95));
+  border: 1px solid rgba(186, 230, 253, 0.48);
+  color: #03101f;
+  box-shadow: 0 0.9rem 2.2rem rgba(14, 165, 233, 0.18);
+}
+
+.hi-button-secondary,
+.hi-button--secondary,
+.hi-button-ghost,
+.hi-button-subtle {
+  background: rgba(8, 15, 31, 0.58);
+  border: 1px solid rgba(186, 230, 253, 0.2);
+  color: #dff8ff;
+}
+
+.hi-button-danger,
+.news-list__delete,
+.profile-gallery__delete,
+.corporation-card__oraculo-actions button:only-child,
+.public-hero-oraculo-tools button:last-child {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(251, 113, 133, 0.32);
+  color: #fecdd3;
+}
+
+.hi-button:disabled,
+.hi-button-primary:disabled,
+.hi-button-secondary:disabled,
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.18);
+  opacity: 0.55;
+  transform: none !important;
+}
+
+.page-card,
+.hi-card,
+.feed-panel,
+.side-panel,
+.news-hero--editorial,
+.news-list__item,
+.ranking-hero,
+.ranking-row,
+.ranking-top-card,
+.ranking-preview__card,
+.profiles-hero,
+.profile-card,
+.corporations-hero,
+.corporation-card,
+.player-profile-hero,
+.profile-editor-card,
+.profile-composer,
+.profile-post,
+.profile-gallery__card,
+.public-hero-profile__section,
+.heroindex-rail__card,
+.sidebar-visual-slot,
+.newsroom-form,
+.newsroom-preview,
+.newsroom-list {
+  border-color: rgba(186, 230, 253, 0.18);
+  box-shadow: var(--hi-shadow-soft);
+}
+
+.ranking-row:hover,
+.ranking-top-card:hover,
+.news-list__item:hover,
+.corporation-card:hover,
+.profile-card:hover,
+.profile-post:hover,
+.profile-gallery__card:hover,
+.public-hero-gallery figure:hover,
+.heroindex-rail__card:hover {
+  border-color: rgba(94, 234, 212, 0.36);
+  box-shadow: var(--hi-shadow-lift);
+  transform: translateY(-1px);
+}
+
+.page-card__kicker,
+.feed-card__tag,
+.news-list__category,
+.ranking-stat-chip,
+.ranking-tier,
+.corporation-card__kicker,
+.public-hero-powers span,
+.my-profile-powers span,
+.profile-gallery__current-chips span,
+.desktop-topnav__oracle-trigger,
+.oraculo-hub-filter-tabs button,
+.profiles-filter-tabs button,
+.ranking-filters button {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hi-state-card,
+.news-state,
+.ranking-state,
+.profiles-state,
+.corporations-state,
+.profile-feed__empty,
+.profile-gallery__empty,
+.public-hero-profile__empty,
+.oraculo-hub-state,
+.oraculo-dossier-state,
+.campaign-log-empty-inline,
+.gm-manager-empty {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(94, 234, 212, 0.12), transparent 10rem),
+    rgba(8, 15, 31, 0.72);
+  border: 1px solid rgba(186, 230, 253, 0.18);
+  border-radius: var(--hi-radius-lg);
+  color: #d7e2f6;
+  box-shadow: 0 0.75rem 2.5rem rgba(2, 6, 23, 0.18);
+}
+
+.hi-state-card::before,
+.news-state::before,
+.ranking-state::before,
+.profiles-state::before,
+.corporations-state::before,
+.profile-feed__empty::before,
+.profile-gallery__empty::before,
+.public-hero-profile__empty::before {
+  color: #68d8ff;
+  content: '●';
+  font-size: 0.7rem;
+  margin-right: 0.45rem;
+}
+
+.news-state--oraculo,
+.oraculo-hub-panel,
+.oraculo-dossier-panel,
+.oraculo-character-sheet,
+.oraculo-character-sheet__fieldset,
+.newsroom-page .hi-card,
+.public-hero-oraculo-tools,
+.corporation-card__oraculo-actions {
+  border-color: rgba(234, 191, 79, 0.28);
+  box-shadow: 0 1rem 3rem rgba(234, 191, 79, 0.08), var(--hi-shadow-soft);
+}
+
+.oraculo-hub-hero,
+.oraculo-dossier-hero,
+.newsroom-hero {
+  border-color: rgba(234, 191, 79, 0.32);
+}
+
+.heroindex-rail {
+  gap: 0.85rem;
+}
+
+.heroindex-rail__card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(94, 234, 212, 0.1), transparent 9rem),
+    rgba(8, 15, 31, 0.82);
+}
+
+.heroindex-rail__kicker {
+  color: #68d8ff;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+img {
+  max-width: 100%;
+}
+
+.ranking-preview__overlay,
+.visual-image-editor__backdrop,
+.hi-modal {
+  backdrop-filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
