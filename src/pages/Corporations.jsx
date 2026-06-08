@@ -122,9 +122,9 @@ function Corporations() {
         </div>
 
         <div className="corporations-grid corporations-list">
-          {loading || newsLoading ? <p className="corporations-state">Cargando corporaciones HeroIndex...</p> : null}
+          {loading || newsLoading ? <p className="corporations-state">Verificando operadores vinculados a Red HeroIndex…</p> : null}
           {!loading && !newsLoading && visibleCorporations.length === 0 ? (
-            <p className="corporations-state">No hay corporaciones activas disponibles.</p>
+            <p className="corporations-state">No hay operadores vinculados a Red HeroIndex durante este ciclo.</p>
           ) : null}
           {!loading && !newsLoading
             ? visibleCorporations.map((corporation) => {
@@ -206,7 +206,7 @@ function Corporations() {
                             ))}
                           </ul>
                         ) : (
-                          <p>Sin señales asociadas.</p>
+                          <p>No hay señales públicas asociadas durante el ciclo actual.</p>
                         )}
                       </section>
 

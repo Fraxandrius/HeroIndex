@@ -282,15 +282,15 @@ function Profiles({ onNavigate }) {
       </section>
 
       {deleteMessage && isOraculoMode ? <p className="profiles-state">{deleteMessage}</p> : null}
-      {loading ? <p className="profiles-state">Cargando perfiles HeroIndex...</p> : null}
+      {loading ? <p className="profiles-state">Actualizando identidades heroicas verificadas…</p> : null}
       {!loading && error && activeHeroes.length === 0 ? (
         <p className="profiles-state profiles-state--error">No fue posible cargar los perfiles.</p>
       ) : null}
       {!loading && !error && activeHeroes.length === 0 ? (
-        <p className="profiles-state">No hay héroes activos disponibles.</p>
+        <p className="profiles-state">No hay identidades heroicas verificadas para este ciclo.</p>
       ) : null}
       {!loading && activeHeroes.length > 0 && filteredHeroes.length === 0 ? (
-        <p className="profiles-state">No hay resultados para los filtros actuales.</p>
+        <p className="profiles-state">No hay identidades que coincidan con los filtros actuales.</p>
       ) : null}
 
       {!loading && filteredHeroes.length > 0 ? (

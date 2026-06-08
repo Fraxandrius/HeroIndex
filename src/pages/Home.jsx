@@ -18,8 +18,16 @@ function getNewsSummary(newsItem) {
   return newsItem.summary ?? newsItem.body ?? ''
 }
 
+function getNewsBody(newsItem) {
+  return newsItem.body ?? newsItem.content ?? ''
+}
+
 function getNewsTitle(newsItem) {
   return newsItem.title ?? ''
+}
+
+function hasMeaningfulText(value) {
+  return typeof value === 'string' && value.trim().length > 0
 }
 
 function getShortNewsSummary(newsItem) {
@@ -59,9 +67,21 @@ function getNewsImageScale(newsItem) {
 function getHeroOverlayStrength(newsItem) {
   const strength = Number(newsItem?.imageOverlayStrength ?? 0.55)
 
-  if (Number.isNaN(strength)) return 0.14
+  if (Number.isNaN(strength)) return 0.1
 
-  return Math.min(Math.max(strength * 0.28, 0.06), 0.2)
+  return Math.min(Math.max(strength * 0.18, 0.035), 0.12)
+}
+
+function isImageFirstStory(story) {
+  if (!story) return false
+
+  const mode = String(story.storyMode ?? story.editorialMode ?? story.coverageMode ?? '').toLowerCase()
+  const type = String(story.type ?? story.format ?? '').toLowerCase()
+  const isMarkedVisual = ['visual', 'image-first', 'imagefirst', 'pieza-visual'].includes(mode) || ['visual', 'image-first', 'imagefirst'].includes(type)
+  const hasImage = Boolean(story.imageUrl ?? story.coverUrl ?? story.visualUrl)
+  const hasText = [getNewsTitle(story), getNewsSummary(story), getNewsBody(story)].some(hasMeaningfulText)
+
+  return isMarkedVisual || (hasImage && !hasText)
 }
 
 function getHeroDisplayName(hero) {
@@ -90,11 +110,12 @@ function Home({ onNavigate }) {
   const recentNews = publicNews
     .filter((item) => item.homePlacement === 'feed' && item.id !== topStory?.id)
     .sort(sortEditorialNews)
-    .slice(0, 5)
+    .slice(0, 3)
   const visibleTrendingNews = trendingNews
     .filter((item) => item.active !== false && item.homePlacement !== 'hidden' && item.id !== topStory?.id)
     .sort(sortEditorialNews)
     .slice(0, 3)
+    const isTopStoryImageFirst = isImageFirstStory(topStory)
   const topStoryVisualStyle = topStory?.imageUrl
     ? {
         '--home-hero-overlay-strength': getHeroOverlayStrength(topStory),
@@ -137,7 +158,7 @@ function Home({ onNavigate }) {
           section="Señal destacada del strip"
           slotId="homeTrendSignal"
         >
-          <span className="story-card__visual-copy"><strong>HeroIndex Live</strong><small>Cobertura activa de figuras verificadas.</small></span>
+          <span className="story-card__visual-copy"><small>SEÑAL VISUAL</small><strong>Canal HeroIndex</strong></span>
         </InlineVisualSlot>
         {heroesLoading || corporationsLoading ? <p>Cargando héroes HeroIndex...</p> : null}
         {!heroesLoading && !corporationsLoading
@@ -151,18 +172,29 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
 
       <div className="home-grid">
         <div className="home-main" aria-label="Feed de noticias HeroIndex">
-          <section className={`hero-feature hero-feature--news${topStory?.storyMode === 'visual' ? ' hero-feature--visual-story' : ''}`} style={topStoryVisualStyle}>
+          <section className={`hero-feature hero-feature--news${isTopStoryImageFirst ? ' hero-feature--image-first' : ' hero-feature--traditional'}`} style={topStoryVisualStyle}>
             {newsLoading ? <p>Cargando noticias HeroIndex...</p> : null}
             {!newsLoading && topStory ? (
-              <div className="hero-feature__editorial-panel">
-                <div className="hero-feature__brand-seal"><BrandLogo size="sm" variant="symbol" /><span>Mesa Editorial HeroIndex</span></div>
-                <div className="hero-feature__badges" aria-label="Estado editorial"><span>PORTADA PRINCIPAL</span><span>CANAL VERIFICADO</span></div>
-                <p className="page-card__kicker">{getNewsType(topStory)}</p>
-                 {getNewsTitle(topStory) ? <h2>{getNewsTitle(topStory)}</h2> : null}
-                {getNewsSummary(topStory) ? <p>{getNewsSummary(topStory)}</p> : null}
-                {!getNewsTitle(topStory) && !getNewsSummary(topStory) ? <strong className="hero-feature__visual-label">Cobertura visual prioritaria</strong> : null}
-                <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada"><span>{topStory.sourceLabel ?? topStory.source ?? 'Mesa Editorial HeroIndex'}</span>{topStory.time ? <span>{topStory.time}</span> : null}</div>
-              </div>
+               isTopStoryImageFirst ? (
+                <div className="hero-feature__visual-meta" aria-label="Metadatos de portada principal">
+                  <span>Mesa Editorial HeroIndex</span>
+                  <span>Portada principal</span>
+                  <span>Canal verificado</span>
+                  {topStory.time ? <span>{topStory.time}</span> : null}
+                  {getNewsTitle(topStory) ? <strong>{getNewsTitle(topStory)}</strong> : null}
+                  {getNewsSummary(topStory) ? <p>{getNewsSummary(topStory)}</p> : null}
+                  <button onClick={() => onNavigate?.('news')} type="button">Abrir cobertura</button>
+                </div>
+              ) : (
+                <div className="hero-feature__editorial-panel">
+                  <div className="hero-feature__brand-seal"><BrandLogo size="sm" variant="symbol" /><span>Mesa Editorial HeroIndex</span></div>
+                  <div className="hero-feature__badges" aria-label="Estado editorial"><span>PORTADA PRINCIPAL</span><span>CANAL VERIFICADO</span></div>
+                  <p className="page-card__kicker">{getNewsType(topStory)}</p>
+                  {getNewsTitle(topStory) ? <h2>{getNewsTitle(topStory)}</h2> : null}
+                  {getNewsSummary(topStory) ? <p>{getNewsSummary(topStory)}</p> : null}
+                  <div className="hero-feature__actions" aria-label="Metadatos de noticia destacada"><span>{topStory.sourceLabel ?? topStory.source ?? 'Mesa Editorial HeroIndex'}</span>{topStory.time ? <span>{topStory.time}</span> : null}<button onClick={() => onNavigate?.('news')} type="button">Abrir cobertura</button></div>
+                </div>
+              )
             ) : null}
             {!newsLoading && !topStory ? <div className="hero-feature__editorial-panel"><div className="hero-feature__brand-seal"><BrandLogo size="sm" variant="symbol" /><span>Mesa Editorial HeroIndex</span></div><p className="page-card__kicker">Canal verificado</p><h2>Sin portada principal activa</h2><p>Marca una cobertura como Portada principal en Mesa Editorial para ocupar este espacio.</p></div> : null}
           </section>
@@ -240,6 +272,7 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
                 })
               : null}
             {!newsLoading && recentNews.length === 0 ? <p>No hay noticias activas por el momento.</p> : null}
+            <button className="feed-panel__open-news" onClick={() => onNavigate?.('news')} type="button">Abrir noticias</button>
           </section>
         </div>
 

@@ -72,8 +72,8 @@ function News() {
         </div>
 
         <div className="news-list">
-          {loading ? <p className="news-state">Cargando noticias HeroIndex...</p> : null}
-          {!loading && visibleNews.length === 0 ? <p className="news-state">No hay noticias activas por el momento.</p> : null}
+          {loading ? <p className="news-state">Sincronizando cobertura verificada…</p> : null}
+          {!loading && visibleNews.length === 0 ? <p className="news-state">La Mesa Editorial no registra coberturas activas durante este ciclo.</p> : null}
           {!loading
             ? visibleNews.map((newsItem, index) => (
                 <article className={`news-list__item${index === 0 ? ' news-list__item--featured' : ''}${newsItem.storyMode === 'visual' ? ' news-list__item--visual-story' : ''}`} key={newsItem.id}>
