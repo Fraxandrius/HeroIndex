@@ -134,3 +134,28 @@ export function uploadHeroMediaImage(heroId, channel, file) {
 
   return uploadImageWithPath(file, `hero-media/${heroId}/${channel}`)
 }
+
+const heroReputationMetricFields = new Set([
+  'approval',
+  'citizenApproval',
+  'rankChange',
+  'rankingPoints',
+  'trustScore',
+])
+
+function getSafeHeroMetricUpdate(heroData = {}) {
+  return Object.fromEntries(
+    Object.entries(heroData).filter(([field]) => heroReputationMetricFields.has(field)),
+  )
+}
+
+export async function updateHeroMetricsBulk(updates = []) {
+  const safeUpdates = updates
+    .filter((item) => item?.id)
+    .map((item) => ({ id: item.id, payload: getSafeHeroMetricUpdate(item.metrics) }))
+    .filter((item) => Object.keys(item.payload).length > 0)
+
+  await Promise.all(safeUpdates.map((item) => updateHero(item.id, item.payload)))
+
+  return safeUpdates.length
+}

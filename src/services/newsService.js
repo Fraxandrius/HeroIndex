@@ -4,6 +4,56 @@ import { uploadImage } from './storageService.js'
 
 export const NEWS_PATH = 'news'
 
+export const STORY_MODE_LABELS = {
+  signal: 'Señal editorial',
+  standard: 'Noticia',
+  visual: 'Pieza visual',
+}
+
+export const DISPLAY_MODE_LABELS = {
+  'compact-feed': 'Feed compacto',
+  'editorial-card': 'Card editorial',
+  'image-first': 'Imagen protagonista',
+  'signal-card': 'Señal breve',
+}
+
+const validStoryModes = new Set(Object.keys(STORY_MODE_LABELS))
+const validDisplayModes = new Set(Object.keys(DISPLAY_MODE_LABELS))
+
+function hasTextValue(value) {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+export function normalizeStoryMode(value) {
+  return validStoryModes.has(value) ? value : 'standard'
+}
+
+export function hasEditorialText(newsItem = {}) {
+  return [newsItem.title, newsItem.summary, newsItem.body, newsItem.content, newsItem.excerpt]
+    .some(hasTextValue)
+}
+
+export function isVisualStory(newsItem = {}) {
+  return normalizeStoryMode(newsItem.storyMode) === 'visual'
+}
+
+export function isSignalStory(newsItem = {}) {
+  return normalizeStoryMode(newsItem.storyMode) === 'signal'
+}
+
+export function normalizeDisplayMode(newsItem = {}) {
+  if (validDisplayModes.has(newsItem.displayMode)) {
+    return newsItem.displayMode
+  }
+
+  const storyMode = normalizeStoryMode(newsItem.storyMode)
+
+  if (storyMode === 'visual') return 'image-first'
+  if (storyMode === 'signal') return 'signal-card'
+
+  return 'editorial-card'
+}
+
 export function normalizeNewsPlacement(value) {
   if (value === 'hero' || value === 'hidden' || value === 'feed') {
     return value
@@ -19,6 +69,8 @@ export function normalizeNewsPriority(value) {
 }
 
 const NEWS_DEFAULTS = {
+  storyMode: 'standard',
+  displayMode: 'editorial-card',
   sourceLabel: 'Mesa Editorial HeroIndex',
   editorialTone: 'verified',
   homePlacement: 'feed',
@@ -33,9 +85,16 @@ const NEWS_DEFAULTS = {
 }
 
 function withNewsDefaults(newsData = {}) {
-  return {
+  const storyMode = normalizeStoryMode(newsData.storyMode ?? NEWS_DEFAULTS.storyMode)
+  const baseData = {
     ...NEWS_DEFAULTS,
     ...newsData,
+    storyMode,
+  }
+
+  return {
+    ...baseData,
+    displayMode: normalizeDisplayMode(baseData),
     homePlacement: normalizeNewsPlacement(newsData.homePlacement ?? NEWS_DEFAULTS.homePlacement),
     priority: normalizeNewsPriority(newsData.priority ?? NEWS_DEFAULTS.priority),
     imagePositionX: Number(newsData.imagePositionX ?? NEWS_DEFAULTS.imagePositionX),
@@ -50,14 +109,21 @@ function withNewsDefaults(newsData = {}) {
 function normalizeNewsItem(id, newsItem) {
    const active = newsItem.active !== false
   const homePlacement = normalizeNewsPlacement(newsItem.homePlacement)
+const storyMode = normalizeStoryMode(newsItem.storyMode)
+  const displayMode = normalizeDisplayMode({ ...newsItem, storyMode })
 
   return {
     id,
     ...newsItem,
     active,
+    displayMode,
     homePlacement,
     isPublic: active && homePlacement !== 'hidden',
+    isSignalStory: storyMode === 'signal',
+    isVisualStory: storyMode === 'visual',
+    hasEditorialText: hasEditorialText(newsItem),
     priority: normalizeNewsPriority(newsItem.priority),
+    storyMode,
   }
 }
 

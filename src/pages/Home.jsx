@@ -5,6 +5,7 @@ import PublicSignalSlot from '../components/visual/PublicSignalSlot.jsx'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
+import { isSignalStory, isVisualStory } from '../services/newsService.js'
 
 function getInitials(name = '') {
   return name
@@ -75,13 +76,17 @@ function getHeroOverlayStrength(newsItem) {
 function isImageFirstStory(story) {
   if (!story) return false
 
-  const mode = String(story.storyMode ?? story.editorialMode ?? story.coverageMode ?? '').toLowerCase()
-  const type = String(story.type ?? story.format ?? '').toLowerCase()
-  const isMarkedVisual = ['visual', 'image-first', 'imagefirst', 'pieza-visual'].includes(mode) || ['visual', 'image-first', 'imagefirst'].includes(type)
   const hasImage = Boolean(story.imageUrl ?? story.coverUrl ?? story.visualUrl)
   const hasText = [getNewsTitle(story), getNewsSummary(story), getNewsBody(story)].some(hasMeaningfulText)
 
-  return isMarkedVisual || (hasImage && !hasText)
+ return story.displayMode === 'image-first' || isVisualStory(story) || (hasImage && !hasText)
+}
+
+function getFeedCardClass(newsItem) {
+  if (isSignalStory(newsItem) || newsItem.displayMode === 'signal-card') return 'feed-card feed-card--signal'
+  if (newsItem.imageUrl) return 'feed-card feed-card--visual'
+
+  return 'feed-card feed-card--compact'
 }
 
 function getHeroDisplayName(hero) {
@@ -239,7 +244,7 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
                   const hasImage = Boolean(item.imageUrl)
 
                   return (
-                    <article className={`feed-card ${hasImage ? 'feed-card--visual' : 'feed-card--compact'}`} key={item.id}>
+                    <article className={getFeedCardClass(item)} key={item.id}>
                       <div className="feed-card__avatar" aria-hidden="true">
                         HI
                       </div>
@@ -251,7 +256,7 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
                           </div>
                           <time>{item.time}</time>
                         </header>
-                        <p className="feed-card__tag">{getNewsType(item)}</p>
+                        <p className="feed-card__tag">{isSignalStory(item) ? 'SEÑAL EDITORIAL' : getNewsType(item)}</p>
                         {hasImage ? (
                           <img
                             alt={item.title ?? 'Noticia HeroIndex'}
@@ -264,7 +269,7 @@ return <button className="story-card story-card--compact" key={hero.id} onClick=
                           />
                         ) : null}
                         {getNewsTitle(item) ? <h3>{getNewsTitle(item)}</h3> : null}
-                        {getNewsSummary(item) ? <p>{hasImage ? getNewsSummary(item) : getShortNewsSummary(item)}</p> : <p className="feed-card__visual-fallback">Cobertura visual HeroIndex</p>}
+                       {getNewsSummary(item) ? <p>{hasImage ? getNewsSummary(item) : getShortNewsSummary(item)}</p> : <p className="feed-card__visual-fallback">{isSignalStory(item) ? 'Señal editorial HeroIndex' : 'Cobertura visual HeroIndex'}</p>}
                         {item.metric ? <footer>{item.metric}</footer> : null}
                       </div>
                     </article>

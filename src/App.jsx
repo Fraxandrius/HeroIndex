@@ -1,30 +1,33 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { RequireOraculo, RequirePlayer } from './components/auth/RouteGuards.jsx'
+import PageLoading from './components/common/PageLoading.jsx'
 import AppShell from './components/layout/AppShell.jsx'
-import Account from './pages/Account.jsx'
-import Corporations from './pages/Corporations.jsx'
-import GMManager from './pages/GMManager.jsx'
-import GMPanel from './pages/GMPanel.jsx'
-import HeroProfile from './pages/HeroProfile.jsx'
-import Home from './pages/Home.jsx'
-import Karma from './pages/Karma.jsx'
-import Login from './pages/Login.jsx'
-import MissionCalculator from './pages/MissionCalculator.jsx'
-import MyProfile from './pages/MyProfile.jsx'
-import News from './pages/News.jsx'
-import OraculoBroadcasts from './pages/OraculoBroadcasts.jsx'
-import OraculoCampaignLog from './pages/OraculoCampaignLog.jsx'
-import OraculoHeroDossier from './pages/OraculoHeroDossier.jsx'
-import OraculoHub from './pages/OraculoHub.jsx'
-import OraculoKarmaManager from './pages/OraculoKarmaManager.jsx'
-import OraculoNewsroom from './pages/OraculoNewsroom.jsx'
-import OraculoNpcBuilder from './pages/OraculoNpcBuilder.jsx'
-import OraculoNpcImport from './pages/OraculoNpcImport.jsx'
-import OraculoPlayerRequests from './pages/OraculoPlayerRequests.jsx'
-import Onboarding from './pages/Onboarding.jsx'
-import Profiles from './pages/Profiles.jsx'
-import Register from './pages/Register.jsx'
-import Ranking from './pages/Ranking.jsx'
+
+const Account = lazy(() => import('./pages/Account.jsx'))
+const Corporations = lazy(() => import('./pages/Corporations.jsx'))
+const GMManager = lazy(() => import('./pages/GMManager.jsx'))
+const GMPanel = lazy(() => import('./pages/GMPanel.jsx'))
+const HeroProfile = lazy(() => import('./pages/HeroProfile.jsx'))
+const Home = lazy(() => import('./pages/Home.jsx'))
+const Karma = lazy(() => import('./pages/Karma.jsx'))
+const Login = lazy(() => import('./pages/Login.jsx'))
+const MissionCalculator = lazy(() => import('./pages/MissionCalculator.jsx'))
+const MyProfile = lazy(() => import('./pages/MyProfile.jsx'))
+const News = lazy(() => import('./pages/News.jsx'))
+const OraculoBroadcasts = lazy(() => import('./pages/OraculoBroadcasts.jsx'))
+const OraculoCampaignLog = lazy(() => import('./pages/OraculoCampaignLog.jsx'))
+const OraculoHeroDossier = lazy(() => import('./pages/OraculoHeroDossier.jsx'))
+const OraculoHub = lazy(() => import('./pages/OraculoHub.jsx'))
+const OraculoKarmaManager = lazy(() => import('./pages/OraculoKarmaManager.jsx'))
+const OraculoNewsroom = lazy(() => import('./pages/OraculoNewsroom.jsx'))
+const OraculoNpcBuilder = lazy(() => import('./pages/OraculoNpcBuilder.jsx'))
+const OraculoNpcImport = lazy(() => import('./pages/OraculoNpcImport.jsx'))
+const OraculoPlayerRequests = lazy(() => import('./pages/OraculoPlayerRequests.jsx'))
+const OraculoReputationCrisis = lazy(() => import('./pages/OraculoReputationCrisis.jsx'))
+const Onboarding = lazy(() => import('./pages/Onboarding.jsx'))
+const Profiles = lazy(() => import('./pages/Profiles.jsx'))
+const Register = lazy(() => import('./pages/Register.jsx'))
+const Ranking = lazy(() => import('./pages/Ranking.jsx'))
 
 const routeAliases = {
   '/noticias': 'news',
@@ -59,6 +62,14 @@ const routes = [
   { id: 'karma', label: 'Karma', path: '/karma', component: Karma, navGroup: 'player', requiresPlayer: true },
   { id: 'account', label: 'Mi Cuenta', path: '/cuenta', component: Account, navGroup: 'player', requiresPlayer: true },
   { id: 'oraculo-hub', label: 'ORÁCULO Hub', path: '/oraculo', component: OraculoHub, navGroup: 'oracle', requiresOracle: true },
+  {
+    id: 'oraculo-reputation-crisis',
+    label: 'Crisis Reputacional',
+    path: '/oraculo/reputation-crisis',
+    component: OraculoReputationCrisis,
+    navGroup: 'oracle',
+    requiresOracle: true,
+  },
   {
      id: 'gm-manager',
     label: 'GM Manager',
@@ -199,7 +210,11 @@ function App() {
     setActiveRouteState({ id: routeId, params })
   }
 
-  const page = <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
+  const page = (
+    <Suspense fallback={<PageLoading />}>
+      <ActivePage onNavigate={handleNavigate} routeParams={activeRouteState.params} />
+    </Suspense>
+  )
   const guardedPage = activeRoute.requiresOracle ? (
     <RequireOraculo onNavigate={handleNavigate}>{page}</RequireOraculo>
   ) : activeRoute.requiresPlayer ? (
