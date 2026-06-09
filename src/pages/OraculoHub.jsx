@@ -108,7 +108,7 @@ const moduleSections = [
       {
         kicker: 'CONTINUIDAD',
         title: 'Registro de Campaña',
-        description: 'Documenta eventos, consecuencias y continuidad narrativa.',
+        description: 'Consulta eventos internos, crisis aplicadas y consecuencias del ecosistema.',
         routeId: 'oraculo-campaign-log',
         state: 'INTERNO',
       },

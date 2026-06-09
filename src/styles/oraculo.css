@@ -3385,3 +3385,68 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ORÁCULO Event Consequence Log-v1 */
+.campaign-log-activity {
+  display: grid;
+  gap: 1rem;
+}
+
+.campaign-log-activity-form {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.campaign-log-activity-form__wide {
+  grid-column: 1 / -1;
+}
+
+.campaign-log-activity-form .hi-button {
+  align-self: end;
+}
+
+.campaign-log-activity-timeline {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.campaign-log-activity-event {
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.72), rgba(8, 13, 26, 0.74));
+  border: 1px solid rgba(250, 204, 21, 0.13);
+  border-left: 4px solid rgba(250, 204, 21, 0.6);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.9rem;
+}
+
+.campaign-log-activity-event span:not(.hi-chip) {
+  color: #fde68a;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.campaign-log-activity-event h4,
+.campaign-log-activity-event p {
+  margin: 0;
+}
+
+.campaign-log-activity-event h4,
+.campaign-log-activity-event strong {
+  color: #ffffff;
+}
+
+.campaign-log-activity-event p,
+.campaign-log-activity-event small {
+  color: #aeb8d8;
+}
+
+@media (max-width: 760px) {
+  .campaign-log-activity-form {
+    grid-template-columns: 1fr;
+  }
+}

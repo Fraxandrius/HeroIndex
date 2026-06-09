@@ -84,7 +84,7 @@ export async function createOrUpdateCharacterSheet(heroId, sheetData = {}) {
     ...sheetData,
     id: heroId,
     heroId,
-    isNpc: sheetData.isNpc ?? existingSheet?.isNpc ?? true,
+    isNpc: sheetData.isNpc ?? existingSheet?.isNpc ?? false,
     createdAt: existingSheet?.createdAt ?? sheetData.createdAt ?? timestamp,
     updatedAt: timestamp,
   }

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { updateCorporationMetricsBulk } from '../services/corporationsService.js'
 import { updateHeroMetricsBulk } from '../services/heroesService.js'
+import { createOraculoActivityEvent } from '../services/oraculoActivityService.js'
 
 const targetOptions = [
   { value: 'active-heroes', label: 'Todos los héroes activos' },
@@ -269,6 +271,7 @@ function buildBulkUpdates(previewRows, type) {
 }
 
 function OraculoReputationCrisis() {
+  const { currentUser, userProfile } = useAuth()
   const { firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
   const { corporations, firebaseCorporations, loading: corporationsLoading } = useCorporations()
   const [formState, setFormState] = useState({ corporationId: '', includeInactive: false, targetMode: 'active-heroes', topN: 10 })
@@ -278,6 +281,7 @@ function OraculoReputationCrisis() {
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isApplying, setIsApplying] = useState(false)
+  const [selectedPresetTitle, setSelectedPresetTitle] = useState('Ajuste manual')
 
   const availableHeroes = useMemo(
     () => (firebaseHeroes.length > 0 ? firebaseHeroes : heroes),
@@ -299,6 +303,7 @@ function OraculoReputationCrisis() {
     setFormState((currentState) => ({ ...currentState, [field]: value }))
     setPreviewRows([])
     setConfirmationChecked(false)
+    setSelectedPresetTitle('Ajuste manual')
   }
 
   const updateMetricControl = (controlId, field, value) => {
@@ -311,6 +316,7 @@ function OraculoReputationCrisis() {
     }))
     setPreviewRows([])
     setConfirmationChecked(false)
+    setSelectedPresetTitle('Ajuste manual')
   }
 
   const applyPreset = (preset) => {
@@ -324,6 +330,7 @@ function OraculoReputationCrisis() {
 
       return nextControls
     })
+    setSelectedPresetTitle(preset.title)
     setStatusMessage(`Preset preparado: ${preset.title}. Genera preview antes de aplicar.`)
     setErrorMessage('')
     setPreviewRows([])
@@ -373,8 +380,25 @@ function OraculoReputationCrisis() {
         updateHeroMetricsBulk(heroUpdates),
         updateCorporationMetricsBulk(corporationUpdates),
       ])
+const impactSummary = `${updatedHeroes} héroes y ${updatedCorporations} corporaciones afectadas.`
+      let logWarning = ''
 
-      setStatusMessage(`Crisis aplicada: ${updatedHeroes} héroes y ${updatedCorporations} corporaciones actualizadas.`)
+      try {
+        await createOraculoActivityEvent({
+          affectedCorporations: updatedCorporations,
+          affectedHeroes: updatedHeroes,
+          createdBy: userProfile?.displayName || userProfile?.username || currentUser?.uid || 'ORÁCULO',
+          impactSummary,
+          summary: `${selectedPresetTitle}: ajustes reputacionales aplicados desde Crisis Reputacional.`,
+          tags: ['crisis reputacional', 'ranking', 'confianza pública'],
+          title: 'Crisis reputacional aplicada',
+          type: 'reputation-crisis',
+        })
+      } catch {
+        logWarning = ' El registro interno no pudo sincronizarse y puede cargarse manualmente en Registro de Campaña.'
+      }
+
+      setStatusMessage(`Crisis aplicada: ${impactSummary}${logWarning}`)
       setPreviewRows([])
       setConfirmationChecked(false)
     } catch {

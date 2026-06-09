@@ -6,12 +6,6 @@ import { canSeeOraculoTools } from '../../utils/roles.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
-const navSections = [
-  { id: 'public', label: 'Público', description: 'Noticias · Perfiles · Ranking' },
-  { id: 'access', label: 'Acceso', description: 'Iniciar sesión · Crear cuenta', requiresGuest: true },
-  { id: 'oracle', label: 'ORÁCULO', description: 'Herramientas internas', requiresOracle: true },
-]
-
 const primaryOracleRouteIds = ['oraculo-hub', 'oraculo-newsroom', 'oraculo-karma-manager']
 
 function getInitials(value = 'HI') {

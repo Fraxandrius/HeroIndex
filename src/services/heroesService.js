@@ -12,6 +12,21 @@ function normalizeHero(id, hero) {
   }
 }
 
+const embeddedCharacterSheetFields = new Set([
+  'characterSheet',
+  'oraculoSheet',
+  'privateRpgSheet',
+  'privateSheet',
+  'rpgPrivateSheet',
+  'rpgSheet',
+])
+
+function omitEmbeddedCharacterSheetFields(heroData = {}) {
+  return Object.fromEntries(
+    Object.entries(heroData).filter(([field]) => !embeddedCharacterSheetFields.has(field)),
+  )
+}
+
 export function normalizeHeroesSnapshot(snapshotValue) {
   if (!snapshotValue) {
     return []
@@ -52,9 +67,10 @@ export async function createHero(heroData) {
 
   const timestamp = Date.now()
   const heroRef = push(ref(database, HEROES_PATH))
+  const canonicalHeroData = omitEmbeddedCharacterSheetFields(heroData)
   const payload = {
-    ...heroData,
-    active: heroData.active ?? true,
+    ...canonicalHeroData,
+    active: canonicalHeroData.active ?? true,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -75,9 +91,9 @@ export async function updateHero(heroId, heroData) {
   }
 
   const itemRef = ref(database, `${HEROES_PATH}/${heroId}`)
-
+  const canonicalHeroData = omitEmbeddedCharacterSheetFields(heroData)
   await update(itemRef, {
-    ...heroData,
+    ...canonicalHeroData,
     updatedAt: Date.now(),
   })
 }

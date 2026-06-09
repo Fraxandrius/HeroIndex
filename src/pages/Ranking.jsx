@@ -195,26 +195,17 @@ function averagePrivateScores(...scores) {
   return numericScores.reduce((total, score) => total + score, 0) / numericScores.length
 }
 
-function getPrivateRpgSheet(hero = {}, characterSheet = null) {
-  return (
-    characterSheet ||
-    hero.privateRpgSheet ||
-    hero.rpgPrivateSheet ||
-    hero.characterSheet ||
-    hero.oraculoSheet ||
-    hero.rpgSheet ||
-    hero.privateSheet ||
-    null
-  )
+function getCanonicalSheet(characterSheet = null) {
+  return characterSheet ?? null
 }
 
-function getPrivateAttributes(privateSheet = {}) {
-  return privateSheet.attributes || privateSheet.privateRpgSheet?.attributes || privateSheet.rpgSheet?.attributes || {}
+function getSheetAttributes(canonicalSheet = {}) {
+  return canonicalSheet?.attributes || {}
 }
 
-function getPrivateSheetValue(privateSheet = {}, ...keys) {
+function getSheetValue(canonicalSheet = {}, ...keys) {
   for (const key of keys) {
-    if (privateSheet[key] !== undefined && privateSheet[key] !== null && privateSheet[key] !== '') return privateSheet[key]
+    if (canonicalSheet?.[key] !== undefined && canonicalSheet[key] !== null && canonicalSheet[key] !== '') return canonicalSheet[key]
   }
 
   return undefined
@@ -250,9 +241,9 @@ function getPublicEvaluationTier(publicEvaluation, axisId) {
 }
 
 function derivePublicAbilityMatrix(hero, { characterSheet = null, position = 1 } = {}) {
-  const privateSheet = getPrivateRpgSheet(hero, characterSheet)
-  const attributes = getPrivateAttributes(privateSheet)
-  const reputation = Number(getPrivateSheetValue(privateSheet, 'reputation'))
+  const canonicalSheet = getCanonicalSheet(characterSheet)
+  const attributes = getSheetAttributes(canonicalSheet)
+  const reputation = Number(getSheetValue(canonicalSheet, 'reputation'))
   const hasPrivateAttributes = ['strength', 'fighting', 'agility', 'reason', 'intuition', 'presence'].some(
     (attribute) => attributes[attribute] !== undefined && attributes[attribute] !== null && attributes[attribute] !== '',
   )
