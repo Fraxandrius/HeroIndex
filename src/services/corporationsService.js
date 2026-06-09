@@ -116,3 +116,27 @@ export async function deleteCorporation(corporationId) {
 export async function deleteMultipleCorporations(corporationIds = []) {
   await Promise.all(corporationIds.filter(Boolean).map((corporationId) => deleteCorporation(corporationId)))
 }
+
+const corporationReputationMetricFields = new Set([
+  'approval',
+  'publicTrust',
+  'reputationScore',
+  'trustScore',
+])
+
+function getSafeCorporationMetricUpdate(corporationData = {}) {
+  return Object.fromEntries(
+    Object.entries(corporationData).filter(([field]) => corporationReputationMetricFields.has(field)),
+  )
+}
+
+export async function updateCorporationMetricsBulk(updates = []) {
+  const safeUpdates = updates
+    .filter((item) => item?.id)
+    .map((item) => ({ id: item.id, payload: getSafeCorporationMetricUpdate(item.metrics) }))
+    .filter((item) => Object.keys(item.payload).length > 0)
+
+  await Promise.all(safeUpdates.map((item) => updateCorporation(item.id, item.payload)))
+
+  return safeUpdates.length
+}

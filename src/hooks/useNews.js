@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { mockNews } from '../data/mockNews.js'
 import { getFirebaseClient } from '../firebase/firebaseClient.js'
-import { normalizeNewsPlacement, normalizeNewsPriority, subscribeToNews } from '../services/newsService.js'
+import {
+  hasEditorialText,
+  isSignalStory,
+  isVisualStory,
+  normalizeDisplayMode,
+  normalizeNewsPlacement,
+  normalizeNewsPriority,
+  normalizeStoryMode,
+  subscribeToNews,
+} from '../services/newsService.js'
 
 function toTimestamp(value) {
   if (!value) {
@@ -75,24 +84,36 @@ function getNewsTag(newsItem) {
 }
 
 function normalizeNewsForUi(newsItem) {
+   const storyMode = normalizeStoryMode(newsItem.storyMode)
+  const displayMode = normalizeDisplayMode({ ...newsItem, storyMode })
+  const homePlacement = normalizeNewsPlacement(newsItem.homePlacement)
+  const visualStory = isVisualStory({ ...newsItem, storyMode })
+  const signalStory = isSignalStory({ ...newsItem, storyMode })
+  const title = newsItem.title || (storyMode === 'standard' ? 'Actualización HeroIndex sin titular' : '')
+
   return {
     ...newsItem,
     author: newsItem.author ?? newsItem.sourceLabel ?? newsItem.source ?? 'Mesa Editorial HeroIndex',
     body: newsItem.body ?? newsItem.summary ?? newsItem.excerpt ?? '',
+    displayMode,
     handle: newsItem.handle ?? '@heroindex',
     inlinePlacementSlotId:
       newsItem.inlinePlacementSlotId ?? newsItem.placementSlotId ?? null,
     metric: newsItem.metric ?? newsItem.reactionCount ?? 'Actualización en vivo',
     movement: newsItem.movement ?? newsItem.move ?? '+1',
     editorialTone: newsItem.editorialTone ?? 'verified',
-    homePlacement: normalizeNewsPlacement(newsItem.homePlacement),
-    isPublic: newsItem.active !== false && normalizeNewsPlacement(newsItem.homePlacement) !== 'hidden',
+    hasEditorialText: hasEditorialText(newsItem),
+    homePlacement,
+    isPublic: newsItem.active !== false && homePlacement !== 'hidden',
+    isSignalStory: signalStory,
+    isVisualStory: visualStory,
     priority: normalizeNewsPriority(newsItem.priority),
     source: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'Mesa Editorial HeroIndex',
     sourceLabel: newsItem.sourceLabel ?? newsItem.source ?? newsItem.author ?? 'Mesa Editorial HeroIndex',
+    storyMode,
     tag: newsItem.kicker ?? getNewsTag(newsItem),
     time: formatNewsTime(newsItem),
-    title: newsItem.title || (newsItem.storyMode === 'visual' ? '' : 'Actualización HeroIndex sin titular'),
+    title,
   }
 }
 

@@ -12,6 +12,21 @@ function normalizeHero(id, hero) {
   }
 }
 
+const embeddedCharacterSheetFields = new Set([
+  'characterSheet',
+  'oraculoSheet',
+  'privateRpgSheet',
+  'privateSheet',
+  'rpgPrivateSheet',
+  'rpgSheet',
+])
+
+function omitEmbeddedCharacterSheetFields(heroData = {}) {
+  return Object.fromEntries(
+    Object.entries(heroData).filter(([field]) => !embeddedCharacterSheetFields.has(field)),
+  )
+}
+
 export function normalizeHeroesSnapshot(snapshotValue) {
   if (!snapshotValue) {
     return []
@@ -52,9 +67,10 @@ export async function createHero(heroData) {
 
   const timestamp = Date.now()
   const heroRef = push(ref(database, HEROES_PATH))
+  const canonicalHeroData = omitEmbeddedCharacterSheetFields(heroData)
   const payload = {
-    ...heroData,
-    active: heroData.active ?? true,
+    ...canonicalHeroData,
+    active: canonicalHeroData.active ?? true,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -75,9 +91,9 @@ export async function updateHero(heroId, heroData) {
   }
 
   const itemRef = ref(database, `${HEROES_PATH}/${heroId}`)
-
+  const canonicalHeroData = omitEmbeddedCharacterSheetFields(heroData)
   await update(itemRef, {
-    ...heroData,
+    ...canonicalHeroData,
     updatedAt: Date.now(),
   })
 }
@@ -133,4 +149,29 @@ export function uploadHeroMediaImage(heroId, channel, file) {
   }
 
   return uploadImageWithPath(file, `hero-media/${heroId}/${channel}`)
+}
+
+const heroReputationMetricFields = new Set([
+  'approval',
+  'citizenApproval',
+  'rankChange',
+  'rankingPoints',
+  'trustScore',
+])
+
+function getSafeHeroMetricUpdate(heroData = {}) {
+  return Object.fromEntries(
+    Object.entries(heroData).filter(([field]) => heroReputationMetricFields.has(field)),
+  )
+}
+
+export async function updateHeroMetricsBulk(updates = []) {
+  const safeUpdates = updates
+    .filter((item) => item?.id)
+    .map((item) => ({ id: item.id, payload: getSafeHeroMetricUpdate(item.metrics) }))
+    .filter((item) => Object.keys(item.payload).length > 0)
+
+  await Promise.all(safeUpdates.map((item) => updateHero(item.id, item.payload)))
+
+  return safeUpdates.length
 }

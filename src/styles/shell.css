@@ -698,6 +698,9 @@
 }
 
 .heroindex-rail {
+  --heroindex-rail-accent: #8edfff;
+  --heroindex-rail-accent-rgb: 142, 223, 255;
+  --heroindex-rail-hot-rgb: 234, 191, 79;
   align-self: start;
   display: grid;
   gap: 0.8rem;
@@ -716,7 +719,7 @@
 
 .heroindex-rail__heading span,
 .heroindex-rail__kicker {
-  color: #8edfff;
+  color: var(--heroindex-rail-accent);
   font-size: 0.64rem;
   font-weight: 950;
   letter-spacing: 0.12em;
@@ -726,6 +729,53 @@
 .heroindex-rail__heading small {
   color: #7182ad;
   font-size: 0.62rem;
+}
+
+
+.heroindex-rail--home {
+  --heroindex-rail-accent: #67e8f9;
+  --heroindex-rail-accent-rgb: 103, 232, 249;
+}
+
+.heroindex-rail--ranking {
+  --heroindex-rail-accent: #5eead4;
+  --heroindex-rail-accent-rgb: 94, 234, 212;
+}
+
+.heroindex-rail--news {
+  --heroindex-rail-accent: #93c5fd;
+  --heroindex-rail-accent-rgb: 147, 197, 253;
+}
+
+.heroindex-rail--profiles,
+.heroindex-rail--player {
+  --heroindex-rail-accent: #c4b5fd;
+  --heroindex-rail-accent-rgb: 196, 181, 253;
+}
+
+.heroindex-rail--corporations {
+  --heroindex-rail-accent: #7dd3fc;
+  --heroindex-rail-accent-rgb: 125, 211, 252;
+}
+
+.heroindex-rail--oracle {
+  --heroindex-rail-accent: #facc15;
+  --heroindex-rail-accent-rgb: 250, 204, 21;
+  --heroindex-rail-hot-rgb: 250, 204, 21;
+}
+
+.heroindex-rail--oracle .heroindex-rail__card {
+  box-shadow:
+    0 0.8rem 2rem rgba(2, 6, 23, 0.14),
+    inset 0 0 0 1px rgba(250, 204, 21, 0.035);
+}
+
+.heroindex-rail__meta {
+  color: rgba(var(--heroindex-rail-accent-rgb), 0.72);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .heroindex-rail .sidebar-visual-slot {
@@ -752,9 +802,9 @@
 
 .heroindex-rail__card {
   background:
-    linear-gradient(135deg, rgba(94, 234, 212, 0.045), transparent 55%),
+    linear-gradient(135deg, rgba(var(--heroindex-rail-accent-rgb), 0.055), transparent 55%),
     rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(186, 230, 253, 0.14);
+  border: 1px solid rgba(var(--heroindex-rail-accent-rgb), 0.16);
   border-radius: 1rem;
   box-shadow: 0 0.8rem 2rem rgba(2, 6, 23, 0.12);
   display: grid;
@@ -764,9 +814,9 @@
 
 .heroindex-rail__card--hot {
   background:
-    radial-gradient(circle at 90% 5%, rgba(234, 191, 79, 0.12), transparent 8rem),
+    radial-gradient(circle at 90% 5%, rgba(var(--heroindex-rail-hot-rgb), 0.13), transparent 8rem),
     rgba(15, 23, 42, 0.82);
-  border-color: rgba(234, 191, 79, 0.22);
+  border-color: rgba(var(--heroindex-rail-hot-rgb), 0.24);
 }
 
 .heroindex-rail__card h2 {

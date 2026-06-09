@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import BroadcastSlot from '../components/broadcast/BroadcastSlot.jsx'
 import { useNews } from '../hooks/useNews.js'
-import { deleteNews } from '../services/newsService.js'
+import { deleteNews, isSignalStory, isVisualStory } from '../services/newsService.js'
 
 const isOraculoMode = import.meta.env.VITE_ORACULO_MODE === 'true'
 
@@ -9,8 +9,38 @@ function getNewsCategory(newsItem = {}, index = 0) {
   return newsItem.category || newsItem.layer || newsItem.tag || newsItem.kicker || (index === 0 ? 'Cobertura verificada' : 'Canal verificado')
 }
 
-function getNewsTitle(newsItem = {}) { return newsItem.title || (newsItem.storyMode === 'visual' ? 'Cobertura visual' : '') }
+function getNewsTitle(newsItem = {}) {
+  if (newsItem.title) return newsItem.title
+  if (isVisualStory(newsItem)) return 'Cobertura visual'
+  if (isSignalStory(newsItem)) return newsItem.kicker || 'Señal editorial'
+
+  return ''
+}
+
 function getNewsCopy(newsItem = {}) { return newsItem.summary || newsItem.body || '' }
+
+function getNewsItemClass(newsItem, index) {
+  return [
+    'news-list__item',
+    index === 0 ? 'news-list__item--featured' : '',
+    isVisualStory(newsItem) || newsItem.displayMode === 'image-first' ? 'news-list__item--visual-story' : '',
+    isSignalStory(newsItem) || newsItem.displayMode === 'signal-card' ? 'news-list__item--signal-story' : '',
+  ].filter(Boolean).join(' ')
+}
+
+function getNewsFeedTag(newsItem, index) {
+  if (isSignalStory(newsItem)) return 'SEÑAL EDITORIAL'
+  if (isVisualStory(newsItem)) return 'COBERTURA VISUAL'
+
+  return index === 0 ? 'ÚLTIMO MINUTO' : 'CANAL VERIFICADO'
+}
+
+function getEmptyCopy(newsItem) {
+  if (isSignalStory(newsItem)) return 'Señal editorial HeroIndex · Actualización breve verificada.'
+  if (isVisualStory(newsItem)) return 'Pieza visual HeroIndex · Cobertura visual verificada.'
+
+  return 'Cobertura HeroIndex en consolidación.'
+}
 
 function News() {
   const { feedNews, loading } = useNews()
@@ -19,8 +49,7 @@ function News() {
   const visibleNews = feedNews.filter((item) => item.active !== false && item.homePlacement !== 'hidden')
 
   const handleDeleteNews = async (newsItem) => {
-    if (!window.confirm('Eliminar noticia. Esta acción no se puede deshacer.')) return
-
+    if (!window.confirm('Eliminar cobertura. Esta acción no se puede deshacer.')) return
     setDeletingNewsId(newsItem.id)
     setDeleteMessage('Eliminando...')
 
@@ -71,12 +100,13 @@ function News() {
           <span>{visibleNews.length} señales verificadas</span>
         </div>
 
+
         <div className="news-list">
           {loading ? <p className="news-state">Sincronizando cobertura verificada…</p> : null}
           {!loading && visibleNews.length === 0 ? <p className="news-state">La Mesa Editorial no registra coberturas activas durante este ciclo.</p> : null}
           {!loading
             ? visibleNews.map((newsItem, index) => (
-                <article className={`news-list__item${index === 0 ? ' news-list__item--featured' : ''}${newsItem.storyMode === 'visual' ? ' news-list__item--visual-story' : ''}`} key={newsItem.id}>
+                <article className={getNewsItemClass(newsItem, index)} key={newsItem.id}>
                   <div className="news-list__media">
                     {newsItem.imageUrl ? (
                       <img
@@ -97,9 +127,9 @@ function News() {
                     <span className="news-list__category">{getNewsCategory(newsItem, index)}</span>
                   </div>
                   <div className="news-list__body">
-                    <p className="feed-card__tag">{index === 0 ? 'ÚLTIMO MINUTO' : 'CANAL VERIFICADO'}</p>
+                    <p className="feed-card__tag">{getNewsFeedTag(newsItem, index)}</p>
                     {getNewsTitle(newsItem) ? <h3>{getNewsTitle(newsItem)}</h3> : null}
-                    {getNewsCopy(newsItem) ? <p>{getNewsCopy(newsItem)}</p> : <p className="news-list__visual-copy">Pieza visual HeroIndex · Señal editorial verificada.</p>}
+                    {getNewsCopy(newsItem) ? <p>{getNewsCopy(newsItem)}</p> : <p className="news-list__visual-copy">{getEmptyCopy(newsItem)}</p>}
                     <footer>
                       <span>Red HeroIndex</span>
                       <span>{newsItem.time || 'Cobertura activa'}</span>
@@ -113,7 +143,7 @@ function News() {
                           onClick={() => handleDeleteNews(newsItem)}
                           type="button"
                         >
-                          {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar noticia'}
+                          {deletingNewsId === newsItem.id ? 'Eliminando...' : 'Eliminar cobertura'}
                         </button>
                       ) : null}
                     </div>

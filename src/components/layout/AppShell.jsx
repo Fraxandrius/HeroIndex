@@ -50,7 +50,7 @@ function AppShell({ activeRouteId, children, onNavigate, routes }) {
       <DesktopTopNav activeRouteId={activeRouteId} onNavigate={onNavigate} routes={routes} />
       <div className="app-shell__desktop-layout">
         <main className="app-shell__content">{children}</main>
-        <HeroIndexRail />
+        <HeroIndexRail activeRouteId={activeRouteId} />
       </div>
     </div>
   )

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { mockCorporations } from '../data/mockCorporations.js'
-import { getFirebaseClient } from '../firebase/firebaseClient.js'
 import { subscribeToCorporations } from '../services/corporationsService.js'
 
 function getScoreValue(value) {
@@ -70,7 +69,6 @@ function createCorporationsState({ firebaseCorporations, error = null, loading =
     error,
     loading,
     firebaseCorporations: normalizedFirebaseCorporations,
-    source: hasFirebaseCorporations ? 'firebase' : 'mock',
     source: loading ? 'loading' : hasFirebaseCorporations ? 'firebase' : 'mock',
   }
 }

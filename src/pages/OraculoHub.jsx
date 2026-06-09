@@ -1,648 +1,387 @@
-import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
-import { subscribeToCharacterSheets } from '../services/characterSheetsService.js'
-import { subscribeToCampaignLogs } from '../services/campaignLogsService.js'
-import { subscribeToAllKarmaTransactions } from '../services/karmaService.js'
-import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
 
-const heroFilters = [
-  { id: 'all', label: 'Todos' },
-  { id: 'affiliated', label: 'Afiliados' },
-  { id: 'independent', label: 'Independientes' },
-  { id: 'missingSheet', label: 'Sin hoja privada RPG' },
+const moduleSections = [
+  {
+    id: 'editorial',
+    kicker: 'EDITORIAL Y SEÑALES',
+    title: 'Narrativa pública',
+    description: 'Controla coberturas, portada y señales visibles del ecosistema.',
+    tools: [
+      {
+        kicker: 'MESA EDITORIAL',
+        title: 'Mesa Editorial',
+        description: 'Controla portada, coberturas y piezas visuales públicas.',
+        routeId: 'oraculo-newsroom',
+        state: 'ACTIVO',
+      },
+      {
+        kicker: 'SEÑALES',
+        title: 'Señales públicas',
+        description: 'Gestiona comunicados institucionales visibles en la capa pública.',
+        routeId: 'oraculo-broadcasts',
+        state: 'ORÁCULO',
+      },
+    ],
+  },
+  {
+    id: 'dossiers',
+    kicker: 'HÉROES Y DOSSIERS',
+    title: 'Registro reputacional',
+    description: 'Mantiene identidades, operadores, expedientes y figuras no jugadoras.',
+    tools: [
+      {
+        kicker: 'CONTROL GENERAL',
+        title: 'GM Manager',
+        description: 'Gestiona contenido público, héroes, corporaciones y noticias.',
+        routeId: 'gm-manager',
+        state: 'ORÁCULO',
+      },
+      {
+        kicker: 'DOSSIER INTERNO',
+        title: 'Dossier ORÁCULO',
+        description: 'Abre el expediente interno de la figura heroica prioritaria.',
+        routeId: 'oraculo-hero-dossier',
+        state: 'INTERNO',
+        needsHero: true,
+      },
+       {
+        kicker: 'CRISIS REPUTACIONAL',
+        title: 'Crisis Reputacional',
+        description: 'Aplica ajustes masivos a ranking, confianza y aprobación pública.',
+        routeId: 'oraculo-reputation-crisis',
+        state: 'INTERNO',
+      },
+      {
+        kicker: 'NPC',
+        title: 'Creador de NPC',
+        description: 'Crea figuras no jugadoras con perfil público y hoja privada.',
+        routeId: 'oraculo-npc-builder',
+        state: 'ACTIVO',
+      },
+      {
+        kicker: 'IMPORTACIÓN',
+        title: 'Importador de NPCs',
+        description: 'Registra múltiples identidades narrativas desde archivo operativo.',
+        routeId: 'oraculo-npc-import',
+        state: 'INTERNO',
+      },
+    ],
+  },
+  {
+    id: 'players',
+    kicker: 'JUGADORES Y PROGRESO',
+    title: 'Avance de campaña',
+    description: 'Coordina recompensas, solicitudes y consecuencias de misión.',
+    tools: [
+      {
+        kicker: 'PROGRESO',
+        title: 'Gestor de Karma',
+        description: 'Administra progreso, recompensas y avances de jugadores.',
+        routeId: 'oraculo-karma-manager',
+        state: 'ACTIVO',
+      },
+      {
+        kicker: 'JUGADORES',
+        title: 'Solicitudes de jugadores',
+        description: 'Revisa vínculos de identidad heroica enviados por jugadores.',
+        routeId: 'oraculo-player-requests',
+        state: 'INTERNO',
+      },
+      {
+        kicker: 'MISIÓN',
+        title: 'Calculadora de misión',
+        description: 'Calcula impacto narrativo, recompensas y proyección de ranking.',
+        routeId: 'mission-calculator',
+        state: 'ACTIVO',
+      },
+    ],
+  },
+  {
+    id: 'campaign',
+    kicker: 'CAMPAÑA Y CONTINUIDAD',
+    title: 'Memoria narrativa',
+    description: 'Conserva continuidad, consecuencias y control operativo reservado.',
+    tools: [
+      {
+        kicker: 'CONTINUIDAD',
+        title: 'Registro de Campaña',
+        description: 'Consulta eventos internos, crisis aplicadas y consecuencias del ecosistema.',
+        routeId: 'oraculo-campaign-log',
+        state: 'INTERNO',
+      },
+      {
+        kicker: 'PANEL GM',
+        title: 'GM Panel',
+        description: 'Acceso reservado a controles heredados de operación interna.',
+        routeId: 'gm-panel',
+        state: 'ORÁCULO',
+      },
+    ],
+  },
 ]
 
-const statusLabels = {
-  approved: 'Aprobado',
-  draft: 'Borrador',
-  rejected: 'Rechazado',
+function getActiveItems(items = []) {
+  return items.filter((item) => item.active !== false)
 }
 
-function getNumericValue(value) {
-  const numberValue = Number(value ?? 0)
+function getStatusValue({ count, fallback, loading }) {
+  if (loading) return 'Sincronizando'
+  if (typeof count === 'number') return String(count)
 
-  return Number.isNaN(numberValue) ? 0 : numberValue
-}
-
-function toTimestamp(value) {
-  if (!value) return 0
-  if (typeof value === 'number') return Number.isNaN(value) ? 0 : value
-
-  const parsed = Date.parse(value)
-
-  return Number.isNaN(parsed) ? 0 : parsed
-}
-
-function formatDate(value) {
-  const timestamp = toTimestamp(value)
-
-  if (!timestamp) return 'Fecha pendiente'
-
-  return new Intl.DateTimeFormat('es', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(timestamp))
+  return fallback
 }
 
 function getHeroDisplayName(hero = {}) {
-  return hero.alias || hero.publicName || hero.codename || hero.name || 'Identidad HeroIndex'
+  return hero.alias || hero.publicName || hero.codename || hero.name || 'identidad prioritaria'
 }
 
-function getHeroTitle(hero = {}) {
-  return hero.heroTitle || 'Figura HeroIndex'
-}
+function buildActivityEvents({ activeCorporations, activeHeroes, activeNews, currentUser, headlineNews }) {
+  const events = []
 
-function getHeroTier(rankingPoints) {
-  const points = getNumericValue(rankingPoints)
-
-  if (points >= 20000) return 'Símbolo global'
-  if (points >= 10000) return 'Figura internacional'
-  if (points >= 6000) return 'Ícono nacional'
-  if (points >= 3000) return 'Héroe destacado'
-  if (points >= 1500) return 'Héroe reconocido'
-  if (points >= 750) return 'Protector urbano'
-  if (points >= 250) return 'Héroe emergente'
-
-  return 'Registro inicial'
-}
-
-function getCorporationName(hero, getCorporationById) {
-  if (hero.independent === true || !hero.corporationId || hero.corporationId === 'independent') {
-    return 'Independiente'
+  if (currentUser) {
+    events.push({
+      kicker: 'ACCESO VERIFICADO',
+      title: 'Sesión ORÁCULO verificada.',
+      description: 'La capa operativa interna está disponible para control narrativo.',
+      time: 'Ahora',
+    })
   }
 
-  return getCorporationById(hero.corporationId)?.name || hero.corporationId
-}
+  if (headlineNews) {
+    events.push({
+      kicker: 'MESA EDITORIAL',
+      title: 'Portada principal sincronizada desde Mesa Editorial.',
+      description: headlineNews.title || 'Cobertura principal lista para la capa pública.',
+      time: 'Ciclo activo',
+    })
+  }
 
-function heroHasAffiliation(hero) {
-  return Boolean(hero.corporationId && hero.corporationId !== 'independent')
-}
+  if (activeNews.length > 0) {
+    events.push({
+      kicker: 'COBERTURAS',
+      title: 'Coberturas públicas activas en la Red HeroIndex.',
+      description: 'La narrativa pública mantiene señales editoriales en circulación.',
+      time: 'En monitoreo',
+    })
+  }
 
-function sortHeroesByRankingPoints(firstHero, secondHero) {
-  const rankingDifference = getNumericValue(secondHero.rankingPoints) - getNumericValue(firstHero.rankingPoints)
+  if (activeHeroes.length > 0) {
+    events.push({
+      kicker: 'REGISTRO HEROICO',
+      title: 'Registros heroicos disponibles para evaluación.',
+      description: 'Los perfiles internos pueden cruzarse con reputación pública y continuidad.',
+      time: 'En monitoreo',
+    })
+  }
 
-  if (rankingDifference !== 0) return rankingDifference
+  if (activeCorporations.length > 0) {
+    events.push({
+      kicker: 'OPERADORES',
+      title: 'Operadores corporativos vinculados al ecosistema.',
+      description: 'La red institucional mantiene presencia en el sistema reputacional.',
+      time: 'Ciclo activo',
+    })
+  }
 
-  return getHeroDisplayName(firstHero).localeCompare(getHeroDisplayName(secondHero), 'es')
-}
-
-function matchesHeroSearch(hero, search, corporationName) {
-  if (!search) return true
-
-  return [
-    hero.alias,
-    hero.publicName,
-    hero.codename,
-    hero.name,
-    getHeroTitle(hero),
-    corporationName,
-  ].some((value) => value?.toString().toLowerCase().includes(search))
+  return events.length > 0
+    ? events.slice(0, 5)
+    : [{
+        kicker: 'REGISTRO OPERATIVO',
+        title: 'Registro operativo en espera de señales.',
+        description: 'ORÁCULO activará eventos cuando existan datos internos disponibles.',
+        time: 'En espera',
+      }]
 }
 
 function OraculoHub({ onNavigate }) {
-  const [heroFilter, setHeroFilter] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [missionCalculations, setMissionCalculations] = useState([])
-  const [missionCalculationsLoading, setMissionCalculationsLoading] = useState(true)
-  const [missionCalculationsError, setMissionCalculationsError] = useState(null)
-  const [campaignLogs, setCampaignLogs] = useState([])
-  const [campaignLogsLoading, setCampaignLogsLoading] = useState(true)
-  const [campaignLogsError, setCampaignLogsError] = useState(null)
-  const [karmaTransactions, setKarmaTransactions] = useState([])
-  const [karmaTransactionsLoading, setKarmaTransactionsLoading] = useState(true)
-  const [characterSheets, setCharacterSheets] = useState([])
-  const [characterSheetsLoading, setCharacterSheetsLoading] = useState(true)
-  const [characterSheetsError, setCharacterSheetsError] = useState(null)
-  const { error: heroesError, firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
-  const { error: newsError, feedNews, firebaseNews, loading: newsLoading } = useNews()
-  const {
-    corporations,
-    error: corporationsError,
-    firebaseCorporations,
-    getCorporationById,
-    loading: corporationsLoading,
-  } = useCorporations()
+  const { currentUser, userProfile } = useAuth()
+  const { feedNews, loading: newsLoading } = useNews()
+  const { heroes, loading: heroesLoading } = useHeroes()
+  const { corporations, loading: corporationsLoading } = useCorporations()
 
-  useEffect(() => {
-    return subscribeToMissionCalculations(
-      (items) => {
-        setMissionCalculations(items)
-        setMissionCalculationsLoading(false)
-      },
-      (error) => {
-        setMissionCalculationsError(error)
-        setMissionCalculationsLoading(false)
-      },
-    )
-  }, [])
+  const activeNews = getActiveItems(feedNews).filter((item) => item.homePlacement !== 'hidden')
+  const activeHeroes = getActiveItems(heroes)
+  const activeCorporations = getActiveItems(corporations)
+  const headlineNews = activeNews.find((item) => item.homePlacement === 'hero')
+  const primaryHero = activeHeroes[0]
+  const userName = userProfile?.displayName || userProfile?.username
+  const isSyncing = newsLoading || heroesLoading || corporationsLoading
+  const activityEvents = buildActivityEvents({
+    activeCorporations,
+    activeHeroes,
+    activeNews,
+    currentUser,
+    headlineNews,
+  })
 
-   useEffect(() => {
-    return subscribeToAllKarmaTransactions(
-      (items) => {
-        setKarmaTransactions(items)
-        setKarmaTransactionsLoading(false)
-      },
-      () => {
-        setKarmaTransactions([])
-        setKarmaTransactionsLoading(false)
-      },
-    )
-  }, [])
-
-  useEffect(() => {
-    return subscribeToCampaignLogs(
-      (items) => {
-        setCampaignLogs(items)
-        setCampaignLogsLoading(false)
-      },
-      (error) => {
-        setCampaignLogsError(error)
-        setCampaignLogsLoading(false)
-      },
-    )
-  }, [])
-
-  useEffect(() => {
-    return subscribeToCharacterSheets(
-      (items) => {
-        setCharacterSheets(items)
-        setCharacterSheetsLoading(false)
-      },
-      (error) => {
-        setCharacterSheetsError(error)
-        setCharacterSheetsLoading(false)
-      },
-    )
-  }, [])
-
-  const allHeroes = firebaseHeroes.length > 0 ? firebaseHeroes : heroes
-  const allCorporations = firebaseCorporations.length > 0 ? firebaseCorporations : corporations
-  const allNews = firebaseNews.length > 0 ? firebaseNews : feedNews
-  const heroIds = new Set(allHeroes.map((hero) => String(hero.id)))
-  const corporationIds = new Set(allCorporations.map((corporation) => String(corporation.id)))
-  const sheetsByHeroId = new Map(characterSheets.map((sheet) => [String(sheet.heroId ?? sheet.id), sheet]))
-  const activeHeroes = allHeroes.filter((hero) => hero.active !== false)
-  const search = searchQuery.trim().toLowerCase()
-  const filteredHeroes = allHeroes
-    .filter((hero) => {
-      const hasSheet = sheetsByHeroId.has(String(hero.id))
-      const corporationName = getCorporationName(hero, getCorporationById)
-
-      if (heroFilter === 'affiliated' && !heroHasAffiliation(hero)) return false
-      if (heroFilter === 'independent' && heroHasAffiliation(hero) && hero.independent !== true) return false
-      if (heroFilter === 'missingSheet' && hasSheet) return false
-
-      return matchesHeroSearch(hero, search, corporationName)
-    })
-    .sort(sortHeroesByRankingPoints)
-    .slice(0, 12)
-  const recentAssessments = [...missionCalculations]
-    .sort((first, second) => toTimestamp(second.createdAt) - toTimestamp(first.createdAt))
-    .slice(0, 5)
-  const pendingAssessments = missionCalculations
-    .filter((assessment) => assessment.status === 'approved' && assessment.applied !== true && assessment.heroId)
-    .sort((first, second) => toTimestamp(second.createdAt) - toTimestamp(first.createdAt))
-    .slice(0, 5)
-  const heroesWithoutSheets = activeHeroes
-    .filter((hero) => !sheetsByHeroId.has(String(hero.id)))
-    .sort(sortHeroesByRankingPoints)
-    .slice(0, 5)
-  const highlightedHeroes = [...activeHeroes].sort(sortHeroesByRankingPoints).slice(0, 5)
-  const recentCampaignLogs = campaignLogs.slice(0, 3)
-  const recentPlayerKarmaTransactions = karmaTransactions.filter((transaction) => transaction.source === 'player').slice(0, 3)
-  const activeHeroCount = activeHeroes.length
-  const inactiveHeroCount = allHeroes.filter((hero) => hero.active === false).length
-  const missingSheetCount = activeHeroes.filter((hero) => !sheetsByHeroId.has(String(hero.id))).length
-  const orphanSheetsCount = characterSheets.filter((sheet) => !heroIds.has(String(sheet.heroId ?? sheet.id))).length
-  const orphanAssessmentsCount = missionCalculations.filter(
-    (assessment) => assessment.heroId && !heroIds.has(String(assessment.heroId)),
-  ).length
-  const newsWithBrokenHeroLinksCount = allNews.filter(
-    (newsItem) =>
-      Array.isArray(newsItem.heroIds) &&
-      newsItem.heroIds.some((heroId) => !heroIds.has(String(heroId))),
-  ).length
-  const newsWithBrokenCorporationLinksCount = allNews.filter(
-    (newsItem) =>
-      Array.isArray(newsItem.corporationIds) &&
-      newsItem.corporationIds.some((corporationId) => !corporationIds.has(String(corporationId))),
-  ).length
-  const heroesWithInvalidCorporationCount = allHeroes.filter(
-    (hero) =>
-      hero.corporationId &&
-      hero.corporationId !== 'independent' &&
-      !corporationIds.has(String(hero.corporationId)),
-  ).length
-  const brokenNewsLinksCount = newsWithBrokenHeroLinksCount + newsWithBrokenCorporationLinksCount
-  const integrityIssuesCount =
-    orphanSheetsCount + orphanAssessmentsCount + brokenNewsLinksCount + heroesWithInvalidCorporationCount
-  const loading =
-    heroesLoading ||
-    corporationsLoading ||
-    newsLoading ||
-    missionCalculationsLoading ||
-    characterSheetsLoading ||
-    campaignLogsLoading ||
-    karmaTransactionsLoading
-  const error = heroesError || corporationsError || newsError || missionCalculationsError || campaignLogsError
-  const quickLinks = [
+  const ecosystemStatus = [
     {
-      description: 'Revisar solicitudes de vinculación heroica de jugadores.',
-      label: 'Solicitudes de jugadores',
-      routeId: 'oraculo-player-requests',
-    },
-        {
-      description: 'Crear y revisar Señales Públicas del ecosistema HeroIndex.',
-      label: 'Señales públicas',
-      routeId: 'oraculo-broadcasts',
+      kicker: 'HÉROES ACTIVOS',
+      value: getStatusValue({ count: activeHeroes.length, loading: heroesLoading }),
+      label: activeHeroes.length === 1 ? 'registro heroico' : 'registros heroicos',
+      detail: activeHeroes.length > 0 ? 'Identidades disponibles para evaluación interna.' : 'Registros heroicos en consolidación.',
     },
     {
-      description: 'Registrar sesiones, misiones y consecuencias narrativas.',
-      label: 'Registro de Campaña',
-      routeId: 'oraculo-campaign-log',
-    },
-     {
-      description: 'Asignar, revisar y corregir movimientos de Karma.',
-      label: 'Gestor de Karma',
-      routeId: 'oraculo-karma-manager',
+      kicker: 'COBERTURAS ACTIVAS',
+      value: getStatusValue({ count: activeNews.length, loading: newsLoading }),
+      label: activeNews.length === 1 ? 'cobertura pública' : 'coberturas públicas',
+      detail: activeNews.length > 0 ? 'Mesa Editorial sincronizada con la capa pública.' : 'Coberturas en espera de activación.',
+      hot: Boolean(headlineNews),
     },
     {
-      description: 'Crear héroes NPC con perfil público y hoja privada.',
-      label: 'Creador de NPC',
-      routeId: 'oraculo-npc-builder',
+      kicker: 'PORTADA EDITORIAL',
+      value: newsLoading ? 'Sincronizando' : headlineNews ? 'Sincronizada' : 'En espera',
+      label: 'control de portada',
+      detail: headlineNews?.title || 'La portada se activa con cobertura principal y prioridad editorial.',
+      hot: Boolean(headlineNews),
+    },
+    
+    {
+      kicker: 'USUARIO ORÁCULO',
+      value: currentUser ? 'Verificado' : 'En espera',
+      label: userName || 'sesión interna',
+      detail: currentUser ? 'Acceso interno disponible bajo permisos ORÁCULO.' : 'La capa interna espera una sesión autorizada.',
+      hot: Boolean(currentUser),
     },
     {
-      description: 'Crear múltiples NPCs desde un archivo CSV.',
-      label: 'Importador de NPCs',
-      routeId: 'oraculo-npc-import',
+      kicker: 'CORPORACIONES',
+      value: getStatusValue({ count: activeCorporations.length, loading: corporationsLoading }),
+      label: activeCorporations.length === 1 ? 'operador activo' : 'operadores activos',
+      detail: activeCorporations.length > 0 ? 'Operadores vinculados al ecosistema reputacional.' : 'Operadores en revisión interna.',
     },
     {
-      description: 'Calcular impacto de misión y proyección de ranking.',
-      label: 'Mission Calculator',
-      routeId: 'mission-calculator',
+      kicker: 'SOLICITUDES',
+      value: 'Seguimiento',
+      label: 'módulo habilitado',
+      detail: 'Las solicitudes de jugadores se revisan desde su módulo ORÁCULO.',
     },
     {
-      description: 'Gestionar contenido público, héroes, corporaciones y noticias.',
-      label: 'GM Manager',
-      routeId: 'gm-manager',
-    },
-    {
-      description: 'Ver posicionamiento público HeroIndex.',
-      label: 'Ranking público',
-      routeId: 'ranking',
-    },
-    {
-      description: 'Explorar catálogo público de héroes.',
-      label: 'Perfiles públicos',
-      routeId: 'profiles',
-    },
-    {
-      description: 'Revisar progresión y movimientos de Karma.',
-      label: 'Karma',
-      routeId: 'karma',
+      kicker: 'SEÑALES PÚBLICAS',
+      value: 'Canal activo',
+      label: 'emisión disponible',
+      detail: 'Las señales públicas se gestionan desde su módulo interno.',
     },
   ]
 
-  if (loading) {
-    return (
-      <section className="page-card oraculo-hub-page">
-        <p className="oraculo-hub-state">Cargando ORÁCULO Hub...</p>
-      </section>
-    )
-  }
+  const handleOpenTool = (tool) => {
+    if (tool.needsHero) {
+      if (!primaryHero?.id) return
+      onNavigate?.(tool.routeId, { heroId: primaryHero.id })
+      return
+    }
 
-  if (error && allHeroes.length === 0) {    
-    return (
-      <section className="page-card oraculo-hub-page">
-        <p className="oraculo-hub-state oraculo-hub-state--error">
-          No fue posible cargar datos internos de ORÁCULO.
-        </p>
-      </section>
-    )
+    onNavigate?.(tool.routeId)
   }
 
   return (
-    <section className="page-card oraculo-hub-page">
-      <header className="oraculo-hub-hero">
-        <p className="page-card__kicker">Capa interna HeroIndex</p>
-        <h2>ORÁCULO Hub</h2>
-        <p className="oraculo-hub-hero__subtitle">
-          Centro interno de observación, evaluación y control de HeroIndex.
-        </p>
-        <p>
-          Acceso restringido a dossiers, evaluaciones de misión, herramientas de contenido y señales
-          internas del ecosistema heroico.
-        </p>
+    <section className="page-card oraculo-hub-page oraculo-os">
+      <header className="oraculo-os__header">
+        <div className="oraculo-os__header-copy">
+          <p className="page-card__kicker">ACCESO ORÁCULO</p>
+          <h2>Sistema Operativo HeroIndex</h2>
+          <p>
+            Capa interna de control reputacional, editorial y narrativo del ecosistema HeroIndex.
+          </p>
+          <div className="oraculo-os__chips" aria-label="Estado de acceso ORÁCULO">
+            <span>CAPA INTERNA</span>
+            <span>GM ACTIVO</span>
+            <span>DATOS NO PÚBLICOS</span>
+            <span>CONTROL NARRATIVO</span>
+          </div>
+        </div>
+        <aside className="oraculo-os__operator" aria-label="Operador ORÁCULO">
+          <span>OPERADOR</span>
+          <strong>{userName || 'Acceso verificado'}</strong>
+          <small>{isSyncing ? 'Sincronizando capa ORÁCULO…' : 'Sistema interno en línea'}</small>
+        </aside>
       </header>
 
-      <section className="oraculo-hub-quick-links" aria-label="Accesos rápidos ORÁCULO">
-        {quickLinks.map((link) => (
-          <button key={link.routeId} onClick={() => onNavigate?.(link.routeId)} type="button">
-            <span>{link.label}</span>
-            <small>{link.description}</small>
-          </button>
+      <section className="oraculo-os__status-grid" aria-label="Estado del ecosistema">
+        {ecosystemStatus.map((item) => (
+          <article className={`oraculo-os__status-card ${item.hot ? 'oraculo-os__status-card--hot' : ''}`.trim()} key={item.kicker}>
+            <p>{item.kicker}</p>
+            <strong>{item.value}</strong>
+            <span>{item.label}</span>
+            <small>{item.detail}</small>
+          </article>
         ))}
       </section>
 
-<section className="oraculo-hub-summary" aria-label="Resumen operativo ORÁCULO">
-        <article>
-          <span>Héroes activos</span>
-          <strong>{activeHeroCount}</strong>
-        </article>
-        <article>
-          <span>Héroes inactivos</span>
-          <strong>{inactiveHeroCount}</strong>
-        </article>
-        <article>
-          <span>Sin hoja RPG</span>
-          <strong>{missingSheetCount}</strong>
-        </article>
-        <article>
-          <span>Evaluaciones pendientes</span>
-          <strong>{pendingAssessments.length}</strong>
-        </article>
-        <article>
-          <span>Registros de campaña</span>
-          <strong>{campaignLogs.length}</strong>
-        </article>
-<article>
-          <span>Movimientos de Karma</span>
-          <strong>{karmaTransactions.length}</strong>
-        </article>
+      <section className="oraculo-os__activity" aria-label="Registro operativo ORÁCULO">
+        <div className="oraculo-os__section-heading">
+          <p className="page-card__kicker">ACTIVIDAD INTERNA</p>
+          <h3>Registro operativo ORÁCULO</h3>
+          <span>{isSyncing ? 'Sincronizando capa ORÁCULO…' : 'Ciclo interno activo'}</span>
+        </div>
+        <div className="oraculo-os__timeline">
+          {activityEvents.map((event) => (
+            <article key={`${event.kicker}-${event.title}`}>
+              <span>{event.time}</span>
+              <div>
+                <p>{event.kicker}</p>
+                <strong>{event.title}</strong>
+                <small>{event.description}</small>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
-      {allHeroes.length === 0 ? <p className="oraculo-hub-state">No hay héroes registrados.</p> : null}
+      <section className="oraculo-os__modules" aria-label="Módulos ORÁCULO">
+        <div className="oraculo-os__section-heading">
+          <p className="page-card__kicker">HERRAMIENTAS ORÁCULO</p>
+          <h3>Módulos de operación interna</h3>
+          <span>Accesos agrupados por capa de control</span>
+        </div>
 
-      <div className="oraculo-hub-layout">
-        <main className="oraculo-hub-main">
-          <section className="oraculo-hub-panel">
-            <div className="oraculo-hub-panel__header">
+        {moduleSections.map((section) => (
+          <section className="oraculo-os__module-section" key={section.id}>
+            <div className="oraculo-os__module-heading">
               <div>
-                <h3>Acceso rápido a dossiers</h3>
-                <p>Busca héroes y abre su dossier interno ORÁCULO. Los filtros respetan afiliación, independencia y hojas privadas.</p>
+                <p>{section.kicker}</p>
+                <h4>{section.title}</h4>
               </div>
+              <span>{section.description}</span>
             </div>
-            <div className="oraculo-hub-controls">
-              <input
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Buscar héroe, título, alias o afiliación..."
-                type="search"
-                value={searchQuery}
-              />
-              <div className="oraculo-hub-filter-tabs" role="tablist" aria-label="Filtro de héroes ORÁCULO">
-                {heroFilters.map((filter) => (
+            <div className="oraculo-os__module-grid">
+              {section.tools.map((tool) => {
+                const isLocked = tool.needsHero && !primaryHero?.id
+                const description = tool.needsHero && primaryHero?.id
+                  ? `${tool.description} Prioridad actual: ${getHeroDisplayName(primaryHero)}.`
+                  : tool.description
+
+                return (
                   <button
-                    aria-selected={heroFilter === filter.id}
-                    className={heroFilter === filter.id ? 'is-active' : ''}
-                    key={filter.id}
-                    onClick={() => setHeroFilter(filter.id)}
-                    role="tab"
+                    className="oraculo-os__module-card"
+                    disabled={isLocked}
+                    key={`${section.id}-${tool.routeId}-${tool.title}`}
+                    onClick={() => handleOpenTool(tool)}
                     type="button"
                   >
-                    {filter.label}
+                    <span className="oraculo-os__module-kicker">{tool.kicker}</span>
+                    <strong>{tool.title}</strong>
+                    <small>{isLocked ? 'Requiere un registro heroico activo para abrir expediente.' : description}</small>
+                    <span className="oraculo-os__module-footer">
+                      <em>Estado: {isLocked ? 'EN ESPERA' : tool.state}</em>
+                      <b>{isLocked ? 'Sin expediente' : 'Abrir módulo'}</b>
+                    </span>
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
-            {characterSheetsError ? (
-              <p className="oraculo-hub-state oraculo-hub-state--warning">
-                Estado de hojas privadas no disponible.
-              </p>
-            ) : null}
-            {filteredHeroes.length > 0 ? (
-              <div className="oraculo-hub-hero-list">
-                {filteredHeroes.map((hero) => {
-                  const corporationName = getCorporationName(hero, getCorporationById)
-                  const hasSheet = sheetsByHeroId.has(String(hero.id))
-
-                  return (
-                    <article key={hero.id}>
-                      <div>
-                        <strong>{getHeroDisplayName(hero)}</strong>
-                        <span>{getHeroTitle(hero)} · {corporationName}</span>
-                      </div>
-                      <div>
-                        <small>Puntos HeroIndex</small>
-                        <b>{getNumericValue(hero.rankingPoints)}</b>
-                      </div>
-                      <span className={hero.active === false ? 'is-inactive' : ''}>
-                        {hero.active === false ? 'Inactivo' : 'Activo'}
-                      </span>
-                      <span className={hasSheet ? 'has-sheet' : 'missing-sheet'}>
-                        {hasSheet ? 'Hoja RPG registrada' : 'Sin hoja RPG'}
-                      </span>
-                      <button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">
-                        Ver dossier
-                      </button>
-                    </article>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">No hay héroes que coincidan con la búsqueda.</p>
-            )}
           </section>
+        ))}
+      </section>
 
-          <section className="oraculo-hub-panel">
-            <h3>Evaluaciones recientes</h3>
-            {recentAssessments.length > 0 ? (
-              <div className="oraculo-hub-assessment-list">
-                {recentAssessments.map((assessment) => (
-                  <article key={assessment.id}>
-                    <span>{statusLabels[assessment.status] ?? assessment.status ?? 'Borrador'}</span>
-                    <h4>{assessment.missionName || 'Misión sin nombre'}</h4>
-                    <p>{assessment.heroAlias || assessment.heroName || 'Héroe no asignado'}</p>
-                    <dl>
-                      <div>
-                        <dt>Puntos sugeridos</dt>
-                        <dd>{getNumericValue(assessment.suggestedRankingPoints)}</dd>
-                      </div>
-                      <div>
-                        <dt>Clasificación</dt>
-                        <dd>{assessment.classification || 'Pendiente'}</dd>
-                      </div>
-                      <div>
-                        <dt>Aplicación</dt>
-                        <dd>{assessment.applied ? 'Aplicada' : 'Pendiente'}</dd>
-                      </div>
-                      <div>
-                        <dt>Creada</dt>
-                        <dd>{formatDate(assessment.createdAt)}</dd>
-                      </div>
-                    </dl>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">Sin evaluaciones registradas.</p>
-            )}
-          </section>
-        </main>
-
-        <aside className="oraculo-hub-side">
-          <section className="oraculo-hub-panel oraculo-hub-integrity">
-            <h3>Integridad de datos</h3>
-            <p>Diagnóstico de solo lectura. ORÁCULO no modifica Firebase desde este panel.</p>
-            <div className="oraculo-hub-integrity__grid">
-              <article>
-                <span>Hojas huérfanas</span>
-                <strong>{orphanSheetsCount}</strong>
-              </article>
-              <article>
-                <span>Evaluaciones huérfanas</span>
-                <strong>{orphanAssessmentsCount}</strong>
-              </article>
-              <article>
-                <span>Noticias con vínculos rotos</span>
-                <strong>{brokenNewsLinksCount}</strong>
-              </article>
-              <article>
-                <span>Afiliaciones inválidas</span>
-                <strong>{heroesWithInvalidCorporationCount}</strong>
-              </article>
-            </div>
-            {integrityIssuesCount === 0 ? (
-              <p className="oraculo-hub-state">Sin inconsistencias detectadas.</p>
-            ) : (
-              <p className="oraculo-hub-state oraculo-hub-state--warning">
-                Se detectaron {integrityIssuesCount} señales para revisión manual.
-              </p>
-            )}
-          </section>
-
-          <section className="oraculo-hub-panel oraculo-hub-panel--priority">
-            <h3>Pendientes de aplicación</h3>
-            {pendingAssessments.length > 0 ? (
-              <div className="oraculo-hub-compact-list">
-                {pendingAssessments.map((assessment) => (
-                  <article key={assessment.id}>
-                    <div>
-                      <strong>{assessment.missionName || 'Misión sin nombre'}</strong>
-                      <span>{assessment.heroAlias || assessment.heroName || 'Héroe no asignado'}</span>
-                      <small>{getNumericValue(assessment.suggestedRankingPoints)} puntos sugeridos</small>
-                    </div>
-                    <button onClick={() => onNavigate?.('mission-calculator')} type="button">
-                      Abrir Mission Calculator
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">No hay evaluaciones aprobadas pendientes.</p>
-            )}
-          </section>
-
- <section className="oraculo-hub-panel">
-            <div className="oraculo-hub-panel__header">
-              <div>
-                <h3>Gestor de Karma</h3>
-                <p>Movimientos recientes registrados por jugadores.</p>
-              </div>
-              <button onClick={() => onNavigate?.('oraculo-karma-manager')} type="button">
-                Abrir gestor
-              </button>
-            </div>
-            {recentPlayerKarmaTransactions.length > 0 ? (
-              <div className="oraculo-hub-compact-list">
-                {recentPlayerKarmaTransactions.map((transaction) => (
-                  <article key={transaction.id}>
-                    <div>
-                      <strong>{transaction.reason || 'Movimiento de jugador'}</strong>
-                      <span>{Number(transaction.amount ?? 0) > 0 ? `+${transaction.amount}` : transaction.amount} Karma</span>
-                      <small>{formatDate(transaction.createdAt)}</small>
-                    </div>
-                    <button onClick={() => onNavigate?.('oraculo-karma-manager')} type="button">
-                      Revisar
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">No hay movimientos de jugador recientes.</p>
-            )}
-          </section>
-
-<section className="oraculo-hub-panel">
-            <div className="oraculo-hub-panel__header">
-              <div>
-                <h3>Registro de Campaña</h3>
-                <p>Últimas sesiones y misiones archivadas por ORÁCULO.</p>
-              </div>
-              <button onClick={() => onNavigate?.('oraculo-campaign-log')} type="button">
-                Abrir registro
-              </button>
-            </div>
-            {recentCampaignLogs.length > 0 ? (
-              <div className="oraculo-hub-compact-list">
-                {recentCampaignLogs.map((log) => (
-                  <article key={log.id}>
-                    <div>
-                      <strong>{log.title || 'Registro sin título'}</strong>
-                      <span>{log.location || 'Zona no registrada'}</span>
-                      <small>{formatDate(log.sessionDate || log.createdAt)} · {log.status || 'draft'}</small>
-                    </div>
-                    <button onClick={() => onNavigate?.('oraculo-campaign-log')} type="button">
-                      Ver registro
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">No hay registros de campaña.</p>
-            )}
-          </section>
-
-          <section className="oraculo-hub-panel">
-            <h3>Héroes sin hoja privada ({missingSheetCount})</h3>
-            {characterSheetsError ? (
-              <p className="oraculo-hub-state oraculo-hub-state--warning">
-                Estado de hojas privadas no disponible.
-              </p>
-            ) : heroesWithoutSheets.length > 0 ? (
-              <div className="oraculo-hub-compact-list">
-                {heroesWithoutSheets.map((hero) => (
-                  <article key={hero.id}>
-                    <div>
-                      <strong>{getHeroDisplayName(hero)}</strong>
-                      <span>{getHeroTitle(hero)}</span>
-                    </div>
-                    <button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">
-                      Abrir dossier
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">Todos los héroes activos tienen hoja privada registrada.</p>
-            )}
-          </section>
-
-          <section className="oraculo-hub-panel">
-            <h3>Señales destacadas</h3>
-            {highlightedHeroes.length > 0 ? (
-              <div className="oraculo-hub-highlight-list">
-                {highlightedHeroes.map((hero, index) => (
-                  <article key={hero.id}>
-                    <span>#{index + 1}</span>
-                    <div>
-                      <strong>{getHeroDisplayName(hero)}</strong>
-                      <small>{getHeroTier(hero.rankingPoints)}</small>
-                    </div>
-                    <b>{getNumericValue(hero.rankingPoints)}</b>
-                    <button onClick={() => onNavigate?.('oraculo-hero-dossier', { heroId: hero.id })} type="button">
-                      Ver dossier
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="oraculo-hub-state">No hay héroes destacados disponibles.</p>
-            )}
-          </section>
-        </aside>
-      </div>
+      <section className="oraculo-os__warning" aria-label="Advertencia interna ORÁCULO">
+        <strong>Los datos internos no son visibles para perfiles públicos ni jugadores sin autorización ORÁCULO.</strong>
+        <p>
+          Mantén separadas la señal pública, la reputación visible y la continuidad privada antes de publicar cambios de campaña.
+        </p>
+      </section>
     </section>
   )
 }

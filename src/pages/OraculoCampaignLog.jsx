@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth.js'
 import { useCorporations } from '../hooks/useCorporations.js'
 import { useHeroes } from '../hooks/useHeroes.js'
 import { useNews } from '../hooks/useNews.js'
@@ -9,6 +10,10 @@ import {
   updateCampaignLog,
 } from '../services/campaignLogsService.js'
 import { subscribeToMissionCalculations } from '../services/missionCalculationsService.js'
+import {
+  createOraculoActivityEvent,
+  subscribeToOraculoActivity,
+} from '../services/oraculoActivityService.js'
 
 const initialFormState = {
   title: '',
@@ -34,6 +39,24 @@ const statusOptions = [
 ]
 
 const statusLabels = Object.fromEntries(statusOptions.map((status) => [status.id, status.label]))
+
+const activityTypeOptions = [
+  { id: 'campaign-event', label: 'Evento de campaña' },
+  { id: 'editorial-action', label: 'Acción editorial' },
+  { id: 'ranking-shift', label: 'Cambio de ranking' },
+  { id: 'reputation-crisis', label: 'Crisis reputacional' },
+]
+
+const activityTypeLabels = Object.fromEntries(activityTypeOptions.map((type) => [type.id, type.label]))
+
+const initialActivityFormState = {
+  title: '',
+  summary: '',
+  type: 'campaign-event',
+  impactSummary: '',
+  tags: '',
+}
+
 
 function getTimestamp(value) {
   if (!value) return 0
@@ -147,6 +170,13 @@ function OraculoCampaignLog({ onNavigate }) {
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [formError, setFormError] = useState('')
+  const [activityEvents, setActivityEvents] = useState([])
+  const [activityLoading, setActivityLoading] = useState(true)
+  const [activityFormState, setActivityFormState] = useState(initialActivityFormState)
+  const [activityMessage, setActivityMessage] = useState('')
+  const [activityError, setActivityError] = useState('')
+  const [isSavingActivity, setIsSavingActivity] = useState(false)
+  const { currentUser, userProfile } = useAuth()
   const { error: heroesError, firebaseHeroes, heroes, loading: heroesLoading } = useHeroes()
   const {
     corporations,
@@ -165,6 +195,20 @@ function OraculoCampaignLog({ onNavigate }) {
       (error) => {
         setLogsError(error)
         setLogsLoading(false)
+      },
+    )
+  }, [])
+
+  
+  useEffect(() => {
+    return subscribeToOraculoActivity(
+      (items) => {
+        setActivityEvents(items)
+        setActivityLoading(false)
+      },
+      () => {
+        setActivityEvents([])
+        setActivityLoading(false)
       },
     )
   }, [])
@@ -190,12 +234,13 @@ function OraculoCampaignLog({ onNavigate }) {
   const newsById = useMemo(() => mapById(allNews), [allNews])
   const missionCalculationsById = useMemo(() => mapById(missionCalculations), [missionCalculations])
   const selectedLog = logs.find((log) => log.id === selectedLogId) ?? logs[0] ?? null
-  const loading = logsLoading || heroesLoading || corporationsLoading || newsLoading || missionCalculationsLoading
+  const loading = logsLoading || heroesLoading || corporationsLoading || newsLoading || missionCalculationsLoading || activityLoading
   const error = logsError || heroesError || corporationsError || newsError
   const draftCount = logs.filter((log) => (log.status ?? 'draft') === 'draft').length
   const activeCount = logs.filter((log) => log.status === 'active').length
   const closedCount = logs.filter((log) => log.status === 'closed').length
   const lastSession = logs[0]
+  const latestActivityEvents = activityEvents.slice(0, 6)
 
   const handleFieldChange = (event) => {
     const { name, value } = event.target
@@ -290,6 +335,49 @@ function OraculoCampaignLog({ onNavigate }) {
     }
   }
 
+  
+  const handleActivityFieldChange = (event) => {
+    const { name, value } = event.target
+
+    setActivityFormState((currentForm) => ({ ...currentForm, [name]: value }))
+    setActivityMessage('')
+    setActivityError('')
+  }
+
+  const handleActivitySubmit = async (event) => {
+    event.preventDefault()
+    setIsSavingActivity(true)
+    setActivityMessage('')
+    setActivityError('')
+
+    const payload = {
+      affectedCorporations: 0,
+      affectedHeroes: 0,
+      createdBy: userProfile?.displayName || userProfile?.username || currentUser?.uid || 'ORÁCULO',
+      impactSummary: activityFormState.impactSummary.trim(),
+      summary: activityFormState.summary.trim(),
+      tags: parseCommaList(activityFormState.tags),
+      title: activityFormState.title.trim(),
+      type: activityFormState.type,
+    }
+
+    if (!payload.title || !payload.summary) {
+      setActivityError('El título y el resumen del evento son obligatorios.')
+      setIsSavingActivity(false)
+      return
+    }
+
+    try {
+      await createOraculoActivityEvent(payload)
+      setActivityMessage('Evento interno registrado correctamente.')
+      setActivityFormState(initialActivityFormState)
+    } catch (eventError) {
+      setActivityError(eventError.message ?? 'No fue posible registrar el evento interno.')
+    } finally {
+      setIsSavingActivity(false)
+    }
+  }
+
   if (loading) {
     return (
       <section className="page-card oraculo-campaign-log-page hi-page hi-page-wide hi-state-card">
@@ -327,6 +415,10 @@ function OraculoCampaignLog({ onNavigate }) {
           <span>Total de registros</span>
           <strong>{logs.length}</strong>
         </article>
+         <article className="hi-metric-card">
+          <span>Eventos del ecosistema</span>
+          <strong>{activityEvents.length}</strong>
+        </article>
         <article className="hi-metric-card">
           <span>Borradores</span>
           <strong>{draftCount}</strong>
@@ -347,6 +439,65 @@ function OraculoCampaignLog({ onNavigate }) {
 
       {message ? <p className="hi-state-card hi-state-card--success">{message}</p> : null}
       {formError ? <p className="hi-state-card hi-state-card--error">{formError}</p> : null}
+
+
+
+      <section className="hi-card hi-card-oraculo campaign-log-activity" aria-label="Eventos del ecosistema ORÁCULO">
+        <div className="campaign-log-section-header">
+          <div>
+            <span className="section-kicker">Registro operativo</span>
+            <h3>Eventos del ecosistema</h3>
+            <p>Crisis aplicadas, consecuencias internas y decisiones que alteran HeroIndex.</p>
+          </div>
+        </div>
+
+        <form className="campaign-log-activity-form" onSubmit={handleActivitySubmit}>
+          <label className="hi-field">
+            <span className="hi-label">Tipo</span>
+            <select className="hi-select" name="type" onChange={handleActivityFieldChange} value={activityFormState.type}>
+              {activityTypeOptions.map((type) => <option key={type.id} value={type.id}>{type.label}</option>)}
+            </select>
+          </label>
+          <label className="hi-field">
+            <span className="hi-label">Título</span>
+            <input className="hi-input" name="title" onChange={handleActivityFieldChange} value={activityFormState.title} />
+          </label>
+          <label className="hi-field campaign-log-activity-form__wide">
+            <span className="hi-label">Resumen</span>
+            <textarea className="hi-textarea" name="summary" onChange={handleActivityFieldChange} rows="3" value={activityFormState.summary} />
+          </label>
+          <label className="hi-field campaign-log-activity-form__wide">
+            <span className="hi-label">Impacto</span>
+            <input className="hi-input" name="impactSummary" onChange={handleActivityFieldChange} value={activityFormState.impactSummary} />
+          </label>
+          <label className="hi-field">
+            <span className="hi-label">Tags</span>
+            <input className="hi-input" name="tags" onChange={handleActivityFieldChange} placeholder="crisis, ranking, campaña" value={activityFormState.tags} />
+          </label>
+          <button className="hi-button hi-button-primary" disabled={isSavingActivity} type="submit">Registrar evento</button>
+        </form>
+
+        {activityMessage ? <p className="hi-state-card hi-state-card--success">{activityMessage}</p> : null}
+        {activityError ? <p className="hi-state-card hi-state-card--error">{activityError}</p> : null}
+
+        <div className="campaign-log-activity-timeline">
+          {latestActivityEvents.map((event) => (
+            <article className="campaign-log-activity-event" key={event.id}>
+              <div>
+                <span>{activityTypeLabels[event.type] ?? 'Evento ORÁCULO'}</span>
+                <h4>{event.title}</h4>
+                <small>{formatDateTime(event.createdAt)} · {event.createdBy || 'ORÁCULO'}</small>
+              </div>
+              <p>{event.summary}</p>
+              <strong>{event.impactSummary || `${event.affectedHeroes ?? 0} héroes · ${event.affectedCorporations ?? 0} corporaciones`}</strong>
+              <div className="campaign-log-tags">
+                {(event.tags ?? []).map((tag) => <span className="hi-chip" key={`${event.id}-${tag}`}>{tag}</span>)}
+              </div>
+            </article>
+          ))}
+          {latestActivityEvents.length === 0 ? <p className="campaign-log-empty-inline">No hay eventos internos registrados para este ciclo.</p> : null}
+        </div>
+      </section>
 
       <div className="campaign-log-layout">
         <div className="campaign-log-main-column">

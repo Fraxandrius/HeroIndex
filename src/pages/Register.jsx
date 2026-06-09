@@ -67,8 +67,8 @@ function Register({ onNavigate }) {
 
     try {
       await registerWithHeroIndexUsername({ heroName, password, username })
-      setMessage('Cuenta creada correctamente.')
-      onNavigate?.('my-profile')
+      setMessage('Cuenta creada correctamente. Continúa con el Registro Oficial HeroIndex.')
+      onNavigate?.('onboarding')
     } catch (registerError) {
       setMessage('')
       setError(registerError.message || 'No fue posible crear la cuenta.')

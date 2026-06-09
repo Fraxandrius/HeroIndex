@@ -1133,3 +1133,13 @@
     border-radius: 1rem;
   }
 }
+
+.feed-card--signal {
+  background: rgba(8, 18, 36, 0.72);
+  border-top: 1px solid rgba(104, 216, 255, 0.18);
+  padding: 0.95rem 0;
+}
+
+.feed-card--signal .feed-card__tag {
+  color: #68d8ff;
+}
